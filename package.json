@@ -1,0 +1,43 @@
+{
+  "name": "@mallary/cli",
+  "version": "0.1.0",
+  "description": "Official Mallary CLI for posting, analytics, uploads, and webhook management.",
+  "type": "module",
+  "bin": {
+    "mallary": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "llms.txt",
+    "AGENTS.md",
+    "CHANGELOG.md",
+    "RELEASING.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "mallary",
+    "cli",
+    "social-media",
+    "publishing",
+    "automation"
+  ],
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "tsx": "^4.20.6",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
+  }
+}

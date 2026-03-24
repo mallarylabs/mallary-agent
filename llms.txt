@@ -1,0 +1,78 @@
+Mallary CLI
+
+Mallary CLI is the official command-line interface for the Mallary public API.
+
+Purpose
+- Upload local media to Mallary
+- Create and schedule social posts
+- Inspect jobs and grouped posts
+- Fetch analytics
+- Manage webhooks
+- Read and update brand/settings data
+- Disconnect connected platforms
+
+Install
+- npm install -g @mallary/cli
+- npx @mallary/cli --help
+
+Authentication
+- Uses environment-variable auth only
+- Required for authenticated commands: MALLARY_API_KEY
+- Optional override: MALLARY_BASE_URL
+
+Base URL behavior
+- Default base URL: https://mallary.ai
+- Health uses /health
+- Authenticated commands call /api/v1/*
+
+Command inventory
+- mallary health
+- mallary upload <file...>
+- mallary posts create
+- mallary posts list
+- mallary posts delete <id>
+- mallary jobs get <id>
+- mallary analytics list
+- mallary webhooks list
+- mallary webhooks create
+- mallary webhooks delete <id>
+- mallary settings get
+- mallary settings update --file partial.json
+- mallary platforms disconnect <platform>
+
+Output conventions
+- Human-readable output by default
+- Use --json for automation
+- Direct API wrapper commands emit the API response body in --json mode
+- Convenience flows emit CLI-shaped JSON:
+  - upload returns { ok, uploads }
+  - posts create returns { ok, uploads, response } when local files were uploaded first
+
+Typical workflows
+1) Upload media:
+   mallary upload ./image.png --json
+2) Create post from flags:
+   mallary posts create --message "Hello" --platform facebook --media ./image.png --json
+3) Create post from a raw JSON payload:
+   mallary posts create --file ./post.json --json
+4) Poll a job:
+   mallary jobs get 123 --json
+5) List grouped posts:
+   mallary posts list --json
+
+Important constraints
+- The CLI is a direct client for the public API. It does not bypass plan limits or validation rules.
+- Settings updates are file-based in v1.
+- For advanced per-platform payloads, prefer posts create --file.
+- comments_under_post remains limited by the API.
+
+Out of scope
+- OAuth connect flows
+- Dashboard onboarding endpoints
+- Admin/observability endpoints
+- MCP transport/client behavior
+
+Companion files
+- README.md: human-first product and usage guide
+- AGENTS.md: contributor and coding-agent workflow instructions
+- RELEASING.md: semver, changelog, and mirror/split process
