@@ -1,6 +1,7 @@
 name: Publish to npm
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - "v*.*.*"
@@ -32,6 +33,7 @@ jobs:
         run: npm run build
 
       - name: Verify package version matches tag
+        if: github.event_name == 'push'
         run: |
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
           TAG_VERSION="${GITHUB_REF_NAME#v}"
@@ -41,6 +43,7 @@ jobs:
           fi
 
       - name: Publish to npm
+        if: github.event_name == 'push'
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
