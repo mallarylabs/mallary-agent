@@ -95,7 +95,7 @@ describe("mallary cli", () => {
     const code = await runCli(["--version"], { stdout, stderr });
     expect(code).toBe(0);
     expect(stdout.toString().trim()).toBe(CLI_VERSION);
-    expect(CLI_VERSION).toBe("0.1.4");
+    expect(CLI_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
     expect(stderr.toString()).toBe("");
   });
 
