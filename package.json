@@ -1,7 +1,7 @@
 {
   "name": "@mallary/cli",
   "version": "0.1.1",
-  "description": "Official Mallary CLI for posting, analytics, uploads, and webhook management.",
+  "description": "Official Mallary.ai CLI for social media posting, analytics, uploads, and webhook management.",
   "type": "module",
   "bin": {
     "mallary": "dist/index.js"
@@ -9,10 +9,7 @@
   "files": [
     "dist",
     "README.md",
-    "llms.txt",
-    "AGENTS.md",
-    "CHANGELOG.md",
-    "RELEASING.md"
+    "llms.txt"
   ],
   "engines": {
     "node": ">=18"

@@ -12,7 +12,7 @@ With the CLI you can:
 - manage your brand settings
 - disconnect platforms
 
-Mallary CLI is a direct client for the public Mallary.ai API. It does not bypass plan limits, feature gates, or platform rules.
+Mallary CLI is a direct client for the public Mallary.ai API. It does not bypass plan limits, feature gates, or platform rules. CLI access is available on paid plans only.
 
 ## Install
 
@@ -47,6 +47,8 @@ Mallary CLI uses environment-variable auth only. Get your API key at https://mal
 ```bash
 export MALLARY_API_KEY="your_mallary_api_key"
 ```
+
+The CLI is available on paid plans only: Starter, Pro, and Business.
 
 ## Quickstart
 
@@ -619,7 +621,6 @@ GitHub Actions example:
 If you are an AI agent or building an agent integration:
 
 - read `llms.txt` first for the compact command and workflow summary
-- read `AGENTS.md` for repo/build/release instructions if you are modifying the CLI codebase
 - use `--json` whenever the CLI is part of an automated toolchain
 - prefer `mallary posts create --file payload.json` for complex platform-specific payloads
 
@@ -634,4 +635,4 @@ If you are an AI agent or building an agent integration:
 
 ## Versioning
 
-Mallary CLI uses semantic versioning. See `RELEASING.md` and `CHANGELOG.md`.
+Mallary CLI uses semantic versioning.

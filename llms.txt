@@ -18,6 +18,7 @@ Install
 Authentication
 - Uses environment-variable auth only
 - Required for authenticated commands: MALLARY_API_KEY
+- CLI access requires a paid Mallary plan: Starter, Pro, or Business
 
 Base URL behavior
 - Base URL is fixed: https://mallary.ai
@@ -61,19 +62,31 @@ Typical workflows
 
 Important constraints
 - The CLI is a direct client for the public API. It does not bypass plan limits or validation rules.
+- Free-plan users cannot use the CLI. The API returns `upgrade_required` for CLI requests from free-tier accounts.
 - Settings updates are file-based in v1.
 - For advanced per-platform payloads, prefer posts create --file.
 - comments_under_post remains limited by the API.
 - Media must be local files uploaded through Mallary or already-hosted `https://files.mallary.ai/...` URLs.
 - External third-party media URLs are rejected by the CLI.
 
+Platform-specific payloads
+- Use `platform_options` in file mode only.
+- Supported examples:
+  - facebook: `post_type`, `link`, `pageId`
+  - instagram: `post_type`
+  - linkedin: `author_urn`
+  - youtube: `post_type`, `title`, `visibility`, `categoryId`, `madeForKids`
+  - pinterest: `post_type`, `boardId`, `link`, `alt_text`
+  - reddit: `post_type`, `subreddit` or `subredditName`
+  - google_business: `accountId`, `locationId`, `languageCode`, `link`
+  - snapchat: `contentType` or `post_type`
+
+Post enhancements
+- `comments_under_post` supports up to 3 follow-up comments.
+- `auto_reply_enabled` can be set per post, but AI auto-replies still require an eligible paid plan plus a complete brand profile in settings.
+
 Out of scope
 - OAuth connect flows
 - Dashboard onboarding endpoints
 - Admin/observability endpoints
 - MCP transport/client behavior
-
-Companion files
-- README.md: human-first product and usage guide
-- AGENTS.md: contributor and coding-agent workflow instructions
-- RELEASING.md: semver, changelog, and mirror/split process
