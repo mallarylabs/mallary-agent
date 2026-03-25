@@ -1,6 +1,6 @@
 # Mallary CLI
 
-Mallary CLI is the official command-line interface for the Mallary.ai social media scheduling/posting tool. It gives developers, operators, scripts, CI jobs, and AI agents a fast way to work with the same public platform that powers the Mallary.ai dashboard, REST API, and MCP server.
+Mallary CLI is the official command-line interface for the https://mallary.ai social media scheduling/posting tool. It gives developers, operators, scripts, CI jobs, and AI agents a fast way to work with the same public platform that powers the Mallary.ai dashboard, REST API, and MCP server.
 
 With the CLI you can:
 

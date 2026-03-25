@@ -4,6 +4,7 @@ import path from "node:path";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { afterEach, describe, expect, it } from "vitest";
 import { runCli } from "../src/main.js";
+import { CLI_VERSION } from "../src/version.js";
 
 class MemoryWriter {
   chunks: string[] = [];
@@ -88,6 +89,16 @@ async function makeTempFile(name: string, content: string | Buffer) {
 }
 
 describe("mallary cli", () => {
+  it("prints the package version", async () => {
+    const stdout = new MemoryWriter();
+    const stderr = new MemoryWriter();
+    const code = await runCli(["--version"], { stdout, stderr });
+    expect(code).toBe(0);
+    expect(stdout.toString().trim()).toBe(CLI_VERSION);
+    expect(CLI_VERSION).toBe("0.1.4");
+    expect(stderr.toString()).toBe("");
+  });
+
   it("prints health in json mode", async () => {
     await withServer(
       async (req, res) => {
