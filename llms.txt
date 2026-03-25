@@ -18,10 +18,9 @@ Install
 Authentication
 - Uses environment-variable auth only
 - Required for authenticated commands: MALLARY_API_KEY
-- Optional override: MALLARY_BASE_URL
 
 Base URL behavior
-- Default base URL: https://mallary.ai
+- Base URL is fixed: https://mallary.ai
 - Health uses /health
 - Authenticated commands call /api/v1/*
 
@@ -65,6 +64,8 @@ Important constraints
 - Settings updates are file-based in v1.
 - For advanced per-platform payloads, prefer posts create --file.
 - comments_under_post remains limited by the API.
+- Media must be local files uploaded through Mallary or already-hosted `https://files.mallary.ai/...` URLs.
+- External third-party media URLs are rejected by the CLI.
 
 Out of scope
 - OAuth connect flows

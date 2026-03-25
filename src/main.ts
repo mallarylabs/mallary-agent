@@ -4,6 +4,7 @@ import { parseArgs } from "node:util";
 import { CLI_VERSION } from "./version.js";
 
 const DEFAULT_BASE_URL = "https://mallary.ai";
+const MALLARY_MEDIA_HOST = "files.mallary.ai";
 
 type FetchLike = typeof fetch;
 type JsonRecord = Record<string, unknown>;
@@ -24,7 +25,6 @@ export interface CliDeps {
 
 interface GlobalOptions {
   json: boolean;
-  baseUrl?: string;
   argv: string[];
 }
 
@@ -126,20 +126,8 @@ function createError(exitCode: number, code: string, message: string, details?: 
     : { http_status: exitCode === 2 ? 500 : 0, code, message, details });
 }
 
-function normalizeBaseUrl(baseUrl: string, requestPath: string): string {
-  const trimmed = String(baseUrl || DEFAULT_BASE_URL).trim().replace(/\/+$/, "");
-  const apiPrefix = "/api/v1";
-  if (trimmed.endsWith(apiPrefix)) {
-    if (requestPath.startsWith(apiPrefix)) {
-      return `${trimmed}${requestPath.slice(apiPrefix.length)}`;
-    }
-    return `${trimmed.slice(0, -apiPrefix.length)}${requestPath}`;
-  }
-  return `${trimmed}${requestPath}`;
-}
-
-function getBaseUrl(env: NodeJS.ProcessEnv, override?: string): string {
-  return String(override || env.MALLARY_BASE_URL || DEFAULT_BASE_URL).trim() || DEFAULT_BASE_URL;
+function buildRequestUrl(requestPath: string): string {
+  return `${DEFAULT_BASE_URL}${requestPath}`;
 }
 
 function getApiKey(env: NodeJS.ProcessEnv): string {
@@ -161,7 +149,6 @@ function ensureApiKey(env: NodeJS.ProcessEnv): string {
 function extractGlobalOptions(argv: string[]): GlobalOptions {
   const cleaned: string[] = [];
   let json = false;
-  let baseUrl: string | undefined;
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -169,31 +156,34 @@ function extractGlobalOptions(argv: string[]): GlobalOptions {
       json = true;
       continue;
     }
-    if (arg === "--base-url") {
-      const next = argv[i + 1];
-      if (!next) {
-        throw new CliError(1, {
-          http_status: 0,
-          code: "invalid_args",
-          message: "--base-url requires a value.",
-        });
-      }
-      baseUrl = next;
-      i += 1;
-      continue;
-    }
-    if (arg.startsWith("--base-url=")) {
-      baseUrl = arg.slice("--base-url=".length);
-      continue;
-    }
     cleaned.push(arg);
   }
 
-  return { json, baseUrl, argv: cleaned };
+  return { json, argv: cleaned };
 }
 
 function isRemoteUrl(value: string): boolean {
   return /^https?:\/\//i.test(String(value || "").trim());
+}
+
+function isMallaryHostedMediaUrl(value: string): boolean {
+  try {
+    const url = new URL(String(value || "").trim());
+    return url.protocol === "https:" && url.hostname === MALLARY_MEDIA_HOST;
+  } catch (_) {
+    return false;
+  }
+}
+
+function ensureMallaryHostedMediaUrl(value: string): string {
+  const trimmed = String(value || "").trim();
+  if (isMallaryHostedMediaUrl(trimmed)) return trimmed;
+  throw new CliError(1, {
+    http_status: 0,
+    code: "external_media_url_not_allowed",
+    message:
+      `External media URLs are not allowed. Upload media to Mallary first so it is hosted on ${MALLARY_MEDIA_HOST}.`,
+  });
 }
 
 function looksLikeBoolean(value: unknown): value is boolean {
@@ -284,7 +274,7 @@ async function performRequest(
     }
   }
 
-  const response = await deps.fetch(normalizeBaseUrl(baseUrl, requestPath), {
+  const response = await deps.fetch(buildRequestUrl(requestPath), {
     method,
     headers: requestHeaders,
     body: payload,
@@ -434,7 +424,7 @@ async function resolveMediaItems(
   for (const item of media) {
     if (typeof item === "string") {
       if (isRemoteUrl(item)) {
-        mediaPayload.push({ url: item });
+        mediaPayload.push({ url: ensureMallaryHostedMediaUrl(item) });
       } else {
         const upload = await uploadLocalFile(deps, baseUrl, apiKey, item);
         uploads.push(upload);
@@ -445,7 +435,7 @@ async function resolveMediaItems(
 
     if (isObject(item) && typeof item.url === "string") {
       if (isRemoteUrl(item.url)) {
-        mediaPayload.push(item);
+        mediaPayload.push({ ...item, url: ensureMallaryHostedMediaUrl(item.url) });
       } else {
         const upload = await uploadLocalFile(deps, baseUrl, apiKey, item.url);
         uploads.push(upload);
@@ -481,13 +471,13 @@ function getHelpText(commandPath?: string[]): string {
   switch (pathKey) {
     case "health":
       return [
-        "Usage: mallary health [--json] [--base-url <url>]",
+        "Usage: mallary health [--json]",
         "",
         "Check Mallary API health.",
       ].join("\n");
     case "upload":
       return [
-        "Usage: mallary upload <file...> [--json] [--base-url <url>]",
+        "Usage: mallary upload <file...> [--json]",
         "",
         "Create Mallary upload URLs and upload local files end-to-end.",
       ].join("\n");
@@ -506,25 +496,25 @@ function getHelpText(commandPath?: string[]): string {
         "  - Local media paths are uploaded automatically before the post request.",
       ].join("\n");
     case "posts list":
-      return "Usage: mallary posts list [--page <n>] [--per-page <n>] [--json] [--base-url <url>]";
+      return "Usage: mallary posts list [--page <n>] [--per-page <n>] [--json]";
     case "posts delete":
-      return "Usage: mallary posts delete <id> [--json] [--base-url <url>]";
+      return "Usage: mallary posts delete <id> [--json]";
     case "jobs get":
-      return "Usage: mallary jobs get <id> [--json] [--base-url <url>]";
+      return "Usage: mallary jobs get <id> [--json]";
     case "analytics list":
-      return "Usage: mallary analytics list [--post-id <id>] [--json] [--base-url <url>]";
+      return "Usage: mallary analytics list [--post-id <id>] [--json]";
     case "webhooks list":
-      return "Usage: mallary webhooks list [--json] [--base-url <url>]";
+      return "Usage: mallary webhooks list [--json]";
     case "webhooks create":
-      return "Usage: mallary webhooks create --url <url> [--event <event> ...] [--secret <secret>] [--json] [--base-url <url>]";
+      return "Usage: mallary webhooks create --url <url> [--event <event> ...] [--secret <secret>] [--json]";
     case "webhooks delete":
-      return "Usage: mallary webhooks delete <id> [--json] [--base-url <url>]";
+      return "Usage: mallary webhooks delete <id> [--json]";
     case "settings get":
-      return "Usage: mallary settings get [--json] [--base-url <url>]";
+      return "Usage: mallary settings get [--json]";
     case "settings update":
-      return "Usage: mallary settings update --file partial.json [--json] [--base-url <url>]";
+      return "Usage: mallary settings update --file partial.json [--json]";
     case "platforms disconnect":
-      return "Usage: mallary platforms disconnect <platform> [--json] [--base-url <url>]";
+      return "Usage: mallary platforms disconnect <platform> [--json]";
     default:
       return [
         `Mallary CLI v${CLI_VERSION}`,
@@ -544,12 +534,10 @@ function getHelpText(commandPath?: string[]): string {
         "",
         "Global options:",
         "  --json",
-        "  --base-url <url>",
         "  --version",
         "",
         "Auth:",
         "  Set MALLARY_API_KEY for all authenticated commands.",
-        "  Optionally set MALLARY_BASE_URL to target staging or local environments.",
       ].join("\n");
   }
 }
@@ -1093,7 +1081,7 @@ async function runPlatformsDisconnect(deps: CliDeps, baseUrl: string, args: stri
 
 async function dispatchCommand(deps: CliDeps, globals: GlobalOptions): Promise<CommandResult> {
   const [command, subcommand, ...rest] = globals.argv;
-  const baseUrl = getBaseUrl(deps.env, globals.baseUrl);
+  const baseUrl = DEFAULT_BASE_URL;
 
   if (!command || command === "help" || command === "--help" || command === "-h") {
     const helpPath = command === "help" ? [subcommand, ...rest].filter(Boolean) : [];

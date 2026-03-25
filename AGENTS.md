@@ -14,8 +14,7 @@ Package boundaries
 
 Auth and transport
 - Auth is env-only: `MALLARY_API_KEY`.
-- Optional environment override: `MALLARY_BASE_URL`.
-- Default production base URL is `https://mallary.ai`.
+- The base URL is fixed to `https://mallary.ai`.
 - All authenticated requests should identify as CLI via headers.
 
 Output contract

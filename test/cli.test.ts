@@ -17,6 +17,18 @@ class MemoryWriter {
   }
 }
 
+function createMallaryFetch(baseUrl: string): typeof fetch {
+  return async (input: RequestInfo | URL, init?: RequestInit) => {
+    const raw =
+      typeof input === "string" ? input : input instanceof URL ? input.toString() : String(input.url || "");
+    if (raw.startsWith("https://mallary.ai")) {
+      const url = new URL(raw);
+      return fetch(`${baseUrl}${url.pathname}${url.search}`, init);
+    }
+    return fetch(input as RequestInfo, init);
+  };
+}
+
 async function readBody(req: IncomingMessage): Promise<string> {
   const chunks: Buffer[] = [];
   for await (const chunk of req) {
@@ -90,7 +102,7 @@ describe("mallary cli", () => {
       async (baseUrl) => {
         const stdout = new MemoryWriter();
         const stderr = new MemoryWriter();
-        const code = await runCli(["health", "--json", "--base-url", baseUrl], { stdout, stderr });
+        const code = await runCli(["health", "--json"], { stdout, stderr, fetch: createMallaryFetch(baseUrl) });
         expect(code).toBe(0);
         expect(JSON.parse(stdout.toString())).toEqual({ ok: true });
         expect(stderr.toString()).toBe("");
@@ -161,10 +173,11 @@ describe("mallary cli", () => {
       async (baseUrl) => {
         const stdout = new MemoryWriter();
         const stderr = new MemoryWriter();
-        const code = await runCli(["upload", filePath, "--json", "--base-url", baseUrl], {
+        const code = await runCli(["upload", filePath, "--json"], {
           stdout,
           stderr,
           env: { MALLARY_API_KEY: "test" },
+          fetch: createMallaryFetch(baseUrl),
         });
         expect(code).toBe(0);
         expect(uploaded).toBe("hello world");
@@ -204,10 +217,11 @@ describe("mallary cli", () => {
       async (baseUrl) => {
         const stdout = new MemoryWriter();
         const stderr = new MemoryWriter();
-        const code = await runCli(["upload", filePath, "--json", "--base-url", baseUrl], {
+        const code = await runCli(["upload", filePath, "--json"], {
           stdout,
           stderr,
           env: { MALLARY_API_KEY: "test" },
+          fetch: createMallaryFetch(baseUrl),
         });
         expect(code).toBe(2);
         const payload = JSON.parse(stdout.toString());
@@ -254,11 +268,12 @@ describe("mallary cli", () => {
         const stdout = new MemoryWriter();
         const stderr = new MemoryWriter();
         const code = await runCli(
-          ["posts", "create", "--message", "Hello", "--platform", "facebook", "--media", filePath, "--json", "--base-url", baseUrl],
+          ["posts", "create", "--message", "Hello", "--platform", "facebook", "--media", filePath, "--json"],
           {
             stdout,
             stderr,
             env: { MALLARY_API_KEY: "test" },
+            fetch: createMallaryFetch(baseUrl),
           }
         );
         expect(code).toBe(0);
@@ -271,6 +286,80 @@ describe("mallary cli", () => {
         expect(payload.ok).toBe(true);
         expect(payload.uploads).toHaveLength(1);
         expect(payload.response.batch_id).toBe("batch-1");
+      }
+    );
+  });
+
+  it("rejects external media URLs in flag mode", async () => {
+    const stdout = new MemoryWriter();
+    const stderr = new MemoryWriter();
+    const code = await runCli(
+      [
+        "posts",
+        "create",
+        "--message",
+        "Hello",
+        "--platform",
+        "facebook",
+        "--media",
+        "https://example.com/photo.jpg",
+        "--json",
+      ],
+      {
+        stdout,
+        stderr,
+        env: { MALLARY_API_KEY: "test" },
+      }
+    );
+    expect(code).toBe(1);
+    expect(JSON.parse(stdout.toString())).toEqual({
+      ok: false,
+      error: {
+        http_status: 0,
+        code: "external_media_url_not_allowed",
+        message:
+          "External media URLs are not allowed. Upload media to Mallary first so it is hosted on files.mallary.ai.",
+      },
+    });
+  });
+
+  it("allows existing Mallary-hosted media URLs in file mode", async () => {
+    const payloadPath = await makeTempFile(
+      "post.json",
+      JSON.stringify({
+        message: "Hello",
+        platforms: ["facebook"],
+        media: [{ url: "https://files.mallary.ai/uploads/photo.jpg" }],
+      })
+    );
+    let postedBody = "";
+
+    await withServer(
+      async (req, res, _state, body) => {
+        if (req.url === "/api/v1/post" && req.method === "POST") {
+          postedBody = body;
+          res.setHeader("content-type", "application/json");
+          res.end(JSON.stringify({ status: "queued", batch_id: "batch-cdn", jobs: [{ platform: "facebook", jobId: "321" }] }));
+          return;
+        }
+        res.statusCode = 404;
+        res.end("not found");
+      },
+      async (baseUrl) => {
+        const stdout = new MemoryWriter();
+        const stderr = new MemoryWriter();
+        const code = await runCli(["posts", "create", "--file", payloadPath, "--json"], {
+          stdout,
+          stderr,
+          env: { MALLARY_API_KEY: "test" },
+          fetch: createMallaryFetch(baseUrl),
+        });
+        expect(code).toBe(0);
+        expect(JSON.parse(postedBody)).toEqual({
+          message: "Hello",
+          platforms: ["facebook"],
+          media: [{ url: "https://files.mallary.ai/uploads/photo.jpg" }],
+        });
       }
     );
   });
@@ -298,10 +387,11 @@ describe("mallary cli", () => {
       async (baseUrl) => {
         const stdout = new MemoryWriter();
         const stderr = new MemoryWriter();
-        const code = await runCli(["posts", "list", "--json", "--base-url", baseUrl], {
+        const code = await runCli(["posts", "list", "--json"], {
           stdout,
           stderr,
           env: { MALLARY_API_KEY: "test" },
+          fetch: createMallaryFetch(baseUrl),
         });
         expect(code).toBe(0);
         expect(JSON.parse(stdout.toString())).toEqual(responsePayload);
@@ -327,10 +417,11 @@ describe("mallary cli", () => {
       async (baseUrl) => {
         const stdout = new MemoryWriter();
         const stderr = new MemoryWriter();
-        const code = await runCli(["settings", "update", "--file", settingsFile, "--json", "--base-url", baseUrl], {
+        const code = await runCli(["settings", "update", "--file", settingsFile, "--json"], {
           stdout,
           stderr,
           env: { MALLARY_API_KEY: "test" },
+          fetch: createMallaryFetch(baseUrl),
         });
         expect(code).toBe(0);
         expect(JSON.parse(receivedBody)).toEqual({ business_name: "Mallary" });
@@ -377,34 +468,35 @@ describe("mallary cli", () => {
       },
       async (baseUrl) => {
         const env = { MALLARY_API_KEY: "test" };
+        const fetch = createMallaryFetch(baseUrl);
 
         const analyticsOut = new MemoryWriter();
-        expect(await runCli(["analytics", "list", "--post-id", "42", "--json", "--base-url", baseUrl], { stdout: analyticsOut, stderr: new MemoryWriter(), env })).toBe(0);
+        expect(await runCli(["analytics", "list", "--post-id", "42", "--json"], { stdout: analyticsOut, stderr: new MemoryWriter(), env, fetch })).toBe(0);
         expect(JSON.parse(analyticsOut.toString()).data.analytics[0].views).toBe(12);
 
         const jobOut = new MemoryWriter();
-        expect(await runCli(["jobs", "get", "123", "--json", "--base-url", baseUrl], { stdout: jobOut, stderr: new MemoryWriter(), env })).toBe(0);
+        expect(await runCli(["jobs", "get", "123", "--json"], { stdout: jobOut, stderr: new MemoryWriter(), env, fetch })).toBe(0);
         expect(JSON.parse(jobOut.toString()).data.job.status).toBe("completed");
 
         const disconnectOut = new MemoryWriter();
-        expect(await runCli(["platforms", "disconnect", "facebook", "--json", "--base-url", baseUrl], { stdout: disconnectOut, stderr: new MemoryWriter(), env })).toBe(0);
+        expect(await runCli(["platforms", "disconnect", "facebook", "--json"], { stdout: disconnectOut, stderr: new MemoryWriter(), env, fetch })).toBe(0);
         expect(JSON.parse(disconnectOut.toString()).platform).toBe("facebook");
 
         const webhooksListOut = new MemoryWriter();
-        expect(await runCli(["webhooks", "list", "--json", "--base-url", baseUrl], { stdout: webhooksListOut, stderr: new MemoryWriter(), env })).toBe(0);
+        expect(await runCli(["webhooks", "list", "--json"], { stdout: webhooksListOut, stderr: new MemoryWriter(), env, fetch })).toBe(0);
         expect(JSON.parse(webhooksListOut.toString())[0].id).toBe(7);
 
         const webhooksCreateOut = new MemoryWriter();
         expect(
           await runCli(
-            ["webhooks", "create", "--url", "https://example.com/hook", "--event", "post.failed", "--json", "--base-url", baseUrl],
-            { stdout: webhooksCreateOut, stderr: new MemoryWriter(), env }
+            ["webhooks", "create", "--url", "https://example.com/hook", "--event", "post.failed", "--json"],
+            { stdout: webhooksCreateOut, stderr: new MemoryWriter(), env, fetch }
           )
         ).toBe(0);
         expect(JSON.parse(webhooksCreateOut.toString()).id).toBe(8);
 
         const webhooksDeleteOut = new MemoryWriter();
-        expect(await runCli(["webhooks", "delete", "8", "--json", "--base-url", baseUrl], { stdout: webhooksDeleteOut, stderr: new MemoryWriter(), env })).toBe(0);
+        expect(await runCli(["webhooks", "delete", "8", "--json"], { stdout: webhooksDeleteOut, stderr: new MemoryWriter(), env, fetch })).toBe(0);
         expect(JSON.parse(webhooksDeleteOut.toString()).status).toBe("ok");
       }
     );
