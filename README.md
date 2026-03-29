@@ -160,6 +160,23 @@ Platform-specific payloads:
 - These are available only in file mode with `mallary posts create --file payload.json`.
 - The CLI does not validate platform-specific keys itself; it passes them through to the Mallary API.
 - If you include `platform_options.instagram`, your `platforms` array should include `instagram`. The same rule applies to every platform.
+- For the exact currently documented `platform_options` fields and examples by platform, see:
+  `https://docs.mallary.ai/api-reference/endpoint/create#body-platform-options`
+
+Platform-specific media rules:
+
+- The CLI uses the same platform media validation as the Mallary API.
+- YouTube requires exactly one video.
+- Instagram currently works best with one image or one video in the public publisher implementation.
+- LinkedIn currently supports text-only posts or one image attachment only.
+- TikTok currently requires one video file.
+- Pinterest requires exactly one image or GIF, or exactly one video, plus `boardId`.
+- Reddit image posts require one image or GIF, and Reddit video upload is not supported by the current public API path.
+- Google Business currently requires one JPEG or PNG image.
+- X allows up to 4 images, or 1 video, or 1 GIF.
+- Snapchat requires partner/API access before posting can succeed.
+- Full matrix:
+  `https://docs.mallary.ai/api-reference/endpoint/create#platform-specific-media-rules`
 
 Payload shape:
 
@@ -357,6 +374,10 @@ Snapchat:
 X / Twitter:
 
 - No additional platform-specific payload fields are currently consumed by the public API beyond the standard post body.
+
+Canonical reference for platform-specific post fields:
+
+- `https://docs.mallary.ai/api-reference/endpoint/create#body-platform-options`
 
 ```json
 {
