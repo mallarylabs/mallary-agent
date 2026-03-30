@@ -169,7 +169,7 @@ Platform-specific media rules:
 - YouTube requires exactly one video.
 - Instagram currently works best with one image or one video in the public publisher implementation.
 - LinkedIn currently supports text-only posts or one image attachment only.
-- TikTok currently requires one video file.
+- TikTok video posts require one video, and TikTok photo posts support up to 35 images.
 - Pinterest requires exactly one image or GIF, or exactly one video, plus `boardId`.
 - Reddit image posts require one image or GIF, and Reddit video upload is not supported by the current public API path.
 - Google Business currently requires one JPEG or PNG image.
@@ -278,14 +278,73 @@ YouTube:
 
 TikTok:
 
-- No additional platform-specific payload fields are currently consumed by the public API beyond the standard post body.
-- TikTok behavior is driven by the connected account and the uploaded media.
+- `post_type`: `video` or `photo`
+- `post_mode`: `DIRECT_POST` or `MEDIA_UPLOAD`
+- `source`: `FILE_UPLOAD` or `PULL_FROM_URL` for video posts; photo posts always use `PULL_FROM_URL`
+- TikTok `PULL_FROM_URL` media must already be hosted on Mallary CDN at `https://files.mallary.ai/...`
+- `privacy_level`: optional direct-post override, must match TikTok creator info
+- `disable_comment`: optional for direct post
+- `disable_duet`: optional for direct-post video
+- `disable_stitch`: optional for direct-post video
+- `video_cover_timestamp_ms`: optional direct-post video cover frame
+- `title`: optional override; defaults to `message`
+- `description`: optional for photo posts
+- `auto_add_music`: optional for direct-post photo
+- `brand_content_toggle`, `brand_organic_toggle`: optional TikTok disclosure toggles
+- `is_aigc`: optional direct-post video AI-content label
+- `photo_cover_index`: optional photo cover selection
+
+Defaults:
+
+- Video posts default to `post_mode=DIRECT_POST` and `source=FILE_UPLOAD`.
+- Photo posts default to `post_mode=DIRECT_POST`.
+- If `privacy_level` is omitted for direct post, Mallary picks the first allowed privacy level from TikTok creator info, preferring `SELF_ONLY`, then `FOLLOWER_OF_CREATOR`, then `MUTUAL_FOLLOW_FRIENDS`, then `PUBLIC_TO_EVERYONE`.
+- If `disable_comment`, `disable_duet`, or `disable_stitch` are omitted for direct post, Mallary falls back to the creator settings returned by TikTok.
 
 ```json
 {
   "message": "New feature demo",
   "platforms": ["tiktok"],
-  "media": [{ "url": "./demo.mp4" }]
+  "media": [{ "url": "./demo.mp4" }],
+  "platform_options": {
+    "tiktok": {
+      "post_type": "video",
+      "post_mode": "DIRECT_POST",
+      "source": "FILE_UPLOAD",
+      "privacy_level": "FOLLOWER_OF_CREATOR",
+      "disable_comment": false,
+      "disable_duet": false,
+      "disable_stitch": false,
+      "video_cover_timestamp_ms": 1000,
+      "brand_content_toggle": false,
+      "brand_organic_toggle": false,
+      "is_aigc": false
+    }
+  }
+}
+```
+
+Photo post example:
+
+```json
+{
+  "message": "Photo launch",
+  "platforms": ["tiktok"],
+  "media": [
+    { "url": "https://files.mallary.ai/photo-1.webp" },
+    { "url": "https://files.mallary.ai/photo-2.webp" }
+  ],
+  "platform_options": {
+    "tiktok": {
+      "post_type": "photo",
+      "post_mode": "DIRECT_POST",
+      "description": "Behind the scenes from launch day",
+      "privacy_level": "PUBLIC_TO_EVERYONE",
+      "disable_comment": false,
+      "auto_add_music": true,
+      "photo_cover_index": 1
+    }
+  }
 }
 ```
 
