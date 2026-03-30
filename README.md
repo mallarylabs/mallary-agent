@@ -392,6 +392,7 @@ Comments under post:
 - Use repeatable `--comment` flags in flag mode.
 - In file mode, send `comments_under_post` as an array.
 - The API currently limits `comments_under_post` to 3 items.
+- TikTok does not currently support `comments_under_post`.
 
 Example:
 
