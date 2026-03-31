@@ -169,7 +169,7 @@ Platform-specific media rules:
 - YouTube requires exactly one video.
 - Instagram currently works best with one image or one video in the public publisher implementation.
 - LinkedIn currently supports text-only posts or one image attachment only.
-- TikTok video posts require one video, and TikTok photo posts support up to 35 images.
+- TikTok video posts require one video, and TikTok photo posts support up to 35 JPEG/WebP images.
 - Pinterest requires exactly one image or GIF, or exactly one video, plus `boardId`.
 - Reddit image posts require one image or GIF, and Reddit video upload is not supported by the current public API path.
 - Google Business currently requires one JPEG or PNG image.
@@ -282,6 +282,7 @@ TikTok:
 - `post_mode`: `DIRECT_POST` or `MEDIA_UPLOAD`
 - `source`: `FILE_UPLOAD` or `PULL_FROM_URL` for video posts; photo posts always use `PULL_FROM_URL`
 - TikTok `PULL_FROM_URL` media must already be hosted on Mallary CDN at `https://files.mallary.ai/...`
+- TikTok photo posts currently accept only `jpg`, `jpeg`, or `webp` images; `png` files are rejected
 - `privacy_level`: optional direct-post override, must match TikTok creator info
 - `disable_comment`: optional for direct post
 - `disable_duet`: optional for direct-post video
