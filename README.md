@@ -299,7 +299,7 @@ Defaults:
 
 - Video posts default to `post_mode=DIRECT_POST` and `source=FILE_UPLOAD`.
 - Photo posts default to `post_mode=DIRECT_POST`.
-- If `privacy_level` is omitted for direct post, Mallary picks the first allowed privacy level from TikTok creator info, preferring `PUBLIC_TO_EVERYONE`, then `MUTUAL_FOLLOW_FRIENDS`, then `FOLLOWER_OF_CREATOR`, then `SELF_ONLY`.
+- If `privacy_level` is omitted for direct post, Mallary first tries the first allowed privacy level from TikTok creator info, preferring `PUBLIC_TO_EVERYONE`, then `MUTUAL_FOLLOW_FRIENDS`, then `FOLLOWER_OF_CREATOR`, then `SELF_ONLY`. If TikTok rejects that with the unaudited-app private-account restriction, Mallary retries once with the most private allowed level.
 - If `disable_comment`, `disable_duet`, or `disable_stitch` are omitted for direct post, Mallary falls back to the creator settings returned by TikTok.
 
 ```json
