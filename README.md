@@ -172,7 +172,6 @@ Platform-specific media rules:
 - TikTok video posts require one video, and TikTok photo posts support up to 35 JPEG/WebP images.
 - Pinterest requires exactly one image or GIF, or exactly one video, plus `boardId`.
 - Reddit image posts require one image or GIF, and Reddit video upload is not supported by the current public API path.
-- Google Business currently requires one JPEG or PNG image.
 - X allows up to 4 images, or 1 video, or 1 GIF.
 - Snapchat requires partner/API access before posting can succeed.
 - Full matrix:
@@ -385,29 +384,6 @@ Reddit:
     "reddit": {
       "post_type": "text",
       "subreddit": "socialmedia"
-    }
-  }
-}
-```
-
-Google Business:
-
-- `accountId`: Google Business account id
-- `locationId`: Google Business location id
-- `languageCode`: optional language code, defaults to `en-US`
-- `link`: optional call-to-action URL
-
-```json
-{
-  "message": "We are now taking spring bookings",
-  "platforms": ["google_business"],
-  "media": [{ "url": "./storefront.jpg" }],
-  "platform_options": {
-    "google_business": {
-      "accountId": "1234567890",
-      "locationId": "9876543210",
-      "languageCode": "en-US",
-      "link": "https://example.com/book"
     }
   }
 }

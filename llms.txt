@@ -78,7 +78,6 @@ Platform-specific payloads
   - youtube: `post_type`, `title`, `visibility`, `categoryId`, `madeForKids`
   - pinterest: `post_type`, `boardId`, `link`, `alt_text`
   - reddit: `post_type`, `subreddit` or `subredditName`
-  - google_business: `accountId`, `locationId`, `languageCode`, `link`
   - snapchat: `contentType` or `post_type`
 
 Post enhancements
