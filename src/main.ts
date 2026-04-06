@@ -486,13 +486,14 @@ function getHelpText(commandPath?: string[]): string {
         "Usage: mallary posts create [options]",
         "",
         "Flag mode:",
-        "  mallary posts create --message \"Hello\" --platform facebook --platform instagram [--media ./file.jpg] [--comment \"...\" ] [--scheduled-at <iso>] [--idempotency-key <key>]",
+        "  mallary posts create --message \"Hello\" --platform facebook --platform instagram [--media ./file.jpg] [--comment \"...\" ] [--scheduled-at <time>] [--scheduled-timezone <iana>] [--idempotency-key <key>]",
         "",
         "File mode:",
         "  mallary posts create --file payload.json [--idempotency-key <key>]",
         "",
         "Notes:",
-        "  - --file is mutually exclusive with payload-building flags such as --message, --platform, --media, --comment, --scheduled-at, --auto-reply-enabled, and --webhook-url.",
+        "  - --file is mutually exclusive with payload-building flags such as --message, --platform, --media, --comment, --scheduled-at, --scheduled-timezone, --auto-reply-enabled, and --webhook-url.",
+        "  - Use --scheduled-at with an absolute timestamp like 2026-04-06T18:30:00Z, or pair a local time like 2026-04-06T14:30 with --scheduled-timezone America/New_York.",
         "  - Local media paths are uploaded automatically before the post request.",
       ].join("\n");
     case "posts list":
@@ -640,6 +641,7 @@ async function buildPostPayload(
       media: { type: "string", multiple: true },
       comment: { type: "string", multiple: true },
       "scheduled-at": { type: "string" },
+      "scheduled-timezone": { type: "string" },
       "idempotency-key": { type: "string" },
       "webhook-url": { type: "string" },
       "auto-reply-enabled": { type: "boolean" },
@@ -666,6 +668,7 @@ async function buildPostPayload(
       "media",
       "comment",
       "scheduled-at",
+      "scheduled-timezone",
       "webhook-url",
       "auto-reply-enabled",
     ]);
@@ -717,6 +720,19 @@ async function buildPostPayload(
   }
   if (typeof parsed.values["scheduled-at"] === "string" && parsed.values["scheduled-at"].trim()) {
     payload.scheduled_at = parsed.values["scheduled-at"].trim();
+  }
+  if (
+    typeof parsed.values["scheduled-timezone"] === "string" &&
+    parsed.values["scheduled-timezone"].trim()
+  ) {
+    if (!payload.scheduled_at) {
+      throw new CliError(1, {
+        http_status: 0,
+        code: "invalid_args",
+        message: "--scheduled-timezone requires --scheduled-at.",
+      });
+    }
+    payload.scheduled_timezone = parsed.values["scheduled-timezone"].trim();
   }
   if (typeof parsed.values["webhook-url"] === "string" && parsed.values["webhook-url"].trim()) {
     payload.webhook_url = parsed.values["webhook-url"].trim();

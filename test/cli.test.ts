@@ -301,6 +301,80 @@ describe("mallary cli", () => {
     );
   });
 
+  it("passes scheduled timezone fields through in flag mode", async () => {
+    let postedBody = "";
+
+    await withServer(
+      async (req, res, _state, body) => {
+        if (req.url === "/api/v1/post" && req.method === "POST") {
+          postedBody = body;
+          res.setHeader("content-type", "application/json");
+          res.end(JSON.stringify({ status: "queued", batch_id: "batch-2", jobs: [{ platform: "threads", jobId: "987" }] }));
+          return;
+        }
+        res.statusCode = 404;
+        res.end("not found");
+      },
+      async (baseUrl) => {
+        const stdout = new MemoryWriter();
+        const stderr = new MemoryWriter();
+        const code = await runCli(
+          [
+            "posts",
+            "create",
+            "--message",
+            "Scheduled",
+            "--platform",
+            "threads",
+            "--scheduled-at",
+            "2026-04-06T09:30",
+            "--scheduled-timezone",
+            "America/Los_Angeles",
+            "--json",
+          ],
+          {
+            stdout,
+            stderr,
+            env: { MALLARY_API_KEY: "test" },
+            fetch: createMallaryFetch(baseUrl),
+          }
+        );
+        expect(code).toBe(0);
+        expect(JSON.parse(postedBody)).toEqual({
+          message: "Scheduled",
+          platforms: ["threads"],
+          scheduled_at: "2026-04-06T09:30",
+          scheduled_timezone: "America/Los_Angeles",
+        });
+      }
+    );
+  });
+
+  it("rejects scheduled timezone without scheduled-at", async () => {
+    const stdout = new MemoryWriter();
+    const stderr = new MemoryWriter();
+    const code = await runCli(
+      [
+        "posts",
+        "create",
+        "--message",
+        "Hello",
+        "--platform",
+        "facebook",
+        "--scheduled-timezone",
+        "America/New_York",
+      ],
+      {
+        stdout,
+        stderr,
+        env: { MALLARY_API_KEY: "test" },
+      }
+    );
+
+    expect(code).toBe(1);
+    expect(stderr.toString()).toContain("--scheduled-timezone requires --scheduled-at");
+  });
+
   it("rejects external media URLs in flag mode", async () => {
     const stdout = new MemoryWriter();
     const stderr = new MemoryWriter();

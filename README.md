@@ -124,6 +124,16 @@ mallary posts create \
   --scheduled-at 2026-03-30T15:00:00Z
 ```
 
+Create with a local wall-clock schedule plus timezone:
+
+```bash
+mallary posts create \
+  --message "Timezone-aware launch" \
+  --platform threads \
+  --scheduled-at 2026-04-06T09:30 \
+  --scheduled-timezone America/Los_Angeles
+```
+
 Create from a JSON file:
 
 ```bash
@@ -148,6 +158,8 @@ Example `post.json`:
 Notes:
 
 - `--file` is for raw/advanced payloads and is mutually exclusive with payload-building flags.
+- In flag mode, use `--scheduled-at` with an absolute timestamp like `2026-04-06T18:30:00Z`, or pair a local time like `2026-04-06T14:30` with `--scheduled-timezone America/New_York`.
+- `--scheduled-timezone` requires `--scheduled-at`.
 - In file mode, the CLI checks each `media[].url` value.
 - If `media[].url` is a local file path like `./launch.png`, the CLI uploads that file to the Mallary CDN first, then replaces it with the final hosted Mallary CDN file URL before sending the post request.
 - If `media[].url` is already a remote URL, it must already be hosted on `https://files.mallary.ai/...`. External media URLs are rejected by the CLI.
@@ -173,7 +185,6 @@ Platform-specific media rules:
 - Pinterest requires exactly one image or GIF, or exactly one video, plus `boardId`.
 - Reddit image posts require one image or GIF, and Reddit video upload is not supported by the current public API path.
 - X allows up to 4 images, or 1 video, or 1 GIF.
-- Snapchat requires partner/API access before posting can succeed.
 - Full matrix:
   `https://docs.mallary.ai/api-reference/endpoint/create#platform-specific-media-rules`
 
@@ -183,6 +194,8 @@ Payload shape:
 {
   "message": "Launch update",
   "platforms": ["facebook", "youtube"],
+  "scheduled_at": "2026-04-06T14:30",
+  "scheduled_timezone": "America/New_York",
   "media": [{ "url": "./launch.mp4" }],
   "platform_options": {
     "facebook": {
@@ -296,9 +309,9 @@ TikTok:
 
 Defaults:
 
-- Video posts default to `post_mode=DIRECT_POST` and `source=FILE_UPLOAD`.
-- Photo posts default to `post_mode=DIRECT_POST`.
-- If `privacy_level` is omitted for direct post, Mallary first tries the first allowed privacy level from TikTok creator info, preferring `PUBLIC_TO_EVERYONE`, then `MUTUAL_FOLLOW_FRIENDS`, then `FOLLOWER_OF_CREATOR`, then `SELF_ONLY`. If TikTok rejects that with the unaudited-app private-account restriction, Mallary retries once with the most private allowed level.
+- Video posts default to `post_mode=MEDIA_UPLOAD` and `source=FILE_UPLOAD`.
+- Photo posts default to `post_mode=MEDIA_UPLOAD`.
+- If `privacy_level` is omitted for direct post, Mallary first tries the first allowed privacy level from TikTok creator info, preferring `PUBLIC_TO_EVERYONE`, then `MUTUAL_FOLLOW_FRIENDS`, then `FOLLOWER_OF_CREATOR`, then `SELF_ONLY`. If TikTok returns the private-account-only direct-post restriction, Mallary retries once with the most private allowed level.
 - If `disable_comment`, `disable_duet`, or `disable_stitch` are omitted for direct post, Mallary falls back to the creator settings returned by TikTok.
 
 ```json
@@ -384,24 +397,6 @@ Reddit:
     "reddit": {
       "post_type": "text",
       "subreddit": "socialmedia"
-    }
-  }
-}
-```
-
-Snapchat:
-
-- `contentType` or `post_type`: `story`, `saved_story`, or `spotlight`
-- Snapchat posting also requires Snapchat partner/API access to be enabled for your Mallary deployment
-
-```json
-{
-  "message": "Behind the scenes",
-  "platforms": ["snapchat"],
-  "media": [{ "url": "./story.mp4" }],
-  "platform_options": {
-    "snapchat": {
-      "contentType": "spotlight"
     }
   }
 }
