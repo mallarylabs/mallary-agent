@@ -484,6 +484,85 @@ describe("mallary cli", () => {
     );
   });
 
+  it("shows needs-final-action text for TikTok media upload in posts list and job output", async () => {
+    await withServer(
+      async (req, res) => {
+        if (req.url === "/api/v1/posts" && req.method === "GET") {
+          res.setHeader("content-type", "application/json");
+          res.end(
+            JSON.stringify({
+              status: "ok",
+              data: {
+                posts: [
+                  {
+                    id: 506,
+                    status: "action_required",
+                    platforms: ["tiktok"],
+                    message: "Hello TikTok",
+                    created_at: "2026-04-06T22:38:21Z",
+                    results: [
+                      {
+                        platform: "tiktok",
+                        success: false,
+                        action_required: {
+                          code: "tiktok_complete_publish_required",
+                          type: "complete_platform_publish",
+                          platform: "tiktok",
+                          title: "Needs final action in TikTok",
+                          message:
+                            "TikTok upload delivered to the creator inbox. The creator must finish editing and posting in TikTok.",
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+            })
+          );
+          return;
+        }
+        if (req.url === "/api/v1/jobs/506" && req.method === "GET") {
+          res.setHeader("content-type", "application/json");
+          res.end(
+            JSON.stringify({
+              status: "ok",
+              data: {
+                job: {
+                  id: 506,
+                  status: "action_required",
+                  attemptsMade: 1,
+                  action_required: {
+                    code: "tiktok_complete_publish_required",
+                    type: "complete_platform_publish",
+                    platform: "tiktok",
+                    title: "Needs final action in TikTok",
+                    message:
+                      "TikTok upload delivered to the creator inbox. The creator must finish editing and posting in TikTok.",
+                  },
+                },
+              },
+            })
+          );
+          return;
+        }
+        res.statusCode = 404;
+        res.end("not found");
+      },
+      async (baseUrl) => {
+        const env = { MALLARY_API_KEY: "test" };
+        const fetch = createMallaryFetch(baseUrl);
+
+        const postsOut = new MemoryWriter();
+        expect(await runCli(["posts", "list"], { stdout: postsOut, stderr: new MemoryWriter(), env, fetch })).toBe(0);
+        expect(postsOut.toString()).toContain("Needs final action in TikTok");
+
+        const jobOut = new MemoryWriter();
+        expect(await runCli(["jobs", "get", "506"], { stdout: jobOut, stderr: new MemoryWriter(), env, fetch })).toBe(0);
+        expect(jobOut.toString()).toContain("Action: Needs final action in TikTok");
+      }
+    );
+  });
+
   it("updates settings from a JSON file", async () => {
     const settingsFile = await makeTempFile("settings.json", JSON.stringify({ business_name: "Mallary" }));
     let receivedBody = "";

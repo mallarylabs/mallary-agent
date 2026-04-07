@@ -90,6 +90,23 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === "object" && !Array.isArray(value);
 }
 
+function extractActionRequired(value: unknown): JsonRecord | null {
+  return isObject(value) ? (value as JsonRecord) : null;
+}
+
+function extractPostActionRequired(post: unknown): JsonRecord | null {
+  if (!isObject(post)) return null;
+  const direct = extractActionRequired(post.action_required);
+  if (direct) return direct;
+  const results = Array.isArray(post.results) ? post.results : [];
+  for (const result of results) {
+    if (!isObject(result)) continue;
+    const action = extractActionRequired(result.action_required);
+    if (action) return action;
+  }
+  return null;
+}
+
 function extractApiError(status: number, body: unknown, raw: string): ApiErrorPayload {
   const obj = isObject(body) ? body : null;
   const topError = obj && isObject(obj.error) ? obj.error : null;
@@ -810,6 +827,16 @@ async function runPostsList(deps: CliDeps, baseUrl: string, args: string[]): Pro
         `- ${formatValue(post.id)} | ${formatValue(post.status)} | ${formatValue(post.platforms)} | ${formatValue(post.created_at)}`
       );
       writeLine(stdout, `  ${String(post.message || "").slice(0, 120)}`);
+      const actionRequired = extractPostActionRequired(post);
+      if (actionRequired?.title || actionRequired?.message) {
+        writeLine(
+          stdout,
+          `  ${String(actionRequired.title || actionRequired.message || "Action required")}`
+        );
+        if (actionRequired.message && actionRequired.message !== actionRequired.title) {
+          writeLine(stdout, `  ${String(actionRequired.message)}`);
+        }
+      }
     });
   });
 }
@@ -871,6 +898,13 @@ async function runJobGet(deps: CliDeps, baseUrl: string, args: string[]): Promis
     writeLine(stdout, `Job ${formatValue(job.id || id)}`);
     writeLine(stdout, `Status: ${formatValue(job.status)}`);
     writeLine(stdout, `Attempts: ${formatValue(job.attemptsMade)}`);
+    const actionRequired = extractActionRequired(job.action_required);
+    if (actionRequired?.title || actionRequired?.message) {
+      writeLine(stdout, `Action: ${formatValue(actionRequired.title || actionRequired.message)}`);
+      if (actionRequired.message && actionRequired.message !== actionRequired.title) {
+        writeLine(stdout, `Message: ${formatValue(actionRequired.message)}`);
+      }
+    }
     if (job.error) writeLine(stdout, `Error: ${formatValue(job.error)}`);
     if (job.result) {
       writeLine(stdout, "Result:");
