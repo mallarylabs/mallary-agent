@@ -519,6 +519,8 @@ function getHelpText(commandPath?: string[]): string {
       return "Usage: mallary posts delete <id> [--json]";
     case "jobs get":
       return "Usage: mallary jobs get <id> [--json]";
+    case "jobs attach-tiktok-url":
+      return "Usage: mallary jobs attach-tiktok-url <id> --url <tiktok_video_url> [--json]";
     case "analytics list":
       return "Usage: mallary analytics list [--post-id <id>] [--json]";
     case "webhooks list":
@@ -545,6 +547,7 @@ function getHelpText(commandPath?: string[]): string {
         "  upload <file...>",
         "  posts create|list|delete",
         "  jobs get <id>",
+        "  jobs attach-tiktok-url <id> --url <tiktok_video_url>",
         "  analytics list",
         "  webhooks list|create|delete",
         "  settings get|update",
@@ -913,6 +916,61 @@ async function runJobGet(deps: CliDeps, baseUrl: string, args: string[]): Promis
   });
 }
 
+async function runJobAttachTikTokUrl(
+  deps: CliDeps,
+  baseUrl: string,
+  args: string[]
+): Promise<CommandResult> {
+  const apiKey = ensureApiKey(deps.env);
+  const parsed = parseArgs({
+    args,
+    allowPositionals: true,
+    strict: true,
+    options: {
+      help: { type: "boolean", short: "h" },
+      url: { type: "string" },
+    },
+  });
+  if (parsed.values.help) {
+    return result(
+      { help: getHelpText(["jobs", "attach-tiktok-url"]) },
+      (stdout) => writeLine(stdout, getHelpText(["jobs", "attach-tiktok-url"]))
+    );
+  }
+  const id = parseSinglePositional("id", parsed.positionals[0]);
+  const postUrl = String(parsed.values.url || "").trim();
+  if (!postUrl) {
+    throw new CliError(1, {
+      http_status: 0,
+      code: "missing_url",
+      message: "--url is required.",
+    });
+  }
+  const response = await apiRequest(deps, {
+    method: "POST",
+    baseUrl,
+    requestPath: `/api/v1/jobs/${encodeURIComponent(id)}/tiktok/post-url`,
+    apiKey,
+    body: {
+      post_url: postUrl,
+    },
+  });
+  return result(response, (stdout) => {
+    const data =
+      isObject(response) && isObject(response.data) ? (response.data as JsonRecord) : null;
+    writeLine(stdout, `Updated TikTok job ${formatValue(data?.job_id || id)}.`);
+    if (data?.platform_post_id) {
+      writeLine(stdout, `Post ID: ${formatValue(data.platform_post_id)}`);
+    }
+    if (data?.platform_post_url) {
+      writeLine(stdout, `Post URL: ${formatValue(data.platform_post_url)}`);
+    }
+    if (data?.analytics_refresh) {
+      writeLine(stdout, "Analytics refresh queued.");
+    }
+  });
+}
+
 async function runAnalyticsList(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
   const apiKey = ensureApiKey(deps.env);
   const parsed = parseArgs({
@@ -1164,10 +1222,11 @@ async function dispatchCommand(deps: CliDeps, globals: GlobalOptions): Promise<C
       }
     case "jobs":
       if (subcommand === "get") return runJobGet(deps, baseUrl, rest);
+      if (subcommand === "attach-tiktok-url") return runJobAttachTikTokUrl(deps, baseUrl, rest);
       throw new CliError(1, {
         http_status: 0,
         code: "invalid_command",
-        message: "Unknown jobs subcommand. Use get.",
+        message: "Unknown jobs subcommand. Use get or attach-tiktok-url.",
       });
     case "analytics":
       if (subcommand === "list") return runAnalyticsList(deps, baseUrl, rest);

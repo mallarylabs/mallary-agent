@@ -563,6 +563,60 @@ describe("mallary cli", () => {
     );
   });
 
+  it("attaches a final TikTok post URL through the jobs command", async () => {
+    let receivedBody = "";
+
+    await withServer(
+      async (req, res, _state, body) => {
+        if (req.url === "/api/v1/jobs/506/tiktok/post-url" && req.method === "POST") {
+          receivedBody = body;
+          res.setHeader("content-type", "application/json");
+          res.end(
+            JSON.stringify({
+              status: "ok",
+              data: {
+                job_id: 506,
+                platform: "tiktok",
+                platform_post_id: "7625779234505754638",
+                platform_post_url: "https://www.tiktok.com/@mallary/video/7625779234505754638",
+                analytics_refresh: "queued",
+              },
+            })
+          );
+          return;
+        }
+        res.statusCode = 404;
+        res.end("not found");
+      },
+      async (baseUrl) => {
+        const stdout = new MemoryWriter();
+        const stderr = new MemoryWriter();
+        const code = await runCli(
+          [
+            "jobs",
+            "attach-tiktok-url",
+            "506",
+            "--url",
+            "https://www.tiktok.com/@mallary/video/7625779234505754638",
+          ],
+          {
+            stdout,
+            stderr,
+            env: { MALLARY_API_KEY: "test" },
+            fetch: createMallaryFetch(baseUrl),
+          }
+        );
+        expect(code).toBe(0);
+        expect(JSON.parse(receivedBody)).toEqual({
+          post_url: "https://www.tiktok.com/@mallary/video/7625779234505754638",
+        });
+        expect(stdout.toString()).toContain("Updated TikTok job 506.");
+        expect(stdout.toString()).toContain("Analytics refresh queued.");
+        expect(stderr.toString()).toBe("");
+      }
+    );
+  });
+
   it("updates settings from a JSON file", async () => {
     const settingsFile = await makeTempFile("settings.json", JSON.stringify({ business_name: "Mallary" }));
     let receivedBody = "";
