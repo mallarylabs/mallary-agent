@@ -21,13 +21,13 @@ mallary upload clip.webm
 
 ### Images
 
-| Extension | MIME Type | Supported |
-|-----------|-----------|-----------|
-| `.png` | `image/png` | Yes |
-| `.jpg`, `.jpeg` | `image/jpeg` | Yes |
-| `.webp` | `image/webp` | Yes |
-| `.gif` | `image/gif` | Yes |
-| `.bmp` | `image/bmp` | Yes |
+| Extension       | MIME Type    | Supported |
+| --------------- | ------------ | --------- |
+| `.png`          | `image/png`  | Yes       |
+| `.jpg`, `.jpeg` | `image/jpeg` | Yes       |
+| `.webp`         | `image/webp` | Yes       |
+| `.gif`          | `image/gif`  | Yes       |
+| `.bmp`          | `image/bmp`  | Yes       |
 
 Examples:
 
@@ -40,14 +40,14 @@ mallary upload cover.webp
 
 ### Videos
 
-| Extension | MIME Type | Supported |
-|-----------|-----------|-----------|
-| `.mp4` | `video/mp4` | Yes |
-| `.mov` | `video/quicktime` | Yes |
-| `.webm` | `video/webm` | Yes |
-| `.mkv` | `video/x-matroska` | Yes |
-| `.avi` | `video/x-msvideo` | Yes |
-| `.mpeg`, `.mpg` | `video/mpeg` | Yes |
+| Extension       | MIME Type          | Supported |
+| --------------- | ------------------ | --------- |
+| `.mp4`          | `video/mp4`        | Yes       |
+| `.mov`          | `video/quicktime`  | Yes       |
+| `.webm`         | `video/webm`       | Yes       |
+| `.mkv`          | `video/x-matroska` | Yes       |
+| `.avi`          | `video/x-msvideo`  | Yes       |
+| `.mpeg`, `.mpg` | `video/mpeg`       | Yes       |
 
 Examples:
 
@@ -60,12 +60,12 @@ mallary upload demo.mkv
 
 ### Audio
 
-| Extension | MIME Type | Supported |
-|-----------|-----------|-----------|
-| `.mp3` | `application/octet-stream` | No |
-| `.wav` | `application/octet-stream` | No |
-| `.ogg` | `application/octet-stream` | No |
-| `.m4a` | `application/octet-stream` | No |
+| Extension | MIME Type                  | Supported |
+| --------- | -------------------------- | --------- |
+| `.mp3`    | `application/octet-stream` | No        |
+| `.wav`    | `application/octet-stream` | No        |
+| `.ogg`    | `application/octet-stream` | No        |
+| `.m4a`    | `application/octet-stream` | No        |
 
 Notes:
 
@@ -74,11 +74,11 @@ Notes:
 
 ### Documents
 
-| Extension | MIME Type | Supported |
-|-----------|-----------|-----------|
-| `.pdf` | `application/octet-stream` | No |
-| `.doc` | `application/octet-stream` | No |
-| `.docx` | `application/octet-stream` | No |
+| Extension | MIME Type                  | Supported |
+| --------- | -------------------------- | --------- |
+| `.pdf`    | `application/octet-stream` | No        |
+| `.doc`    | `application/octet-stream` | No        |
+| `.docx`   | `application/octet-stream` | No        |
 
 If you need a document-style asset, convert or export it into an image or video format that the destination platform supports.
 
@@ -163,23 +163,6 @@ mallary upload image1.jpg image2.png image3.gif
 
 # Upload videos
 mallary upload video1.mp4 video2.mov
-```
-
-## What Changed (Fix)
-
-### Before
-
-```bash
-# Older generic skill docs implied any media-like file could be uploaded
-# and used in the same way across platforms.
-```
-
-### After
-
-```bash
-# Mallary's public CLI is documented correctly:
-# image and video uploads are supported
-# unsupported file categories should be converted before upload
 ```
 
 ## Platform-Specific Notes
