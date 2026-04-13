@@ -1,12 +1,15 @@
 ---
 name: mallary
 description: Mallary is a multi-platform social media publishing tool for X, Facebook, Instagram, LinkedIn, YouTube, TikTok, Pinterest, Reddit, Threads, and Snapchat. Use it to upload media, create and schedule posts, inspect jobs, fetch analytics, manage webhooks, update brand settings, and support developer or AI-agent publishing workflows.
-homepage: https://docs.mallary.ai/
+version: 1.0.1
+homepage: https://mallary.ai/
 metadata:
-  {
-    "openclaw":
-      { "emoji": "🌎", "requires": { "bins": [], "env": ["MALLARY_API_KEY"] } },
-  }
+  openclaw:
+    emoji: "🌎"
+    requires:
+      bins: []
+      env:
+        - MALLARY_API_KEY
 ---
 
 ## Install Mallary if it doesn't exist
