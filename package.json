@@ -1,6 +1,6 @@
 {
   "name": "@mallary/cli",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Official Mallary.ai CLI for social media posting, analytics, uploads, and webhook management.",
   "homepage": "https://github.com/mallarylabs/mallary-agent#readme",
   "bugs": {
