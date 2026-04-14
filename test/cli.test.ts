@@ -661,6 +661,25 @@ describe("mallary cli", () => {
           res.end(JSON.stringify({ status: "ok", data: { job: { id: 123, status: "completed" } } }));
           return;
         }
+        if (req.url === "/api/v1/platforms" && req.method === "GET") {
+          res.setHeader("content-type", "application/json");
+          res.end(
+            JSON.stringify({
+              status: "ok",
+              data: {
+                platforms: [
+                  { platform: "x", connected: true },
+                  { platform: "facebook", connected: false },
+                  { platform: "instagram", connected: true },
+                ],
+                connected: ["x", "instagram"],
+                disconnected: ["facebook"],
+                counts: { connected: 2, supported: 3 },
+              },
+            })
+          );
+          return;
+        }
         if (req.url === "/api/v1/disconnect" && req.method === "POST") {
           res.setHeader("content-type", "application/json");
           res.end(JSON.stringify({ status: "ok", platform: "facebook" }));
@@ -695,6 +714,10 @@ describe("mallary cli", () => {
         const jobOut = new MemoryWriter();
         expect(await runCli(["jobs", "get", "123", "--json"], { stdout: jobOut, stderr: new MemoryWriter(), env, fetch })).toBe(0);
         expect(JSON.parse(jobOut.toString()).data.job.status).toBe("completed");
+
+        const platformsOut = new MemoryWriter();
+        expect(await runCli(["platforms", "list", "--json"], { stdout: platformsOut, stderr: new MemoryWriter(), env, fetch })).toBe(0);
+        expect(JSON.parse(platformsOut.toString()).data.connected).toEqual(["x", "instagram"]);
 
         const disconnectOut = new MemoryWriter();
         expect(await runCli(["platforms", "disconnect", "facebook", "--json"], { stdout: disconnectOut, stderr: new MemoryWriter(), env, fetch })).toBe(0);

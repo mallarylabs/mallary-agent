@@ -9,6 +9,7 @@ Purpose
 - Fetch analytics
 - Manage webhooks
 - Read and update brand/settings data
+- List connected platforms
 - Disconnect connected platforms
 
 Install
@@ -38,6 +39,7 @@ Command inventory
 - mallary webhooks delete <id>
 - mallary settings get
 - mallary settings update --file partial.json
+- mallary platforms list
 - mallary platforms disconnect <platform>
 
 Output conventions

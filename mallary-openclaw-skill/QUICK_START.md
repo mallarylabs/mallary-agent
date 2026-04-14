@@ -95,10 +95,10 @@ mallary posts delete 123
 
 ### Check Connected Platforms
 
-Mallary CLI does not currently expose a `platforms list` or `integrations list` command. Connected accounts are managed in the Mallary dashboard. Use the platform names directly in CLI commands, for example:
+Use `platforms list` to see which supported Mallary platforms are currently connected for your authenticated account:
 
 ```bash
-mallary posts create --message "Hello" --platform facebook --platform youtube
+mallary platforms list
 ```
 
 ### Upload Media
@@ -117,7 +117,7 @@ mallary upload ./path/to/video.mp4 --json
 mallary health
 ```
 
-Then confirm your connected accounts in the Mallary dashboard before posting.
+Then confirm your connected accounts with `mallary platforms list` or in the Mallary dashboard before posting.
 
 ### 2. Create Multi-Platform Post
 

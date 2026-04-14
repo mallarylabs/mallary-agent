@@ -31,6 +31,7 @@ npm link
 mallary --help
 mallary posts list
 mallary posts create --message "Hello!" --platform facebook
+mallary platforms list
 
 # To unlink later
 npm unlink -g @mallary/cli
@@ -47,6 +48,7 @@ npm run build
 npm run start -- --help
 npm run start -- posts list
 npm run start -- posts create --message "Hello" --platform facebook
+npm run start -- platforms list
 ```
 
 ## Option 4: Use npm/npx (Published Package)
@@ -164,6 +166,9 @@ export MALLARY_API_KEY=your_key
 
 # Health check
 mallary health
+
+# List connected platforms
+mallary platforms list
 
 # Create a test post
 mallary posts create \

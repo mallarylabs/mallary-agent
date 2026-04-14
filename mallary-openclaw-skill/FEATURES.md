@@ -2,7 +2,7 @@
 
 ## Complete Feature Set
 
-Mallary CLI is the official command-line interface for Mallary.ai. It is designed for developers, operators, CI jobs, and AI agents that need to upload media, create posts, inspect jobs, fetch analytics, manage webhooks, update brand settings, and disconnect platforms from one command surface.
+Mallary CLI is the official command-line interface for Mallary.ai. It is designed for developers, operators, CI jobs, and AI agents that need to upload media, create posts, inspect jobs, fetch analytics, manage webhooks, update brand settings, list connected platforms, and disconnect platforms from one command surface.
 
 The CLI mirrors the public Mallary API. It does not bypass plan limits, feature gates, connected-account requirements, or platform validation rules.
 
@@ -40,6 +40,7 @@ Mallary supports both simple post creation and advanced payload-based publishing
 - Analytics fetching
 - Webhook management
 - Settings read/update
+- Connected platform listing
 - TikTok post URL attachment for inbox-style TikTok workflows
 
 ## Usage Modes
@@ -257,4 +258,5 @@ Mallary CLI supports the complete public Mallary publishing workflow:
 - fetch analytics
 - manage webhooks
 - manage brand settings
+- list connected platforms
 - disconnect platforms

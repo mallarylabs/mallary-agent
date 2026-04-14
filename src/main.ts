@@ -533,6 +533,8 @@ function getHelpText(commandPath?: string[]): string {
       return "Usage: mallary settings get [--json]";
     case "settings update":
       return "Usage: mallary settings update --file partial.json [--json]";
+    case "platforms list":
+      return "Usage: mallary platforms list [--json]";
     case "platforms disconnect":
       return "Usage: mallary platforms disconnect <platform> [--json]";
     default:
@@ -551,7 +553,7 @@ function getHelpText(commandPath?: string[]): string {
         "  analytics list",
         "  webhooks list|create|delete",
         "  settings get|update",
-        "  platforms disconnect <platform>",
+        "  platforms list|disconnect",
         "",
         "Global options:",
         "  --json",
@@ -1187,6 +1189,55 @@ async function runPlatformsDisconnect(deps: CliDeps, baseUrl: string, args: stri
   });
 }
 
+async function runPlatformsList(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
+  const apiKey = ensureApiKey(deps.env);
+  const parsed = parseArgs({
+    args,
+    allowPositionals: true,
+    strict: true,
+    options: { help: { type: "boolean", short: "h" } },
+  });
+  if (parsed.values.help) {
+    return result({ help: getHelpText(["platforms", "list"]) }, (stdout) => writeLine(stdout, getHelpText(["platforms", "list"])));
+  }
+  const response = await apiRequest(deps, {
+    method: "GET",
+    baseUrl,
+    requestPath: "/api/v1/platforms",
+    apiKey,
+  });
+  return result(response, (stdout) => {
+    const data = isObject(response) && isObject(response.data) ? (response.data as JsonRecord) : null;
+    const connected = Array.isArray(data?.connected)
+      ? data.connected.map((item) => String(item)).filter(Boolean)
+      : [];
+    const platformRows = Array.isArray(data?.platforms) ? data.platforms : [];
+    const supportedCount =
+      isObject(data?.counts) && Number.isFinite(Number((data.counts as JsonRecord).supported))
+        ? Number((data.counts as JsonRecord).supported)
+        : platformRows.length;
+
+    writeLine(stdout, `Connected platforms (${connected.length}/${supportedCount})`);
+    if (connected.length === 0) {
+      writeLine(stdout, "None");
+    } else {
+      connected.forEach((platform) => writeLine(stdout, `- ${platform}`));
+    }
+
+    if (platformRows.length > 0) {
+      writeLine(stdout);
+      printHeading(stdout, "All supported platforms");
+      platformRows.forEach((item) => {
+        if (!isObject(item)) return;
+        writeLine(
+          stdout,
+          `- ${formatValue(item.platform)}: ${item.connected === true ? "connected" : "not connected"}`
+        );
+      });
+    }
+  });
+}
+
 async function dispatchCommand(deps: CliDeps, globals: GlobalOptions): Promise<CommandResult> {
   const [command, subcommand, ...rest] = globals.argv;
   const baseUrl = DEFAULT_BASE_URL;
@@ -1264,11 +1315,12 @@ async function dispatchCommand(deps: CliDeps, globals: GlobalOptions): Promise<C
           });
       }
     case "platforms":
+      if (subcommand === "list") return runPlatformsList(deps, baseUrl, rest);
       if (subcommand === "disconnect") return runPlatformsDisconnect(deps, baseUrl, rest);
       throw new CliError(1, {
         http_status: 0,
         code: "invalid_command",
-        message: "Unknown platforms subcommand. Use disconnect.",
+        message: "Unknown platforms subcommand. Use list or disconnect.",
       });
     default:
       throw new CliError(1, {

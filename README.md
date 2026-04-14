@@ -10,6 +10,7 @@ With the CLI you can:
 - fetch post analytics
 - manage webhooks
 - manage your brand settings
+- list connected platforms
 - disconnect platforms
 
 Mallary CLI is a direct client for the public Mallary.ai API. It does not bypass plan limits, feature gates, or platform rules. CLI access is available on paid plans only.
@@ -84,6 +85,12 @@ Inspect one job:
 
 ```bash
 mallary jobs get 123
+```
+
+List your connected platforms:
+
+```bash
+mallary platforms list
 ```
 
 ## Commands
@@ -581,6 +588,12 @@ Notes:
 - Enabling `auto_reply_enabled` also requires these settings fields to be populated: `business_name`, `website_url`, `business_description`, `services`, and `contact_info`.
 
 ### Platforms
+
+List your connected platforms against Mallary's full supported platform set:
+
+```bash
+mallary platforms list
+```
 
 Disconnect a platform:
 

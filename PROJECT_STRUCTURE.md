@@ -2,7 +2,7 @@
 
 ## Overview
 
-Mallary CLI is the official command-line interface for the public Mallary API. It is designed for developers, operators, and AI agents that need to automate media uploads, posting, scheduling, analytics, settings, webhooks, and platform disconnects.
+Mallary CLI is the official command-line interface for the public Mallary API. It is designed for developers, operators, and AI agents that need to automate media uploads, posting, scheduling, analytics, settings, connected platform listing, webhooks, and platform disconnects.
 
 ## Directory Structure
 
@@ -188,7 +188,10 @@ Human output or --json output
 10. `settings get|update`
    - read or partially update account settings
 
-11. `platforms disconnect <platform>`
+11. `platforms list`
+   - list Mallary-supported platforms and show which are connected
+
+12. `platforms disconnect <platform>`
    - disconnect a connected social platform
 
 ## Environment Variables
@@ -231,7 +234,8 @@ Human output or --json output
 8. `GET /api/v1/analytics`
 9. `GET/POST/DELETE /api/v1/webhooks`
 10. `GET/POST /api/v1/settings`
-11. `POST /api/v1/disconnect`
+11. `GET /api/v1/platforms`
+12. `POST /api/v1/disconnect`
 
 Authentication:
 

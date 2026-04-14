@@ -1,6 +1,6 @@
 ---
 name: mallary
-description: Mallary is a multi-platform social media publishing tool for X, Facebook, Instagram, LinkedIn, YouTube, TikTok, Pinterest, Reddit, Threads, and Snapchat. Use it to upload media, create and schedule posts, inspect jobs, fetch analytics, manage webhooks, update brand settings, and support developer or AI-agent publishing workflows.
+description: Mallary is a multi-platform social media publishing tool for X, Facebook, Instagram, LinkedIn, YouTube, TikTok, Pinterest, Reddit, Threads, and Snapchat. Use it to upload media, create and schedule posts, inspect jobs, fetch analytics, list connected platforms, manage webhooks, update brand settings, and support developer or AI-agent publishing workflows.
 version: 1.0.1
 homepage: https://mallary.ai/
 metadata:
@@ -106,16 +106,22 @@ There is no OAuth login command and no custom API URL override in the public CLI
 
 ### Integration Discovery
 
-Mallary does not expose a public integration-discovery command family in the CLI.
+Mallary exposes a lightweight connected-platform discovery command in the CLI.
 
 Instead, use:
 
 ```bash
-# Inspect saved account-level settings
-mallary settings get
+# List supported platforms and see which are connected
+mallary platforms list
 
 # Build advanced posts from a JSON payload
 mallary posts create --file post.json
+```
+
+You can also inspect saved account-level settings:
+
+```bash
+mallary settings get
 ```
 
 For platform-specific fields, use:
@@ -170,6 +176,9 @@ mallary posts delete 123
 
 # Get job status
 mallary jobs get 123
+
+# List connected platforms
+mallary platforms list
 
 # Disconnect a platform
 mallary platforms disconnect facebook
@@ -690,7 +699,7 @@ If a user is building app integrations, prefer the REST API. If a user is buildi
 
 1. **Missing API key** - Set `export MALLARY_API_KEY=key` before using authenticated commands
 2. **CLI is plan-gated** - Free plans cannot use the Mallary CLI
-3. **No integration discovery commands** - use `mallary settings get`, local docs, and `platform_options` instead
+3. **Connected-platform discovery is limited** - use `mallary platforms list` to see connected accounts, and use local docs plus `platform_options` for platform-specific payload details
 4. **External media URLs are rejected** - remote media must already be hosted on `https://files.mallary.ai/...`
 5. **Use file mode for advanced settings** - `mallary posts create --file payload.json`
 6. **`--scheduled-timezone` requires `--scheduled-at`** - the timezone flag cannot stand alone
@@ -710,6 +719,7 @@ export MALLARY_API_KEY=key                                # Required for authent
 mallary health                                            # Health check (no auth needed)
 
 # Discovery
+mallary platforms list                                   # List supported platforms and current connections
 mallary settings get                                      # Get saved account settings
 mallary posts create --file payload.json                  # Advanced post payload
 
