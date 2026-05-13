@@ -17,8 +17,9 @@ npx @mallary/cli --help
 ### 1. Get Your API Key
 
 1. Sign in to your Mallary account at https://mallary.ai
-2. Connect the social accounts you plan to publish to
-3. Copy your API key from your Mallary dashboard
+2. Select the intended **Dashboard profile** in the top profile bar
+3. Connect the social accounts you plan to publish to for that profile
+4. Copy your API key from your Mallary dashboard
 
 ### 2. Set Environment Variable
 
@@ -46,7 +47,10 @@ source ~/.zshrc
 ```bash
 mallary --help
 mallary health
+mallary profiles list
 ```
+
+`mallary profiles list` shows each profile and its ID. Omit `--profile-id` to use the default profile.
 
 ## Basic Commands
 
@@ -55,6 +59,9 @@ mallary health
 ```bash
 # Simple post
 mallary posts create --message "Hello World!" --platform facebook
+
+# Post from a non-default Dashboard profile
+mallary posts create --message "Hello World!" --platform facebook --profile-id AbC123xYz90
 
 # Post with multiple images
 mallary posts create \
@@ -83,6 +90,9 @@ mallary posts create \
 # List all posts
 mallary posts list
 
+# List posts for a non-default Dashboard profile
+mallary posts list --profile-id AbC123xYz90
+
 # With pagination
 mallary posts list --page 2 --per-page 20
 ```
@@ -95,10 +105,12 @@ mallary posts delete 123
 
 ### Check Connected Platforms
 
-Use `platforms list` to see which supported Mallary platforms are currently connected for your authenticated account:
+Use `profiles list` to find profile IDs, then use `platforms list` to see which supported Mallary platforms are connected for the default or selected profile:
 
 ```bash
+mallary profiles list
 mallary platforms list
+mallary platforms list --profile-id AbC123xYz90
 ```
 
 ### Upload Media
@@ -117,7 +129,7 @@ mallary upload ./path/to/video.mp4 --json
 mallary health
 ```
 
-Then confirm your connected accounts with `mallary platforms list` or in the Mallary dashboard before posting.
+Then confirm your connected accounts with `mallary platforms list` or in the Mallary dashboard before posting. Select the intended Dashboard profile before connecting accounts in the dashboard.
 
 ### 2. Create Multi-Platform Post
 
@@ -126,7 +138,8 @@ mallary posts create \
   --message "Posting to multiple platforms!" \
   --platform facebook \
   --platform linkedin \
-  --platform x
+  --platform x \
+  --profile-id AbC123xYz90
 ```
 
 ### 3. Schedule Multiple Posts
@@ -162,6 +175,9 @@ mallary posts list --json | jq '.data.posts[] | .id'
 
 # Get analytics rows
 mallary analytics list --json | jq '.data.analytics[] | .platform'
+
+# Get profile IDs
+mallary profiles list --json | jq '.data.profiles[] | .id'
 ```
 
 ### Script Automation
@@ -174,6 +190,7 @@ for hour in 09 12 15 18; do
   mallary posts create \
     --message "Automated post at ${hour}:00" \
     --platform facebook \
+    --profile-id AbC123xYz90 \
     --scheduled-at "2026-04-20T${hour}:00:00Z"
   echo "Created post for ${hour}:00"
 done
@@ -219,6 +236,8 @@ Common causes:
 - your API key is invalid
 - your plan does not include CLI access
 - the target platform is not connected
+- the target platform is connected to a different Dashboard profile
+- you passed an unknown profile ID; run `mallary profiles list`
 - the media does not meet the target platform’s rules
 - you passed an external remote media URL instead of a Mallary-hosted one
 
@@ -239,13 +258,15 @@ node cli/dist/index.js help analytics list
 1. try `mallary upload ./file.png`
 2. create a simple post with `mallary posts create`
 3. move to file mode with `mallary posts create --file payload.json` for advanced platform options
-4. fetch analytics with `mallary analytics list`
-5. configure AI auto reply settings with `mallary settings update --file ...`
+4. target non-default profiles with `mallary profiles list` and `--profile-id`
+5. fetch analytics with `mallary analytics list`
+6. configure AI auto reply settings with `mallary settings update --file ... --profile-id ...`
 
 ## Links
 
 - Main site: https://mallary.ai
 - Docs: https://docs.mallary.ai
+- Profiles reference: [PROFILES.md](./PROFILES.md)
 - Pricing: https://mallary.ai/pricing
 - Repository: https://github.com/mallarylabs/mallary-agent
 - Support: support@mallary.ai

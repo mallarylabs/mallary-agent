@@ -2,6 +2,8 @@
 
 The Mallary CLI supports platform-specific publishing settings through JSON file mode. Different platforms have different options and media rules, so the safest path is to use `mallary posts create --file payload.json` whenever you need `platform_options`.
 
+Provider settings are independent of profiles. Omit `--profile-id` or `profile_id` to use the default profile. Use `mallary profiles list` to find the profile ID for a non-default profile, then pass `--profile-id` in flag mode or `profile_id` in file mode.
+
 ## How to Use Provider Settings
 
 ### Method 1: Command Line Flags
@@ -12,6 +14,7 @@ Use command-line flags for shared fields:
 mallary posts create \
   --message "Your content" \
   --platform facebook \
+  --profile-id AbC123xYz90 \
   --media ./launch.png
 ```
 
@@ -27,6 +30,7 @@ In the JSON file, specify platform-specific settings under `platform_options`:
 
 ```json
 {
+  "profile_id": "AbC123xYz90",
   "message": "Post content",
   "platforms": ["reddit"],
   "platform_options": {

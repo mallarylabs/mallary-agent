@@ -2,7 +2,7 @@
 
 ## Overview
 
-Mallary CLI is the official command-line interface for the public Mallary API. It is designed for developers, operators, and AI agents that need to automate media uploads, posting, scheduling, analytics, settings, connected platform listing, webhooks, and platform disconnects.
+Mallary CLI is the official command-line interface for the public Mallary API. It is designed for developers, operators, and AI agents that need to automate media uploads, posting, scheduling, analytics, dashboard profile targeting, profile-scoped settings, connected platform listing, webhooks, and platform disconnects.
 
 ## Directory Structure
 
@@ -25,11 +25,10 @@ cli/
 ├── package-lock.json             # npm lockfile
 ├── tsconfig.json                 # TypeScript configuration
 ├── .gitignore                    # Git ignore rules
-├── llms.txt                      # Compact AI-agent command summary
-│
 ├── README.md                     # Main documentation
 ├── SKILL.md                      # AI agent usage guide
 ├── QUICK_START.md                # Quick start guide
+├── PROFILES.md                   # Profile IDs, scoping, API endpoints, and limits
 ├── PROJECT_STRUCTURE.md          # This file
 ├── FEATURES.md                   # Feature summary
 ├── PROVIDER_SETTINGS.md          # Platform-specific posting fields
@@ -89,6 +88,11 @@ cli/
 #### `QUICK_START.md`
 
 - shortest path from install to first post
+
+#### `PROFILES.md`
+
+- explains profiles, public profile IDs, profile-scoped resources, and plan limits
+- documents profile-aware CLI flags and API endpoints
 
 #### `PROJECT_STRUCTURE.md`
 
@@ -182,17 +186,20 @@ Human output or --json output
 8. `analytics list`
    - fetch analytics rows
 
-9. `webhooks list|create|delete`
+9. `profiles list`
+   - list profiles and their profile IDs
+
+10. `webhooks list|create|delete`
    - manage webhook endpoints
 
-10. `settings get|update`
-   - read or partially update account settings
+11. `settings get|update`
+   - read or partially update profile-scoped settings
 
-11. `platforms list`
-   - list Mallary-supported platforms and show which are connected
+12. `platforms list`
+   - list Mallary-supported platforms and show which are connected for a profile
 
-12. `platforms disconnect <platform>`
-   - disconnect a connected social platform
+13. `platforms disconnect <platform>`
+   - disconnect a connected social platform from a profile
 
 ## Environment Variables
 
@@ -232,10 +239,14 @@ Human output or --json output
 6. `GET /api/v1/jobs/{id}`
 7. `POST /api/v1/jobs/{id}/tiktok/post-url`
 8. `GET /api/v1/analytics`
-9. `GET/POST/DELETE /api/v1/webhooks`
-10. `GET/POST /api/v1/settings`
-11. `GET /api/v1/platforms`
-12. `POST /api/v1/disconnect`
+9. `GET/POST /api/v1/profiles`
+10. `POST /api/v1/profiles/{id}`
+11. `GET/POST/DELETE /api/v1/webhooks`
+12. `GET/POST /api/v1/settings`
+13. `GET /api/v1/platforms`
+14. `POST /api/v1/disconnect`
+
+Profile-aware endpoints accept a public `profile_id` where relevant. Omitting it selects the default Dashboard profile.
 
 Authentication:
 
@@ -255,7 +266,8 @@ npm publish --access public
 
 - `dist/`
 - `README.md`
-- `llms.txt`
+- `SKILL.md`
+- `PROFILES.md`
 
 ## Testing
 

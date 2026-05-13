@@ -4,6 +4,8 @@
 
 Mallary supports platform-specific settings through `platform_options` in file mode. Shared fields can be sent from flags, but platform-specific publish options belong in `mallary posts create --file payload.json`.
 
+Profiles are separate from provider settings. Omit `--profile-id` or `profile_id` to use the default Dashboard profile; use `mallary profiles list` and pass `--profile-id` or JSON `profile_id` for a non-default profile.
+
 ## Supported Platforms
 
 ### Platforms with Specific Settings
@@ -36,6 +38,7 @@ Use flags for shared fields:
 mallary posts create \
   --message "Content" \
   --platform facebook \
+  --profile-id AbC123xYz90 \
   --media ./launch.png
 ```
 
@@ -45,6 +48,7 @@ Use file mode for platform-specific settings:
 
 ```json
 {
+  "profile_id": "AbC123xYz90",
   "message": "Launch update",
   "platforms": ["youtube"],
   "media": [{ "url": "./launch.mp4" }],

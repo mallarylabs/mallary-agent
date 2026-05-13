@@ -16,6 +16,7 @@ node cli/dist/index.js --help
 # Example command
 export MALLARY_API_KEY=your_key
 node cli/dist/index.js posts list
+node cli/dist/index.js profiles list
 ```
 
 ## Option 2: Link Globally (Recommended for Development)
@@ -29,8 +30,9 @@ npm link
 
 # Now you can use it anywhere
 mallary --help
+mallary profiles list
 mallary posts list
-mallary posts create --message "Hello!" --platform facebook
+mallary posts create --message "Hello!" --platform facebook --profile-id AbC123xYz90
 
 # To unlink later
 npm unlink -g @mallary/cli
@@ -45,6 +47,7 @@ After linking, you can use `mallary` from any directory.
 cd cli
 npm run build
 npm run start -- --help
+npm run start -- profiles list
 npm run start -- posts list
 npm run start -- posts create --message "Hello" --platform facebook
 ```
@@ -59,10 +62,13 @@ npm install -g @mallary/cli
 
 # Or use with npx (no global install)
 npx @mallary/cli --help
+npx @mallary/cli profiles list
 npx @mallary/cli posts list
 ```
 
 ## Quick Setup Guide
+
+Use `mallary profiles list` to find a non-default profile ID. Replace `AbC123xYz90` in examples with a real public profile ID, or omit `--profile-id` to use the default profile.
 
 ### Step 1: Build the CLI
 
@@ -165,10 +171,14 @@ export MALLARY_API_KEY=your_key
 # Health check
 mallary health
 
+# Profile discovery
+mallary profiles list
+
 # Create a test post
 mallary posts create \
   --message "Test post from CLI" \
-  --platform facebook
+  --platform facebook \
+  --profile-id AbC123xYz90
 ```
 
 ## Development Workflow
@@ -283,5 +293,6 @@ export MALLARY_API_KEY=your_key
 mallary health
 
 # 5. Start using
-mallary posts create --message "My first post" --platform facebook
+mallary profiles list
+mallary posts create --message "My first post" --platform facebook --profile-id AbC123xYz90
 ```

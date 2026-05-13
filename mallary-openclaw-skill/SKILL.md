@@ -1,7 +1,7 @@
 ---
 name: mallary
-description: Mallary is a multi-platform social media publishing tool for X, Facebook, Instagram, LinkedIn, YouTube, TikTok, Pinterest, Reddit, Threads, and Snapchat. Use it to upload media, create and schedule posts, inspect jobs, fetch analytics, list connected platforms, manage webhooks, update brand settings, and support developer or AI-agent publishing workflows.
-version: 1.0.1
+description: Mallary gives your AI agents the ability to post, schedule, upload media, and check analytics across every major social platform with one unified interface. Built for MCP, CLI, and API workflows. Mallary supports social media publishing and scheduling for X, Facebook, Instagram, LinkedIn, YouTube, TikTok, Pinterest, Reddit, Threads, and Snapchat. Use it to upload media, create and schedule posts, inspect jobs, fetch analytics, list and target dashboard profiles, list connected platforms, manage webhooks, update profile-scoped brand settings, and support developer or AI-agent publishing workflows. Mallary is fully audited and approved by Meta, Google, LinkedIn, TikTok and more. We use 100% official APIs.
+version: 1.0.2
 homepage: https://mallary.ai/
 metadata:
   openclaw:
@@ -60,16 +60,18 @@ Mallary CLI access is available on paid plans only: Starter, Pro, and Business.
 The fundamental pattern for using Mallary CLI:
 
 1. **Authenticate** - Set `MALLARY_API_KEY`
-2. **Prepare** - Upload local media files if needed
-3. **Post** - Create immediate or scheduled posts with shared fields or file-mode payloads
-4. **Inspect** - Check grouped posts and job status
-5. **Analyze** - Fetch analytics and review action-required outcomes
+2. **Select profile** - Use the default profile or pass `--profile-id` for a non-default Dashboard profile
+3. **Prepare** - Upload local media files if needed
+4. **Post** - Create immediate or scheduled posts with shared fields or file-mode payloads
+5. **Inspect** - Check grouped posts and job status
+6. **Analyze** - Fetch analytics and review action-required outcomes
 
 ````bash
 # 1. Authenticate
 export MALLARY_API_KEY=your_api_key
 
 # 2. Prepare
+mallary profiles list
 mallary upload image.jpg
 
 # 3. Post
@@ -111,17 +113,22 @@ Mallary exposes a lightweight connected-platform discovery command in the CLI.
 Instead, use:
 
 ```bash
+# List dashboard profiles and copy random public profile IDs
+mallary profiles list
+
 # List supported platforms and see which are connected
 mallary platforms list
+mallary platforms list --profile-id AbC123xYz90
 
 # Build advanced posts from a JSON payload
 mallary posts create --file post.json
 ```
 
-You can also inspect saved account-level settings:
+You can also inspect saved profile-scoped settings:
 
 ```bash
 mallary settings get
+mallary settings get --profile-id AbC123xYz90
 ```
 
 For platform-specific fields, use:
@@ -131,11 +138,52 @@ For platform-specific fields, use:
 - `https://docs.mallary.ai/api-reference/endpoint/create#body-platform-options`
 - `https://docs.mallary.ai/api-reference/endpoint/create#platform-specific-media-rules`
 
+### Connection Profiles
+
+Profiles group platform connections, posts, analytics, and brand or AI auto-reply settings. The dashboard has one top-level **Dashboard profile** bar; everything underneath it belongs to the selected profile.
+
+Rules:
+
+- omit `--profile-id` or `profile_id` to use the default profile
+- use `mallary profiles list` to find random public profile IDs such as `AbC123xYz90`
+- use the public profile ID, not an internal numeric database ID
+- connect accounts in the dashboard after selecting the intended Dashboard profile
+- settings and AI auto-reply context are profile-scoped
+- create and rename profile workflows are handled in the dashboard or REST API; the CLI currently lists and targets profiles
+
+Profile-aware CLI commands:
+
+```bash
+mallary profiles list
+mallary posts create --message "Launch update" --platform linkedin --profile-id AbC123xYz90
+mallary posts list --profile-id AbC123xYz90
+mallary analytics list --profile-id AbC123xYz90
+mallary settings get --profile-id AbC123xYz90
+mallary settings update --file settings.partial.json --profile-id AbC123xYz90
+mallary platforms list --profile-id AbC123xYz90
+mallary platforms disconnect facebook --profile-id AbC123xYz90
+```
+
+In file mode:
+
+```json
+{
+  "profile_id": "AbC123xYz90",
+  "message": "Launch update",
+  "platforms": ["facebook", "linkedin"]
+}
+```
+
+See [PROFILES.md](./PROFILES.md) for the full profile model, API endpoints, and plan limits.
+
 ### Creating Posts
 
 ```bash
 # Simple immediate post
 mallary posts create --message "Content" --platform facebook
+
+# Simple immediate post from a non-default profile
+mallary posts create --message "Content" --platform facebook --profile-id AbC123xYz90
 
 # Scheduled post
 mallary posts create --message "Content" --platform facebook --scheduled-at "2026-12-31T12:00:00Z"
@@ -169,6 +217,7 @@ mallary posts create --file post.json --json
 ```bash
 # List grouped posts
 mallary posts list
+mallary posts list --profile-id AbC123xYz90
 mallary posts list --page 2 --per-page 25
 
 # Delete post
@@ -179,9 +228,11 @@ mallary jobs get 123
 
 # List connected platforms
 mallary platforms list
+mallary platforms list --profile-id AbC123xYz90
 
 # Disconnect a platform
 mallary platforms disconnect facebook
+mallary platforms disconnect facebook --profile-id AbC123xYz90
 ```
 
 ### Analytics
@@ -189,12 +240,13 @@ mallary platforms disconnect facebook
 ```bash
 # Get analytics across posts
 mallary analytics list
+mallary analytics list --profile-id AbC123xYz90
 
 # Get analytics for a specific post
 mallary analytics list --post-id 42
 ```
 
-Returns analytics snapshots from the Mallary API for the authenticated account or a specific post when available.
+Returns analytics snapshots from the Mallary API for the selected profile or a specific post when available.
 
 ### Connecting Missing Posts
 
@@ -210,6 +262,7 @@ mallary jobs attach-tiktok-url 506 --url "https://www.tiktok.com/@mallary/video/
 # 3. Re-check the job, and if you know the related post ID, re-check analytics
 mallary jobs get 506
 mallary analytics list --post-id 42
+mallary analytics list --post-id 42 --profile-id AbC123xYz90
 ```
 
 ### Media Upload
@@ -676,18 +729,16 @@ If a user is building app integrations, prefer the REST API. If a user is buildi
 
 - [HOW_TO_RUN.md](./HOW_TO_RUN.md) - installation and setup methods
 - [FEATURES.md](./FEATURES.md) - CLI capabilities and usage model
+- [PROFILES.md](./PROFILES.md) - profile-scoped connections, settings, IDs, and limits
 - [PROVIDER_SETTINGS.md](./PROVIDER_SETTINGS.md) - platform-specific payload fields
-- [INTEGRATION_TOOLS_WORKFLOW.md](./INTEGRATION_TOOLS_WORKFLOW.md) - Mallary discovery workflow
-- [INTEGRATION_SETTINGS_DISCOVERY.md](./INTEGRATION_SETTINGS_DISCOVERY.md) - account settings and platform option discovery
 - [SUPPORTED_FILE_TYPES.md](./SUPPORTED_FILE_TYPES.md) - supported upload formats
 - [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md) - package layout and code architecture
-- [PUBLISHING.md](./PUBLISHING.md) - npm publishing guide
 - [README.md](./README.md) - primary CLI reference
-- [llms.txt](./llms.txt) - compact AI-agent summary
 
 **Ready-to-use examples:**
 
 - `mallary posts create --message "Hello" --platform facebook`
+- `mallary posts create --message "Hello" --platform facebook --profile-id AbC123xYz90`
 - `mallary posts create --file payload.json`
 - `mallary upload ./hero.png --json`
 - `mallary settings update --file settings.partial.json`
@@ -699,7 +750,7 @@ If a user is building app integrations, prefer the REST API. If a user is buildi
 
 1. **Missing API key** - Set `export MALLARY_API_KEY=key` before using authenticated commands
 2. **CLI is plan-gated** - Free plans cannot use the Mallary CLI
-3. **Connected-platform discovery is limited** - use `mallary platforms list` to see connected accounts, and use local docs plus `platform_options` for platform-specific payload details
+3. **Profiles are scoped** - omit `--profile-id` for the default profile, or use `mallary profiles list` and pass the public ID for a non-default profile
 4. **External media URLs are rejected** - remote media must already be hosted on `https://files.mallary.ai/...`
 5. **Use file mode for advanced settings** - `mallary posts create --file payload.json`
 6. **`--scheduled-timezone` requires `--scheduled-at`** - the timezone flag cannot stand alone
@@ -719,12 +770,16 @@ export MALLARY_API_KEY=key                                # Required for authent
 mallary health                                            # Health check (no auth needed)
 
 # Discovery
-mallary platforms list                                   # List supported platforms and current connections
-mallary settings get                                      # Get saved account settings
+mallary profiles list                                    # List dashboard profiles and public IDs
+mallary platforms list                                   # List supported platforms and default-profile connections
+mallary platforms list --profile-id AbC123xYz90          # List supported platforms for one profile
+mallary settings get                                      # Get default-profile settings
+mallary settings get --profile-id AbC123xYz90            # Get settings for one profile
 mallary posts create --file payload.json                  # Advanced post payload
 
 # Posting
 mallary posts create --message "text" --platform facebook                             # Simple
+mallary posts create --message "text" --platform facebook --profile-id AbC123xYz90    # Non-default profile
 mallary posts create --message "text" --platform facebook --scheduled-at "2026-12-31T12:00:00Z"  # Scheduled
 mallary posts create --message "text" --media ./img.jpg --platform instagram          # With media
 mallary posts create --message "main" --comment "follow-up" --platform x              # With comment
@@ -733,18 +788,22 @@ mallary upload <file> --json                                                    
 
 # Management
 mallary posts list                                       # List grouped posts
+mallary posts list --profile-id AbC123xYz90              # List grouped posts for one profile
 mallary posts delete <id>                                # Delete queued/scheduled post
 mallary jobs get <id>                                    # Get job status
 mallary jobs attach-tiktok-url <id> --url "<url>"        # Finish TikTok final URL flow
 mallary platforms disconnect <platform>                  # Disconnect platform
+mallary platforms disconnect <platform> --profile-id AbC123xYz90  # Disconnect from one profile
 
 # Analytics and settings
 mallary analytics list                                   # Analytics list
+mallary analytics list --profile-id AbC123xYz90          # Analytics for one profile
 mallary analytics list --post-id <id>                    # Analytics for one post
 mallary webhooks list                                    # List webhooks
 mallary webhooks create --url https://example.com/hook --event post.published
 mallary webhooks delete <id>
-mallary settings update --file settings.partial.json     # Partial settings update
+mallary settings update --file settings.partial.json     # Default-profile settings update
+mallary settings update --file settings.partial.json --profile-id AbC123xYz90  # One profile
 
 # Help
 mallary --help                                           # Show help

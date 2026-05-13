@@ -152,8 +152,11 @@ MEDIA_URL=$(echo "$RESULT" | jq -r '.uploads[0].media_url')
 mallary posts create \
   --message "Check out our latest demo." \
   --platform youtube \
+  --profile-id AbC123xYz90 \
   --media "$MEDIA_URL"
 ```
+
+Omit `--profile-id` to use the default Dashboard profile. Use `mallary profiles list` to find public profile IDs for non-default profiles.
 
 ### Upload Multiple Files
 

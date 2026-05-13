@@ -2,7 +2,7 @@
 
 ## Complete Feature Set
 
-Mallary CLI is the official command-line interface for Mallary.ai. It is designed for developers, operators, CI jobs, and AI agents that need to upload media, create posts, inspect jobs, fetch analytics, manage webhooks, update brand settings, list connected platforms, and disconnect platforms from one command surface.
+Mallary CLI is the official command-line interface for Mallary.ai. It is designed for developers, operators, CI jobs, and AI agents that need to upload media, create posts, inspect jobs, fetch analytics, manage webhooks, list and target dashboard profiles, update profile-scoped brand settings, list connected platforms, and disconnect platforms from one command surface.
 
 The CLI mirrors the public Mallary API. It does not bypass plan limits, feature gates, connected-account requirements, or platform validation rules.
 
@@ -38,10 +38,23 @@ Mallary supports both simple post creation and advanced payload-based publishing
 - Optional per-post AI auto reply flag
 - Job inspection
 - Analytics fetching
+- Dashboard profile listing and `--profile-id` targeting
 - Webhook management
-- Settings read/update
-- Connected platform listing
+- Profile-scoped settings read/update
+- Profile-scoped connected platform listing and disconnect
 - TikTok post URL attachment for inbox-style TikTok workflows
+
+#### Profiles
+
+Profiles are used to group your social media accounts. You can create a profile for each of your businesses, and then connect your social media accounts for each business inside this profile. Your default profile will be used if you don't pass a `profile_id` when making requests.
+
+- Every user has a default profile.
+- Omit `--profile-id` or `profile_id` to use the default profile.
+- Use `mallary profiles list` to find your profile IDs.
+- Pass `--profile-id` to target a non-default profile in `posts create`, `posts list`, `analytics list`, `settings get/update`, `platforms list`, and `platforms disconnect`.
+- In JSON file mode, send `profile_id`.
+- Platform connections, posts, analytics, and AI auto-reply settings are profile-scoped.
+- The CLI lists and targets profiles; profile creation and rename workflows live in the dashboard or REST API.
 
 ## Usage Modes
 
@@ -114,6 +127,7 @@ Advanced mode is best when:
 
 ```json
 {
+  "profile_id": "AbC123xYz90",
   "message": "Launch update",
   "platforms": ["facebook", "instagram", "youtube", "pinterest"],
   "media": [{ "url": "./launch.mp4" }],
@@ -147,6 +161,7 @@ Mallary CLI ultimately submits to the Mallary API: `POST /api/v1/post`.
 
 ```ts
 type CreatePostPayload = {
+  profile_id?: string;
   message: string;
   platforms: string[];
   media?: Array<{
@@ -233,6 +248,7 @@ Mallary CLI is intentionally friendly to agents and automation.
 ### AI Agent Tips
 
 - prefer `--json` output for machine handling
+- call `mallary profiles list --json` before targeting a non-default profile
 - prefer `posts create --file` for advanced platform payloads
 - upload local files through Mallary first or let the CLI do it automatically
 - never pass third-party remote media URLs directly to the CLI
@@ -243,9 +259,9 @@ Mallary CLI is intentionally friendly to agents and automation.
 - `README.md` - authoritative usage and command reference
 - `SKILL.md` - compact agent-facing reference
 - `QUICK_START.md` - fast onboarding path
+- `PROFILES.md` - profile model, public IDs, commands, API endpoints, and limits
 - `PROVIDER_SETTINGS.md` - platform-specific posting fields
 - `SUPPORTED_FILE_TYPES.md` - upload behavior and file type notes
-- `llms.txt` - compact command inventory and workflow notes for automated systems
 
 ## Summary
 
@@ -257,6 +273,7 @@ Mallary CLI supports the complete public Mallary publishing workflow:
 - inspect jobs
 - fetch analytics
 - manage webhooks
-- manage brand settings
-- list connected platforms
-- disconnect platforms
+- list and target profiles
+- manage profile-scoped brand settings
+- list connected platforms for a profile
+- disconnect platforms from a profile

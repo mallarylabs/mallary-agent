@@ -9,9 +9,10 @@ With the CLI you can:
 - inspect jobs and grouped posts
 - fetch post analytics
 - manage webhooks
-- manage your brand settings
-- list connected platforms
-- disconnect platforms
+- list dashboard profiles and target non-default profiles
+- manage profile-scoped brand and AI auto-reply settings
+- list connected platforms for a profile
+- disconnect platforms from a profile
 
 Mallary CLI is a direct client for the public Mallary.ai API. It does not bypass plan limits, feature gates, or platform rules. CLI access is available on paid plans only.
 
@@ -91,7 +92,10 @@ List your connected platforms:
 
 ```bash
 mallary platforms list
+mallary profiles list
 ```
+
+Use `mallary profiles list` to find a profile's ID. Pass it as `--profile-id` when you want a command to target a non-default Dashboard profile.
 
 ## Commands
 
@@ -124,6 +128,7 @@ mallary posts create \
   --message "Hello from Mallary CLI" \
   --platform facebook \
   --platform linkedin \
+  --profile-id AbC123xYz90 \
   --media ./hero.png \
   --comment "Follow-up comment 1" \
   --comment "Follow-up comment 2" \
@@ -199,6 +204,7 @@ Payload shape:
 
 ```json
 {
+  "profile_id": "AbC123xYz90",
   "message": "Launch update",
   "platforms": ["facebook", "youtube"],
   "scheduled_at": "2026-04-06T14:30",
@@ -461,9 +467,9 @@ AI auto reply:
 
 - AI Auto Replies automatically detect new comments on your published posts and uses OpenAI (ChatGPT) to post helpful replies based on your settings in configured the Mallary dashboard or as described in the settings section below. AI Auto Replies are supported on YouTube, Facebook, Instagram, LinkedIn, X (Twitter), Reddit.
 - AI Auto Replies are available on Pro and Business plans only.
-- It depends on your saved brand/profile settings, not just the current post payload.
-- You can enable it account-wide in `mallary settings update`, or per post with `--auto-reply-enabled`.
-- If you omit `--auto-reply-enabled`, the post uses your saved account-level setting.
+- It depends on your saved profile-scoped brand settings, not just the current post payload.
+- You can enable it for the selected profile in `mallary settings update`, or per post with `--auto-reply-enabled`.
+- If you omit `--auto-reply-enabled`, the post uses the selected profile's saved setting.
 - To enable it successfully, your settings must include: `business_name`, `website_url`, `business_description`, `services`, and `contact_info`.
 
 Per-post example:
@@ -512,7 +518,37 @@ mallary jobs get 123 --json
 ```bash
 mallary analytics list
 mallary analytics list --post-id 123
+mallary analytics list --profile-id AbC123xYz90
 ```
+
+Analytics are profile-scoped. Omit `--profile-id` to use the default profile.
+
+### Profiles
+
+Profiles are used to group your social media accounts. You can create a profile for each of your businesses, and then connect your social media accounts for each business inside this profile. Your default profile will be used if you don't pass a `profile_id` when making requests.
+
+Profiles group social platform connections, posts, analytics, and brand or AI auto-reply settings. The Mallary dashboard has one top-level **Dashboard profile** bar; everything underneath it belongs to the selected profile.
+
+Every user has a default profile. Omit `--profile-id` to use it. For non-default profiles, list profiles and copy the random public profile ID:
+
+```bash
+mallary profiles list
+mallary profiles list --json
+```
+
+Use that ID with profile-aware commands:
+
+```bash
+mallary posts create --message "Launch update" --platform linkedin --profile-id AbC123xYz90
+mallary posts list --profile-id AbC123xYz90
+mallary analytics list --profile-id AbC123xYz90
+mallary settings get --profile-id AbC123xYz90
+mallary settings update --file ./settings.partial.json --profile-id AbC123xYz90
+mallary platforms list --profile-id AbC123xYz90
+mallary platforms disconnect facebook --profile-id AbC123xYz90
+```
+
+In file mode, use `profile_id` in the payload. The CLI currently lists and targets profiles; create and rename profile workflows are handled in the dashboard or REST API. See [PROFILES.md](./PROFILES.md).
 
 ### Webhooks
 
@@ -543,12 +579,14 @@ Get current settings:
 
 ```bash
 mallary settings get
+mallary settings get --profile-id AbC123xYz90
 ```
 
 Update settings from a partial JSON file:
 
 ```bash
 mallary settings update --file ./settings.partial.json
+mallary settings update --file ./settings.partial.json --profile-id AbC123xYz90
 ```
 
 Example partial settings payload:
@@ -584,6 +622,7 @@ Accepted settings fields:
 Notes:
 
 - `mallary settings update --file ...` accepts partial updates, so you can send only the fields you want to change.
+- Settings are profile-scoped. Omit `--profile-id` to use the default profile.
 - `auto_reply_enabled` can only be turned on for paid plans that include AI auto reply.
 - Enabling `auto_reply_enabled` also requires these settings fields to be populated: `business_name`, `website_url`, `business_description`, `services`, and `contact_info`.
 
@@ -592,7 +631,10 @@ Notes:
 Disconnect a platform:
 
 ```bash
+mallary platforms list
+mallary platforms list --profile-id AbC123xYz90
 mallary platforms disconnect facebook
+mallary platforms disconnect facebook --profile-id AbC123xYz90
 ```
 
 ## JSON Output
@@ -673,14 +715,16 @@ GitHub Actions example:
     mallary posts create \
       --message "Release shipped." \
       --platform facebook \
-      --platform linkedin
+      --platform linkedin \
+      --profile-id AbC123xYz90
 ```
 
 ## AI Agent Notes
 
 If you are an AI agent or building an agent integration:
 
-- read `llms.txt` first for the compact command and workflow summary
+- read [SKILL.md](./SKILL.md) first for the compact command and workflow summary
+- read [PROFILES.md](./PROFILES.md) before targeting a non-default Dashboard profile
 - use `--json` whenever the CLI is part of an automated toolchain
 - prefer `mallary posts create --file payload.json` for complex platform-specific payloads
 
@@ -690,6 +734,7 @@ If you are an AI agent or building an agent integration:
 - Dashboard: https://mallary.ai/dashboard
 - Pricing: https://mallary.ai/pricing
 - API docs: https://docs.mallary.ai/
+- Profiles reference: [PROFILES.md](./PROFILES.md)
 - MCP docs source: `docs/mcp.md`
 - Support: mailto:support@mallary.ai
 
