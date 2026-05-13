@@ -648,6 +648,143 @@ describe("mallary cli", () => {
     );
   });
 
+  it("passes profile ids through profile-scoped commands", async () => {
+    const settingsFile = await makeTempFile("settings.json", JSON.stringify({ business_name: "Mallary" }));
+    const seen: Record<string, unknown> = {};
+    const profileId = "AbC123xYz90";
+
+    await withServer(
+      async (req, res, _state, body) => {
+        const url = new URL(String(req.url || "/"), "http://mallary.test");
+        res.setHeader("content-type", "application/json");
+
+        if (url.pathname === "/api/v1/post" && req.method === "POST") {
+          seen.postCreate = JSON.parse(body);
+          res.end(JSON.stringify({ status: "queued", batch_id: "profile-batch", jobs: [] }));
+          return;
+        }
+        if (url.pathname === "/api/v1/posts" && req.method === "GET") {
+          seen.postsListProfile = url.searchParams.get("profile_id");
+          res.end(JSON.stringify({ status: "ok", data: { posts: [] } }));
+          return;
+        }
+        if (url.pathname === "/api/v1/analytics" && req.method === "GET") {
+          seen.analyticsProfile = url.searchParams.get("profile_id");
+          seen.analyticsPost = url.searchParams.get("post_id");
+          res.end(JSON.stringify({ status: "ok", data: { analytics: [] } }));
+          return;
+        }
+        if (url.pathname === "/api/v1/settings" && req.method === "GET") {
+          seen.settingsGetProfile = url.searchParams.get("profile_id");
+          res.end(JSON.stringify({ status: "ok", data: { business_name: "Mallary" } }));
+          return;
+        }
+        if (url.pathname === "/api/v1/settings" && req.method === "POST") {
+          seen.settingsUpdate = JSON.parse(body);
+          res.end(JSON.stringify({ status: "ok", data: { business_name: "Mallary" } }));
+          return;
+        }
+        if (url.pathname === "/api/v1/platforms" && req.method === "GET") {
+          seen.platformsListProfile = url.searchParams.get("profile_id");
+          res.end(JSON.stringify({ status: "ok", data: { platforms: [], connected: [], disconnected: [] } }));
+          return;
+        }
+        if (url.pathname === "/api/v1/profiles" && req.method === "GET") {
+          seen.profilesList = true;
+          res.end(JSON.stringify({ status: "ok", data: { profiles: [{ id: profileId, name: "Default", is_default: true, connected_platforms: [] }] } }));
+          return;
+        }
+        if (url.pathname === "/api/v1/disconnect" && req.method === "POST") {
+          seen.disconnect = JSON.parse(body);
+          res.end(JSON.stringify({ status: "ok", platform: "facebook" }));
+          return;
+        }
+
+        res.statusCode = 404;
+        res.end(JSON.stringify({ error: "not found" }));
+      },
+      async (baseUrl) => {
+        const env = { MALLARY_API_KEY: "test" };
+        const fetch = createMallaryFetch(baseUrl);
+
+        expect(
+          await runCli(["posts", "create", "--message", "Hello", "--platform", "facebook", "--profile-id", profileId, "--json"], {
+            stdout: new MemoryWriter(),
+            stderr: new MemoryWriter(),
+            env,
+            fetch,
+          })
+        ).toBe(0);
+        expect(
+          await runCli(["posts", "list", "--profile-id", profileId, "--json"], {
+            stdout: new MemoryWriter(),
+            stderr: new MemoryWriter(),
+            env,
+            fetch,
+          })
+        ).toBe(0);
+        expect(
+          await runCli(["analytics", "list", "--post-id", "99", "--profile-id", profileId, "--json"], {
+            stdout: new MemoryWriter(),
+            stderr: new MemoryWriter(),
+            env,
+            fetch,
+          })
+        ).toBe(0);
+        expect(
+          await runCli(["settings", "get", "--profile-id", profileId, "--json"], {
+            stdout: new MemoryWriter(),
+            stderr: new MemoryWriter(),
+            env,
+            fetch,
+          })
+        ).toBe(0);
+        expect(
+          await runCli(["settings", "update", "--file", settingsFile, "--profile-id", profileId, "--json"], {
+            stdout: new MemoryWriter(),
+            stderr: new MemoryWriter(),
+            env,
+            fetch,
+          })
+        ).toBe(0);
+        expect(
+          await runCli(["platforms", "list", "--profile-id", profileId, "--json"], {
+            stdout: new MemoryWriter(),
+            stderr: new MemoryWriter(),
+            env,
+            fetch,
+          })
+        ).toBe(0);
+        expect(
+          await runCli(["profiles", "list", "--json"], {
+            stdout: new MemoryWriter(),
+            stderr: new MemoryWriter(),
+            env,
+            fetch,
+          })
+        ).toBe(0);
+        expect(
+          await runCli(["platforms", "disconnect", "facebook", "--profile-id", profileId, "--json"], {
+            stdout: new MemoryWriter(),
+            stderr: new MemoryWriter(),
+            env,
+            fetch,
+          })
+        ).toBe(0);
+      }
+    );
+
+    expect(seen.postCreate).toEqual({ message: "Hello", platforms: ["facebook"], profile_id: profileId });
+    expect(seen.postsListProfile).toBe(profileId);
+    expect(seen.analyticsProfile).toBe(profileId);
+    expect(seen.analyticsPost).toBe("99");
+    expect(seen.settingsGetProfile).toBe(profileId);
+    expect(seen.settingsUpdate).toEqual({ business_name: "Mallary", profile_id: profileId });
+    expect(seen.platformsListProfile).toBe(profileId);
+    expect(seen.profilesList).toBe(true);
+    expect(seen.disconnect).toEqual({ platform: "facebook", profile_id: profileId });
+  });
+
   it("covers analytics, jobs, disconnect, and webhook commands", async () => {
     await withServer(
       async (req, res) => {

@@ -503,18 +503,18 @@ function getHelpText(commandPath?: string[]): string {
         "Usage: mallary posts create [options]",
         "",
         "Flag mode:",
-        "  mallary posts create --message \"Hello\" --platform facebook --platform instagram [--media ./file.jpg] [--comment \"...\" ] [--scheduled-at <time>] [--scheduled-timezone <iana>] [--idempotency-key <key>]",
+        "  mallary posts create --message \"Hello\" --platform facebook --platform instagram [--profile-id <id>] [--media ./file.jpg] [--comment \"...\" ] [--scheduled-at <time>] [--scheduled-timezone <iana>] [--idempotency-key <key>]",
         "",
         "File mode:",
         "  mallary posts create --file payload.json [--idempotency-key <key>]",
         "",
         "Notes:",
-        "  - --file is mutually exclusive with payload-building flags such as --message, --platform, --media, --comment, --scheduled-at, --scheduled-timezone, --auto-reply-enabled, and --webhook-url.",
+        "  - --file is mutually exclusive with payload-building flags such as --message, --platform, --profile-id, --media, --comment, --scheduled-at, --scheduled-timezone, --auto-reply-enabled, and --webhook-url.",
         "  - Use --scheduled-at with an absolute timestamp like 2026-04-06T18:30:00Z, or pair a local time like 2026-04-06T14:30 with --scheduled-timezone America/New_York.",
         "  - Local media paths are uploaded automatically before the post request.",
       ].join("\n");
     case "posts list":
-      return "Usage: mallary posts list [--page <n>] [--per-page <n>] [--json]";
+      return "Usage: mallary posts list [--profile-id <id>] [--page <n>] [--per-page <n>] [--json]";
     case "posts delete":
       return "Usage: mallary posts delete <id> [--json]";
     case "jobs get":
@@ -522,7 +522,9 @@ function getHelpText(commandPath?: string[]): string {
     case "jobs attach-tiktok-url":
       return "Usage: mallary jobs attach-tiktok-url <id> --url <tiktok_video_url> [--json]";
     case "analytics list":
-      return "Usage: mallary analytics list [--post-id <id>] [--json]";
+      return "Usage: mallary analytics list [--profile-id <id>] [--post-id <id>] [--json]";
+    case "profiles list":
+      return "Usage: mallary profiles list [--json]";
     case "webhooks list":
       return "Usage: mallary webhooks list [--json]";
     case "webhooks create":
@@ -530,13 +532,13 @@ function getHelpText(commandPath?: string[]): string {
     case "webhooks delete":
       return "Usage: mallary webhooks delete <id> [--json]";
     case "settings get":
-      return "Usage: mallary settings get [--json]";
+      return "Usage: mallary settings get [--profile-id <id>] [--json]";
     case "settings update":
-      return "Usage: mallary settings update --file partial.json [--json]";
+      return "Usage: mallary settings update --file partial.json [--profile-id <id>] [--json]";
     case "platforms list":
-      return "Usage: mallary platforms list [--json]";
+      return "Usage: mallary platforms list [--profile-id <id>] [--json]";
     case "platforms disconnect":
-      return "Usage: mallary platforms disconnect <platform> [--json]";
+      return "Usage: mallary platforms disconnect <platform> [--profile-id <id>] [--json]";
     default:
       return [
         `Mallary CLI v${CLI_VERSION}`,
@@ -551,6 +553,7 @@ function getHelpText(commandPath?: string[]): string {
         "  jobs get <id>",
         "  jobs attach-tiktok-url <id> --url <tiktok_video_url>",
         "  analytics list",
+        "  profiles list",
         "  webhooks list|create|delete",
         "  settings get|update",
         "  platforms list|disconnect",
@@ -660,6 +663,7 @@ async function buildPostPayload(
       file: { type: "string" },
       message: { type: "string" },
       platform: { type: "string", multiple: true },
+      "profile-id": { type: "string" },
       media: { type: "string", multiple: true },
       comment: { type: "string", multiple: true },
       "scheduled-at": { type: "string" },
@@ -687,6 +691,7 @@ async function buildPostPayload(
     ensureExclusiveFileMode(parsed.values as JsonRecord, [
       "message",
       "platform",
+      "profile-id",
       "media",
       "comment",
       "scheduled-at",
@@ -736,6 +741,9 @@ async function buildPostPayload(
     message,
     platforms,
   };
+  if (typeof parsed.values["profile-id"] === "string" && parsed.values["profile-id"].trim()) {
+    payload.profile_id = parsed.values["profile-id"].trim();
+  }
   if (resolved.mediaPayload.length > 0) payload.media = resolved.mediaPayload;
   if (Array.isArray(parsed.values.comment) && parsed.values.comment.length > 0) {
     payload.comments_under_post = parsed.values.comment;
@@ -803,6 +811,7 @@ async function runPostsList(deps: CliDeps, baseUrl: string, args: string[]): Pro
     strict: true,
     options: {
       help: { type: "boolean", short: "h" },
+      "profile-id": { type: "string" },
       page: { type: "string" },
       "per-page": { type: "string" },
     },
@@ -811,6 +820,7 @@ async function runPostsList(deps: CliDeps, baseUrl: string, args: string[]): Pro
     return result({ help: getHelpText(["posts", "list"]) }, (stdout) => writeLine(stdout, getHelpText(["posts", "list"])));
   }
   const params = new URLSearchParams();
+  if (typeof parsed.values["profile-id"] === "string") params.set("profile_id", parsed.values["profile-id"]);
   if (typeof parsed.values.page === "string") params.set("page", parsed.values.page);
   if (typeof parsed.values["per-page"] === "string") params.set("per_page", parsed.values["per-page"]);
   const suffix = params.toString() ? `?${params.toString()}` : "";
@@ -981,6 +991,7 @@ async function runAnalyticsList(deps: CliDeps, baseUrl: string, args: string[]):
     strict: true,
     options: {
       help: { type: "boolean", short: "h" },
+      "profile-id": { type: "string" },
       "post-id": { type: "string" },
     },
   });
@@ -988,6 +999,7 @@ async function runAnalyticsList(deps: CliDeps, baseUrl: string, args: string[]):
     return result({ help: getHelpText(["analytics", "list"]) }, (stdout) => writeLine(stdout, getHelpText(["analytics", "list"])));
   }
   const params = new URLSearchParams();
+  if (typeof parsed.values["profile-id"] === "string") params.set("profile_id", parsed.values["profile-id"]);
   if (typeof parsed.values["post-id"] === "string") params.set("post_id", parsed.values["post-id"]);
   const suffix = params.toString() ? `?${params.toString()}` : "";
   const response = await apiRequest(deps, {
@@ -1012,13 +1024,45 @@ async function runAnalyticsList(deps: CliDeps, baseUrl: string, args: string[]):
   });
 }
 
-async function runWebhooksList(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
+async function runProfilesList(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
   const apiKey = ensureApiKey(deps.env);
   const parsed = parseArgs({
     args,
     allowPositionals: true,
     strict: true,
     options: { help: { type: "boolean", short: "h" } },
+  });
+  if (parsed.values.help) {
+    return result({ help: getHelpText(["profiles", "list"]) }, (stdout) => writeLine(stdout, getHelpText(["profiles", "list"])));
+  }
+  const response = await apiRequest(deps, {
+    method: "GET",
+    baseUrl,
+    requestPath: "/api/v1/profiles",
+    apiKey,
+  });
+  return result(response, (stdout) => {
+    const data = isObject(response) && isObject(response.data) ? (response.data as JsonRecord) : null;
+    const profiles = Array.isArray(data?.profiles) ? data.profiles : [];
+    writeLine(stdout, `Found ${profiles.length} profile(s).`);
+    profiles.forEach((profile) => {
+      if (!isObject(profile)) return;
+      const suffix = profile.is_default ? " (default)" : "";
+      const connected = Array.isArray(profile.connected_platforms)
+        ? profile.connected_platforms.length
+        : 0;
+      writeLine(stdout, `- ${formatValue(profile.name)}${suffix} | ID ${formatValue(profile.id)} | ${connected} connected`);
+    });
+  });
+}
+
+async function runWebhooksList(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
+  const apiKey = ensureApiKey(deps.env);
+  const parsed = parseArgs({
+    args,
+    allowPositionals: true,
+    strict: true,
+    options: { help: { type: "boolean", short: "h" }, "profile-id": { type: "string" } },
   });
   if (parsed.values.help) {
     return result({ help: getHelpText(["webhooks", "list"]) }, (stdout) => writeLine(stdout, getHelpText(["webhooks", "list"])));
@@ -1085,7 +1129,7 @@ async function runWebhooksDelete(deps: CliDeps, baseUrl: string, args: string[])
     args,
     allowPositionals: true,
     strict: true,
-    options: { help: { type: "boolean", short: "h" } },
+    options: { help: { type: "boolean", short: "h" }, "profile-id": { type: "string" } },
   });
   if (parsed.values.help) {
     return result({ help: getHelpText(["webhooks", "delete"]) }, (stdout) => writeLine(stdout, getHelpText(["webhooks", "delete"])));
@@ -1108,15 +1152,18 @@ async function runSettingsGet(deps: CliDeps, baseUrl: string, args: string[]): P
     args,
     allowPositionals: true,
     strict: true,
-    options: { help: { type: "boolean", short: "h" } },
+    options: { help: { type: "boolean", short: "h" }, "profile-id": { type: "string" } },
   });
   if (parsed.values.help) {
     return result({ help: getHelpText(["settings", "get"]) }, (stdout) => writeLine(stdout, getHelpText(["settings", "get"])));
   }
+  const params = new URLSearchParams();
+  if (typeof parsed.values["profile-id"] === "string") params.set("profile_id", parsed.values["profile-id"]);
+  const suffix = params.toString() ? `?${params.toString()}` : "";
   const response = await apiRequest(deps, {
     method: "GET",
     baseUrl,
-    requestPath: "/api/v1/settings",
+    requestPath: `/api/v1/settings${suffix}`,
     apiKey,
   });
   return result(response, (stdout) => {
@@ -1133,6 +1180,7 @@ async function runSettingsUpdate(deps: CliDeps, baseUrl: string, args: string[])
     options: {
       help: { type: "boolean", short: "h" },
       file: { type: "string" },
+      "profile-id": { type: "string" },
     },
   });
   if (parsed.values.help) {
@@ -1153,6 +1201,9 @@ async function runSettingsUpdate(deps: CliDeps, baseUrl: string, args: string[])
       message: "Settings payload file must contain a JSON object.",
     });
   }
+  if (typeof parsed.values["profile-id"] === "string" && parsed.values["profile-id"].trim()) {
+    payload.profile_id = parsed.values["profile-id"].trim();
+  }
   const response = await apiRequest(deps, {
     method: "POST",
     baseUrl,
@@ -1171,18 +1222,22 @@ async function runPlatformsDisconnect(deps: CliDeps, baseUrl: string, args: stri
     args,
     allowPositionals: true,
     strict: true,
-    options: { help: { type: "boolean", short: "h" } },
+    options: { help: { type: "boolean", short: "h" }, "profile-id": { type: "string" } },
   });
   if (parsed.values.help) {
     return result({ help: getHelpText(["platforms", "disconnect"]) }, (stdout) => writeLine(stdout, getHelpText(["platforms", "disconnect"])));
   }
   const platform = parseSinglePositional("platform", parsed.positionals[0]).toLowerCase();
+  const body: JsonRecord = { platform };
+  if (typeof parsed.values["profile-id"] === "string" && parsed.values["profile-id"].trim()) {
+    body.profile_id = parsed.values["profile-id"].trim();
+  }
   const response = await apiRequest(deps, {
     method: "POST",
     baseUrl,
     requestPath: "/api/v1/disconnect",
     apiKey,
-    body: { platform },
+    body,
   });
   return result(response, (stdout) => {
     writeLine(stdout, `Disconnected ${platform}.`);
@@ -1195,15 +1250,18 @@ async function runPlatformsList(deps: CliDeps, baseUrl: string, args: string[]):
     args,
     allowPositionals: true,
     strict: true,
-    options: { help: { type: "boolean", short: "h" } },
+    options: { help: { type: "boolean", short: "h" }, "profile-id": { type: "string" } },
   });
   if (parsed.values.help) {
     return result({ help: getHelpText(["platforms", "list"]) }, (stdout) => writeLine(stdout, getHelpText(["platforms", "list"])));
   }
+  const params = new URLSearchParams();
+  if (typeof parsed.values["profile-id"] === "string") params.set("profile_id", parsed.values["profile-id"]);
+  const suffix = params.toString() ? `?${params.toString()}` : "";
   const response = await apiRequest(deps, {
     method: "GET",
     baseUrl,
-    requestPath: "/api/v1/platforms",
+    requestPath: `/api/v1/platforms${suffix}`,
     apiKey,
   });
   return result(response, (stdout) => {
@@ -1285,6 +1343,13 @@ async function dispatchCommand(deps: CliDeps, globals: GlobalOptions): Promise<C
         http_status: 0,
         code: "invalid_command",
         message: "Unknown analytics subcommand. Use list.",
+      });
+    case "profiles":
+      if (subcommand === "list") return runProfilesList(deps, baseUrl, rest);
+      throw new CliError(1, {
+        http_status: 0,
+        code: "invalid_command",
+        message: "Unknown profiles subcommand. Use list.",
       });
     case "webhooks":
       switch (subcommand) {

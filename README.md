@@ -72,6 +72,7 @@ mallary posts create \
   --message "Check out my new product video!" \
   --platform facebook \
   --platform instagram \
+  --profile-id AbC123xYz90 \
   --media ./launch.mp4
 ```
 
@@ -491,6 +492,7 @@ List grouped posts:
 
 ```bash
 mallary posts list
+mallary posts list --profile-id AbC123xYz90
 mallary posts list --page 2 --per-page 25 --json
 ```
 
@@ -511,7 +513,17 @@ mallary jobs get 123 --json
 
 ```bash
 mallary analytics list
+mallary analytics list --profile-id AbC123xYz90
 mallary analytics list --post-id 123
+```
+
+### Profiles
+
+List connection profiles and copy the public profile ID for non-default profile commands:
+
+```bash
+mallary profiles list
+mallary profiles list --json
 ```
 
 ### Webhooks
@@ -543,12 +555,14 @@ Get current settings:
 
 ```bash
 mallary settings get
+mallary settings get --profile-id AbC123xYz90
 ```
 
 Update settings from a partial JSON file:
 
 ```bash
 mallary settings update --file ./settings.partial.json
+mallary settings update --file ./settings.partial.json --profile-id AbC123xYz90
 ```
 
 Example partial settings payload:
@@ -584,6 +598,7 @@ Accepted settings fields:
 Notes:
 
 - `mallary settings update --file ...` accepts partial updates, so you can send only the fields you want to change.
+- Settings are profile-scoped. Omit `--profile-id` to use your default profile.
 - `auto_reply_enabled` can only be turned on for paid plans that include AI auto reply.
 - Enabling `auto_reply_enabled` also requires these settings fields to be populated: `business_name`, `website_url`, `business_description`, `services`, and `contact_info`.
 
@@ -593,13 +608,18 @@ List your connected platforms against Mallary's full supported platform set:
 
 ```bash
 mallary platforms list
+mallary platforms list --profile-id AbC123xYz90
 ```
 
 Disconnect a platform:
 
 ```bash
 mallary platforms disconnect facebook
+mallary platforms disconnect facebook --profile-id AbC123xYz90
 ```
+
+Mallary profiles are used to group your social media accounts. You can create a profile for each of your businesses, and then connect your social media accounts for each business inside this profile. Your default profile will be used if you don't pass a `profile_id` when making requests.
+
 
 ## JSON Output
 
