@@ -519,6 +519,8 @@ mallary analytics list --post-id 123
 
 ### Profiles
 
+Profiles are used to group your social media accounts. You can create a profile for each of your businesses, and then connect your social media accounts for each business inside this profile. Your default profile will be used if you don't pass a `profile_id` when making requests.
+
 List connection profiles and copy the public profile ID for non-default profile commands:
 
 ```bash
