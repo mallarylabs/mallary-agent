@@ -73,7 +73,8 @@ mallary posts create \
   --message "Check out my new product video!" \
   --platform facebook \
   --platform instagram \
-  --media ./launch.mp4
+  --media ./launch.mp4 \
+  --thumbnail ./launch-cover.jpg
 ```
 
 List your posts:
@@ -129,7 +130,8 @@ mallary posts create \
   --platform facebook \
   --platform linkedin \
   --profile-id AbC123xYz90 \
-  --media ./hero.png \
+  --media ./launch-video.mp4 \
+  --thumbnail ./launch-cover.jpg \
   --comment "Follow-up comment 1" \
   --comment "Follow-up comment 2" \
   --auto-reply-enabled \
@@ -157,11 +159,11 @@ Example `post.json`:
 ```json
 {
   "message": "Launch update",
-  "platforms": ["facebook", "instagram", "linkedin"],
-  "media": [{ "url": "./launch.png" }],
+  "platforms": ["youtube", "facebook"],
+  "media": [{ "url": "./launch.mp4", "thumbnail_url": "./launch-cover.jpg" }],
   "platform_options": {
-    "instagram": {
-      "post_type": "carousel"
+    "youtube": {
+      "title": "Launch update"
     }
   }
 }
@@ -174,10 +176,22 @@ Notes:
 - `--scheduled-timezone` requires `--scheduled-at`.
 - In file mode, the CLI checks each `media[].url` value.
 - If `media[].url` is a local file path like `./launch.png`, the CLI uploads that file to the Mallary CDN first, then replaces it with the final hosted Mallary CDN file URL before sending the post request.
+- In file mode, local `media[].thumbnail_url` paths are also uploaded automatically.
 - If `media[].url` is already a remote URL, it must already be hosted on `https://files.mallary.ai/...`. External media URLs are rejected by the CLI.
+- Existing remote `media[].thumbnail_url` values must also already be hosted on `https://files.mallary.ai/...`.
 - This is intentional because many social platforms only accept trusted media URLs. The CLI requires media to be uploaded to the Mallary CDN first.
 - Platform-specific payloads are supported in file mode via `platform_options`.
 - Each key in `platform_options` should match the platform name you put in `platforms`.
+
+Video thumbnails:
+
+- In flag mode, use `--thumbnail` with exactly one `--media` item.
+- In file mode, put `thumbnail_url` on the video media item.
+- YouTube regular videos, Facebook videos, and Instagram videos/Reels can use custom thumbnails/covers.
+- YouTube accepts `jpg`, `jpeg`, or `png` thumbnails up to 2 MB. Recommended: `1280x720` 16:9. YouTube Shorts thumbnails are skipped.
+- Facebook videos accept `jpg`, `jpeg`, or `png` thumbnails up to 10 MB.
+- TikTok video posts do not accept arbitrary image thumbnails through Mallary; supplying `thumbnail_url` disables Mallary's `video_cover_timestamp_ms` behavior and lets TikTok use its default cover.
+- TikTok photo posts can use `thumbnail_url` only when it exactly matches one of the supplied photo URLs and should become the cover photo.
 
 Platform-specific payloads:
 
@@ -209,7 +223,7 @@ Payload shape:
   "platforms": ["facebook", "youtube"],
   "scheduled_at": "2026-04-06T14:30",
   "scheduled_timezone": "America/New_York",
-  "media": [{ "url": "./launch.mp4" }],
+  "media": [{ "url": "./launch.mp4", "thumbnail_url": "./launch-cover.jpg" }],
   "platform_options": {
     "facebook": {
       "post_type": "feed"
@@ -250,7 +264,7 @@ Instagram:
 {
   "message": "Behind the scenes",
   "platforms": ["instagram"],
-  "media": [{ "url": "./reel.mp4" }],
+  "media": [{ "url": "./reel.mp4", "thumbnail_url": "./reel-cover.jpg" }],
   "platform_options": {
     "instagram": {
       "post_type": "reel"
@@ -288,7 +302,7 @@ YouTube:
 {
   "message": "Watch our latest product walkthrough",
   "platforms": ["youtube"],
-  "media": [{ "url": "./walkthrough.mp4" }],
+  "media": [{ "url": "./walkthrough.mp4", "thumbnail_url": "./walkthrough-cover.jpg" }],
   "platform_options": {
     "youtube": {
       "post_type": "shorts",
@@ -313,12 +327,14 @@ TikTok:
 - `disable_duet`: optional for direct-post video
 - `disable_stitch`: optional for direct-post video
 - `video_cover_timestamp_ms`: optional direct-post video cover frame
+- `thumbnail_url` on a TikTok video media item overrides Mallary's timestamp cover behavior; Mallary does not send arbitrary image thumbnails to TikTok video posts
 - `title`: optional override; defaults to `message`
 - `description`: optional for photo posts
 - `auto_add_music`: optional for direct-post photo
 - `brand_content_toggle`, `brand_organic_toggle`: optional TikTok disclosure toggles
 - `is_aigc`: optional direct-post video AI-content label
 - `photo_cover_index`: optional photo cover selection
+- `thumbnail_url` on a TikTok photo media item selects the cover only when it exactly matches one of the supplied photo URLs
 
 Defaults:
 

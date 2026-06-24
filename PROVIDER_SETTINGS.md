@@ -71,6 +71,7 @@ Settings:
 - `visibility`: `public`, `unlisted`, or `private`
 - `categoryId`: optional YouTube category id
 - `madeForKids`: optional boolean
+- `thumbnail_url`: optional on the video media item for regular YouTube videos. Use `jpg`, `jpeg`, or `png` up to 2 MB. Recommended: `1280x720` 16:9. Shorts thumbnails are skipped.
 
 Example:
 
@@ -78,7 +79,7 @@ Example:
 {
   "message": "Watch our latest product walkthrough",
   "platforms": ["youtube"],
-  "media": [{ "url": "./walkthrough.mp4" }],
+  "media": [{ "url": "./walkthrough.mp4", "thumbnail_url": "./walkthrough-cover.jpg" }],
   "platform_options": {
     "youtube": {
       "post_type": "shorts",
@@ -133,6 +134,7 @@ Example:
 Settings:
 
 - `post_type` (required when needed): `feed`, `story`, `reel`, or `carousel`
+- `thumbnail_url`: optional on video media items for Instagram video/Reels covers. Use a Mallary-hosted image that matches the video placement.
 
 Example:
 
@@ -140,7 +142,7 @@ Example:
 {
   "message": "Behind the scenes",
   "platforms": ["instagram"],
-  "media": [{ "url": "./reel.mp4" }],
+  "media": [{ "url": "./reel.mp4", "thumbnail_url": "./reel-cover.jpg" }],
   "platform_options": {
     "instagram": {
       "post_type": "reel"
@@ -161,6 +163,7 @@ Settings:
 - `disable_duet`
 - `disable_stitch`
 - `video_cover_timestamp_ms`
+- `thumbnail_url` on video media overrides Mallary's timestamp cover behavior. TikTok video posts do not accept arbitrary image thumbnails through Mallary.
 - `title`
 - `description`
 - `auto_add_music`
@@ -168,6 +171,7 @@ Settings:
 - `brand_organic_toggle`
 - `is_aigc`
 - `photo_cover_index`
+- `thumbnail_url` on photo media selects the cover only when it exactly matches one of the supplied photo URLs
 
 Example:
 
@@ -175,7 +179,7 @@ Example:
 {
   "message": "New feature demo",
   "platforms": ["tiktok"],
-  "media": [{ "url": "./demo.mp4" }],
+  "media": [{ "url": "./demo.mp4", "thumbnail_url": "./demo-cover.jpg" }],
   "platform_options": {
     "tiktok": {
       "post_type": "video",
@@ -201,6 +205,7 @@ Settings:
 - `post_type`: `feed` or `story`
 - `link`: optional destination URL for feed-style link posts
 - `pageId`: optional advanced override for a specific connected page
+- `thumbnail_url`: optional on video media items. Mallary accepts `jpg`, `jpeg`, or `png` thumbnails up to 10 MB and retries without the thumbnail if Meta rejects it.
 
 Example:
 
@@ -361,7 +366,9 @@ mallary posts create --file ./reddit-post.json
 - Use `--file` whenever you need `platform_options`.
 - Keep `platform_options` keys aligned with the values in `platforms`.
 - Local media paths inside `media[].url` are uploaded automatically by the CLI before the post request is sent.
+- Local thumbnail paths inside `media[].thumbnail_url` are also uploaded automatically by the CLI before the post request is sent.
 - Remote media URLs must already be hosted on `https://files.mallary.ai/...`.
+- Remote thumbnail URLs must also already be hosted on `https://files.mallary.ai/...`.
 
 ## Finding Your Platform Name
 

@@ -301,6 +301,83 @@ describe("mallary cli", () => {
     );
   });
 
+  it("creates posts with a local video thumbnail upload in flag mode", async () => {
+    const videoPath = await makeTempFile("video.mp4", "video-data");
+    const thumbnailPath = await makeTempFile("cover.jpg", "cover-data");
+    let uploadCount = 0;
+    let postedBody = "";
+
+    await withServer(
+      async (req, res, _state, body) => {
+        if (req.url === "/api/v1/upload" && req.method === "POST") {
+          uploadCount += 1;
+          const isThumbnail = body.includes("cover.jpg");
+          const slug = isThumbnail ? "cover" : "video";
+          const contentType = isThumbnail ? "image/jpeg" : "video/mp4";
+          res.setHeader("content-type", "application/json");
+          res.end(
+            JSON.stringify({
+              uploadUrl: `${new URL(`http://127.0.0.1`).origin}/upload/${slug}`,
+              mediaUrl: `https://files.mallary.ai/${slug}.${isThumbnail ? "jpg" : "mp4"}`,
+              storageKey: `uploads/${slug}`,
+              contentType,
+              headers: { "content-type": contentType },
+            }).replace("http://127.0.0.1", `http://127.0.0.1:${(res.socket.address() as any).port}`)
+          );
+          return;
+        }
+        if ((req.url === "/upload/video" || req.url === "/upload/cover") && req.method === "PUT") {
+          res.statusCode = 200;
+          res.end("");
+          return;
+        }
+        if (req.url === "/api/v1/post" && req.method === "POST") {
+          postedBody = body;
+          res.setHeader("content-type", "application/json");
+          res.end(JSON.stringify({ status: "queued", batch_id: "batch-thumb", jobs: [{ platform: "youtube", jobId: "123" }] }));
+          return;
+        }
+        res.statusCode = 404;
+        res.end("not found");
+      },
+      async (baseUrl) => {
+        const stdout = new MemoryWriter();
+        const stderr = new MemoryWriter();
+        const code = await runCli(
+          [
+            "posts",
+            "create",
+            "--message",
+            "Hello",
+            "--platform",
+            "youtube",
+            "--media",
+            videoPath,
+            "--thumbnail",
+            thumbnailPath,
+            "--json",
+          ],
+          {
+            stdout,
+            stderr,
+            env: { MALLARY_API_KEY: "test" },
+            fetch: createMallaryFetch(baseUrl),
+          }
+        );
+        expect(code).toBe(0);
+        expect(uploadCount).toBe(2);
+        expect(JSON.parse(postedBody)).toEqual({
+          message: "Hello",
+          platforms: ["youtube"],
+          media: [{ url: "https://files.mallary.ai/video.mp4", thumbnail_url: "https://files.mallary.ai/cover.jpg" }],
+        });
+        const payload = JSON.parse(stdout.toString());
+        expect(payload.uploads).toHaveLength(2);
+        expect(stderr.toString()).toBe("");
+      }
+    );
+  });
+
   it("passes scheduled timezone fields through in flag mode", async () => {
     let postedBody = "";
 

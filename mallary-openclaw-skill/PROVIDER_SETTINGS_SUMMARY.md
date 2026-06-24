@@ -13,11 +13,11 @@ Profiles are separate from provider settings. Omit `--profile-id` or `profile_id
 | Platform | Type | Key Settings |
 |----------|------|--------------|
 | Reddit | `reddit` | `post_type`, `subreddit` |
-| YouTube | `youtube` | `post_type`, `title`, `visibility`, `categoryId` |
+| YouTube | `youtube` | `post_type`, `title`, `visibility`, `categoryId`; media `thumbnail_url` for regular video thumbnails |
 | LinkedIn | `linkedin` | `author_urn` |
-| Instagram | `instagram` | `post_type` |
-| TikTok | `tiktok` | `post_type`, `post_mode`, `source`, `privacy_level` |
-| Facebook | `facebook` | `post_type`, `link`, `pageId` |
+| Instagram | `instagram` | `post_type`; media `thumbnail_url` for video/Reels covers |
+| TikTok | `tiktok` | `post_type`, `post_mode`, `source`, `privacy_level`; media `thumbnail_url` changes cover behavior |
+| Facebook | `facebook` | `post_type`, `link`, `pageId`; media `thumbnail_url` for video thumbnails |
 | Pinterest | `pinterest` | `post_type`, `boardId`, `link`, `alt_text` |
 
 ### Platforms with Default Settings
@@ -85,7 +85,7 @@ Use file mode for platform-specific settings:
 {
   "message": "Full video description...",
   "platforms": ["youtube"],
-  "media": [{ "url": "./demo.mp4" }],
+  "media": [{ "url": "./demo.mp4", "thumbnail_url": "./demo-cover.jpg" }],
   "platform_options": {
     "youtube": {
       "post_type": "regular",
@@ -141,7 +141,7 @@ mallary posts create \
 {
   "message": "TikTok description",
   "platforms": ["tiktok"],
-  "media": [{ "url": "./demo.mp4" }],
+  "media": [{ "url": "./demo.mp4", "thumbnail_url": "./demo-cover.jpg" }],
   "platform_options": {
     "tiktok": {
       "post_type": "video",

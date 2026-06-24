@@ -20,6 +20,7 @@ Mallary supports both simple post creation and advanced payload-based publishing
 
 - Mallary supports multi-media posts where the target platform allows it.
 - Local file paths are uploaded automatically before the post request is sent.
+- Local video thumbnail paths in `media[].thumbnail_url` are uploaded automatically before the post request is sent.
 - Remote third-party media URLs are rejected by the CLI.
 - Already-hosted `https://files.mallary.ai/...` URLs are allowed.
 
@@ -164,9 +165,10 @@ type CreatePostPayload = {
   profile_id?: string;
   message: string;
   platforms: string[];
-  media?: Array<{
-    url: string;
-    type?: string;
+	  media?: Array<{
+	    url: string;
+	    thumbnail_url?: string;
+	    type?: string;
     width?: number;
     height?: number;
     duration?: number;

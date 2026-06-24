@@ -194,6 +194,9 @@ mallary posts create --message "Content" --platform facebook --scheduled-at "202
 # Post with media
 mallary posts create --message "Content" --media ./img1.jpg --platform instagram
 
+# Post with a video thumbnail
+mallary posts create --message "Content" --media ./video.mp4 --thumbnail ./cover.jpg --platform youtube
+
 # Post with follow-up comments
 mallary posts create \
   --message "Main post" \
@@ -315,7 +318,7 @@ cat > youtube-post.json <<'EOF'
 {
   "message": "Video description",
   "platforms": ["youtube"],
-  "media": [{ "url": "./video.mp4" }],
+  "media": [{ "url": "./video.mp4", "thumbnail_url": "./cover.jpg" }],
   "platform_options": {
     "youtube": {
       "post_type": "regular",
@@ -362,7 +365,8 @@ IMAGE_URL=$(echo "$IMAGE_RESULT" | jq -r '.uploads[0].media_url')
 mallary posts create \
   --message "Check out my video!" \
   --platform youtube \
-  --media "$VIDEO_URL"
+  --media "$VIDEO_URL" \
+  --thumbnail "$IMAGE_URL"
 ```
 
 ### Pattern 3: Twitter Thread

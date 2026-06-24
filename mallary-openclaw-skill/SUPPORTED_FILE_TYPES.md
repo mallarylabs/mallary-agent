@@ -180,11 +180,18 @@ mallary upload video1.mp4 video2.mov
 
 - requires exactly one video
 - `post_type` can be `regular` or `shorts`
+- custom thumbnails for regular videos can use `jpg`, `jpeg`, or `png` up to 2 MB; recommended `1280x720` 16:9
+- YouTube Shorts thumbnails are skipped
 
 ### Instagram
 
 - public publishing currently works best with one image or one video
 - choose `feed`, `story`, `reel`, or `carousel` through `platform_options.instagram.post_type`
+- video/Reels covers can be supplied with `media[].thumbnail_url`
+
+### Facebook
+
+- video thumbnails can use `jpg`, `jpeg`, or `png` up to 10 MB through `media[].thumbnail_url`
 
 ### Twitter/X
 

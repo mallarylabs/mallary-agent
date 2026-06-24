@@ -63,6 +63,13 @@ mallary posts create \
   --media ./img1.jpg \
   --media ./img2.jpg
 
+# Post a video with a custom thumbnail
+mallary posts create \
+  --message "Product walkthrough" \
+  --platform youtube \
+  --media ./video.mp4 \
+  --thumbnail ./cover.jpg
+
 # Post with follow-up comments
 mallary posts create \
   --message "Main post" \

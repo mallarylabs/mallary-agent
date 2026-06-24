@@ -423,10 +423,45 @@ async function uploadLocalFile(
   };
 }
 
+async function resolveMediaLocation(
+  deps: CliDeps,
+  baseUrl: string,
+  apiKey: string,
+  value: string
+): Promise<{ url: string; upload: UploadedFile | null }> {
+  if (isRemoteUrl(value)) {
+    return { url: ensureMallaryHostedMediaUrl(value), upload: null };
+  }
+  const upload = await uploadLocalFile(deps, baseUrl, apiKey, value);
+  return { url: upload.media_url, upload };
+}
+
 function lowerCaseKeys(value: Record<string, string>): Record<string, string> {
   const lowered: Record<string, string> = {};
   for (const [key, val] of Object.entries(value)) lowered[key.toLowerCase()] = val;
   return lowered;
+}
+
+async function resolveThumbnailUrl(
+  deps: CliDeps,
+  baseUrl: string,
+  apiKey: string,
+  item: Record<string, unknown>,
+  uploads: UploadedFile[]
+): Promise<Record<string, unknown>> {
+  const rawThumbnail =
+    typeof item.thumbnail_url === "string"
+      ? item.thumbnail_url.trim()
+      : typeof item.thumbnailUrl === "string"
+        ? item.thumbnailUrl.trim()
+        : "";
+  if (!rawThumbnail) return item;
+
+  const resolved = await resolveMediaLocation(deps, baseUrl, apiKey, rawThumbnail);
+  if (resolved.upload) uploads.push(resolved.upload);
+  const next: Record<string, unknown> = { ...item, thumbnail_url: resolved.url };
+  delete next.thumbnailUrl;
+  return next;
 }
 
 async function resolveMediaItems(
@@ -440,24 +475,17 @@ async function resolveMediaItems(
 
   for (const item of media) {
     if (typeof item === "string") {
-      if (isRemoteUrl(item)) {
-        mediaPayload.push({ url: ensureMallaryHostedMediaUrl(item) });
-      } else {
-        const upload = await uploadLocalFile(deps, baseUrl, apiKey, item);
-        uploads.push(upload);
-        mediaPayload.push({ url: upload.media_url });
-      }
+      const resolved = await resolveMediaLocation(deps, baseUrl, apiKey, item);
+      if (resolved.upload) uploads.push(resolved.upload);
+      mediaPayload.push({ url: resolved.url });
       continue;
     }
 
     if (isObject(item) && typeof item.url === "string") {
-      if (isRemoteUrl(item.url)) {
-        mediaPayload.push({ ...item, url: ensureMallaryHostedMediaUrl(item.url) });
-      } else {
-        const upload = await uploadLocalFile(deps, baseUrl, apiKey, item.url);
-        uploads.push(upload);
-        mediaPayload.push({ ...item, url: upload.media_url });
-      }
+      const resolved = await resolveMediaLocation(deps, baseUrl, apiKey, item.url);
+      if (resolved.upload) uploads.push(resolved.upload);
+      const withMediaUrl = { ...item, url: resolved.url };
+      mediaPayload.push(await resolveThumbnailUrl(deps, baseUrl, apiKey, withMediaUrl, uploads));
       continue;
     }
 
@@ -503,13 +531,13 @@ function getHelpText(commandPath?: string[]): string {
         "Usage: mallary posts create [options]",
         "",
         "Flag mode:",
-        "  mallary posts create --message \"Hello\" --platform facebook --platform instagram [--profile-id <id>] [--media ./file.jpg] [--comment \"...\" ] [--scheduled-at <time>] [--scheduled-timezone <iana>] [--idempotency-key <key>]",
+        "  mallary posts create --message \"Hello\" --platform facebook --platform instagram [--profile-id <id>] [--media ./file.jpg] [--thumbnail ./cover.jpg] [--comment \"...\" ] [--scheduled-at <time>] [--scheduled-timezone <iana>] [--idempotency-key <key>]",
         "",
         "File mode:",
         "  mallary posts create --file payload.json [--idempotency-key <key>]",
         "",
         "Notes:",
-        "  - --file is mutually exclusive with payload-building flags such as --message, --platform, --profile-id, --media, --comment, --scheduled-at, --scheduled-timezone, --auto-reply-enabled, and --webhook-url.",
+        "  - --file is mutually exclusive with payload-building flags such as --message, --platform, --profile-id, --media, --thumbnail, --comment, --scheduled-at, --scheduled-timezone, --auto-reply-enabled, and --webhook-url.",
         "  - Use --scheduled-at with an absolute timestamp like 2026-04-06T18:30:00Z, or pair a local time like 2026-04-06T14:30 with --scheduled-timezone America/New_York.",
         "  - Local media paths are uploaded automatically before the post request.",
       ].join("\n");
@@ -665,6 +693,7 @@ async function buildPostPayload(
       platform: { type: "string", multiple: true },
       "profile-id": { type: "string" },
       media: { type: "string", multiple: true },
+      thumbnail: { type: "string" },
       comment: { type: "string", multiple: true },
       "scheduled-at": { type: "string" },
       "scheduled-timezone": { type: "string" },
@@ -693,6 +722,7 @@ async function buildPostPayload(
       "platform",
       "profile-id",
       "media",
+      "thumbnail",
       "comment",
       "scheduled-at",
       "scheduled-timezone",
@@ -736,7 +766,19 @@ async function buildPostPayload(
   }
 
   const mediaEntries = Array.isArray(parsed.values.media) ? parsed.values.media : [];
-  const resolved = await resolveMediaItems(deps, baseUrl, apiKey, mediaEntries);
+  const thumbnail =
+    typeof parsed.values.thumbnail === "string" ? parsed.values.thumbnail.trim() : "";
+  if (thumbnail && mediaEntries.length !== 1) {
+    throw new CliError(1, {
+      http_status: 0,
+      code: "invalid_args",
+      message: "--thumbnail requires exactly one --media item in flag mode.",
+    });
+  }
+  const mediaInput: unknown[] = thumbnail
+    ? [{ url: String(mediaEntries[0]), thumbnail_url: thumbnail }]
+    : mediaEntries;
+  const resolved = await resolveMediaItems(deps, baseUrl, apiKey, mediaInput);
   const payload: JsonRecord = {
     message,
     platforms,
