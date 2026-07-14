@@ -6,6 +6,7 @@ Purpose
 - Upload local media to Mallary
 - Create and schedule social posts
 - Inspect jobs and grouped posts
+- List comments and reply to commennts on published posts
 - Fetch analytics
 - Manage webhooks
 - Read and update brand/settings data
@@ -19,7 +20,7 @@ Install
 Authentication
 - Uses environment-variable auth only
 - Required for authenticated commands: MALLARY_API_KEY
-- CLI access requires a paid Mallary plan: Starter, Pro, or Business
+- Most CLI commands require a paid Mallary plan: Starter, Pro, or Business
 
 Base URL behavior
 - Base URL is fixed: https://mallary.ai
@@ -32,6 +33,8 @@ Command inventory
 - mallary posts create
 - mallary posts list
 - mallary posts delete <id>
+- mallary comments list --post-id <id>
+- mallary comments reply --post-id <id> --comment-id <cid> --message "text"
 - mallary jobs get <id>
 - mallary analytics list
 - mallary webhooks list
@@ -61,10 +64,13 @@ Typical workflows
    mallary jobs get 123 --json
 5) List grouped posts:
    mallary posts list --json
+6) Engage with comments:
+   mallary comments list --post-id 123 --json
+   mallary comments reply --post-id 123 --comment-id "1789..." --message "Thanks for checking this out."
 
 Important constraints
 - The CLI is a direct client for the public API. It does not bypass plan limits or validation rules.
-- Free-plan users cannot use the CLI. The API returns `upgrade_required` for CLI requests from free-tier accounts.
+- Free-plan users can use `comments list` and `comments reply`; other CLI commands return `upgrade_required`.
 - Settings updates are file-based in v1.
 - For advanced per-platform payloads, prefer posts create --file.
 - comments_under_post remains limited by the API.

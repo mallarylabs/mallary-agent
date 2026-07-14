@@ -139,6 +139,8 @@ Settings:
 
 - `post_type` (required when needed): `feed`, `story`, `reel`, or `carousel`
 - `thumbnail_url`: optional on video media items for Instagram video/Reels covers. Use a Mallary-hosted image that matches the video placement.
+- `story` uses exactly one image or video. Captions and follow-up comments are not supported for Stories; include text in the media itself.
+- `carousel` uses 2 to 10 image/video media items.
 
 Example:
 

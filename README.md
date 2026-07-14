@@ -7,13 +7,14 @@ With the CLI you can:
 - upload local media files to Mallary.ai
 - create and schedule posts to your social media accounts
 - inspect jobs and grouped posts
+- list comments and reply to comments on published posts
 - fetch post analytics
 - manage webhooks
 - manage your brand settings
 - list connected platforms
 - disconnect platforms
 
-Mallary CLI is a direct client for the public Mallary.ai API. It does not bypass plan limits, feature gates, or platform rules. CLI access is available on paid plans only.
+Mallary CLI is a direct client for the public Mallary.ai API. It does not bypass plan limits, feature gates, or platform rules. Most CLI access is available on paid plans only.
 
 ## Install
 
@@ -49,7 +50,7 @@ Mallary CLI uses environment-variable auth only. Get your API key at https://mal
 export MALLARY_API_KEY="your_mallary_api_key"
 ```
 
-The CLI is available on paid plans only: Starter, Pro, and Business.
+Most CLI commands are available on paid plans only: Starter, Pro, and Business. Comment listing and supplied comment replies are available on all plans.
 
 ## Quickstart
 
@@ -81,6 +82,18 @@ List your posts:
 
 ```bash
 mallary posts list
+```
+
+List comments on a published post:
+
+```bash
+mallary comments list --post-id 123
+```
+
+Post a supplied reply:
+
+```bash
+mallary comments reply --post-id 123 --comment-id "1789..." --message "Thanks for checking this out."
 ```
 
 Inspect one job:
@@ -201,7 +214,7 @@ Platform-specific media rules:
 
 - The CLI uses the same platform media validation as the Mallary API.
 - YouTube requires exactly one video.
-- Instagram currently works best with one image or one video in the public publisher implementation.
+- Instagram supports `feed`, `story`, `reel`, and `carousel` via `platform_options.instagram.post_type`; Stories use one image/video, Reels use one video, and carousels use 2 to 10 mixed image/video items.
 - LinkedIn currently supports text-only posts or one image attachment only.
 - TikTok video posts require one video, and TikTok photo posts support up to 35 JPEG/WebP images.
 - Pinterest requires exactly one image or GIF, or exactly one video, plus `boardId`.
@@ -254,6 +267,8 @@ Facebook:
 Instagram:
 
 - `post_type`: `feed`, `story`, `reel`, or `carousel`
+- Stories do not support captions or follow-up comments; include story text in the media itself.
+- Carousels support 2 to 10 image/video items.
 
 ```json
 {
@@ -518,6 +533,16 @@ Delete a queued or scheduled post:
 mallary posts delete 123
 ```
 
+### Comments
+
+```bash
+mallary comments list --post-id 123
+mallary comments list --post-id 123 --platform instagram --limit 50 --json
+mallary comments reply --post-id 123 --comment-id "1789..." --message "Thanks for checking this out."
+```
+
+The `comments` commands are designed to allow AI agents and automation to write and post replies to the comments on your social media posts. Mallary lists comments from your published posts, and the `comments reply` command posts the exact reply text that you provide.
+
 ### Jobs
 
 ```bash
@@ -727,6 +752,7 @@ If you are an AI agent or building an agent integration:
 - read `llms.txt` first for the compact command and workflow summary
 - use `--json` whenever the CLI is part of an automated toolchain
 - prefer `mallary posts create --file payload.json` for complex platform-specific payloads
+- for engagement, call `mallary comments list`, write the reply in the user's voice, then call `mallary comments reply`
 
 ## Links
 

@@ -185,8 +185,10 @@ mallary upload video1.mp4 video2.mov
 
 ### Instagram
 
-- public publishing currently works best with one image or one video
 - choose `feed`, `story`, `reel`, or `carousel` through `platform_options.instagram.post_type`
+- stories use exactly one image or video and do not support captions/follow-up comments
+- reels use exactly one video
+- carousels use 2 to 10 mixed image/video items
 - video/Reels covers can be supplied with `media[].thumbnail_url`
 
 ### Facebook

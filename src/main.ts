@@ -545,6 +545,10 @@ function getHelpText(commandPath?: string[]): string {
       return "Usage: mallary posts list [--profile-id <id>] [--page <n>] [--per-page <n>] [--json]";
     case "posts delete":
       return "Usage: mallary posts delete <id> [--json]";
+    case "comments list":
+      return "Usage: mallary comments list --post-id <id> [--platform <platform>] [--profile-id <id>] [--limit <n>] [--json]";
+    case "comments reply":
+      return "Usage: mallary comments reply --post-id <id> --comment-id <comment_id> --message \"Reply text\" [--platform <platform>] [--profile-id <id>] [--json]";
     case "jobs get":
       return "Usage: mallary jobs get <id> [--json]";
     case "jobs attach-tiktok-url":
@@ -578,6 +582,7 @@ function getHelpText(commandPath?: string[]): string {
         "  health",
         "  upload <file...>",
         "  posts create|list|delete",
+        "  comments list|reply",
         "  jobs get <id>",
         "  jobs attach-tiktok-url <id> --url <tiktok_video_url>",
         "  analytics list",
@@ -920,6 +925,114 @@ async function runPostsDelete(deps: CliDeps, baseUrl: string, args: string[]): P
   });
   return result(response, (stdout) => {
     writeLine(stdout, `Deleted post ${id}.`);
+  });
+}
+
+async function runCommentsList(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
+  const apiKey = ensureApiKey(deps.env);
+  const parsed = parseArgs({
+    args,
+    allowPositionals: true,
+    strict: true,
+    options: {
+      help: { type: "boolean", short: "h" },
+      "post-id": { type: "string" },
+      platform: { type: "string" },
+      "profile-id": { type: "string" },
+      limit: { type: "string" },
+    },
+  });
+  if (parsed.values.help) {
+    return result({ help: getHelpText(["comments", "list"]) }, (stdout) => writeLine(stdout, getHelpText(["comments", "list"])));
+  }
+  const postId = String(parsed.values["post-id"] || parsed.positionals[0] || "").trim();
+  if (!postId) {
+    throw new CliError(1, {
+      http_status: 0,
+      code: "invalid_args",
+      message: "--post-id is required.",
+    });
+  }
+  const params = new URLSearchParams({ post_id: postId });
+  if (typeof parsed.values.platform === "string" && parsed.values.platform.trim()) {
+    params.set("platform", parsed.values.platform.trim());
+  }
+  if (typeof parsed.values["profile-id"] === "string" && parsed.values["profile-id"].trim()) {
+    params.set("profile_id", parsed.values["profile-id"].trim());
+  }
+  if (typeof parsed.values.limit === "string" && parsed.values.limit.trim()) {
+    params.set("limit", parsed.values.limit.trim());
+  }
+  const response = await apiRequest(deps, {
+    method: "GET",
+    baseUrl,
+    requestPath: `/api/v1/comments?${params.toString()}`,
+    apiKey,
+  });
+  return result(response, (stdout) => {
+    const data = isObject(response) && isObject(response.data) ? (response.data as JsonRecord) : {};
+    const comments = Array.isArray(data.comments) ? data.comments : [];
+    writeLine(stdout, `Found ${comments.length} comment(s) on post ${formatValue(data.post_id || postId)}.`);
+    comments.forEach((comment) => {
+      if (!isObject(comment)) return;
+      const author = comment.author_username || comment.author_name || comment.author_id || "unknown";
+      writeLine(stdout, `- ${formatValue(comment.id)} | ${formatValue(author)} | ${formatValue(comment.created_at)}`);
+      writeLine(stdout, `  ${String(comment.text || "").slice(0, 240)}`);
+    });
+  });
+}
+
+async function runCommentsReply(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
+  const apiKey = ensureApiKey(deps.env);
+  const parsed = parseArgs({
+    args,
+    allowPositionals: true,
+    strict: true,
+    options: {
+      help: { type: "boolean", short: "h" },
+      "post-id": { type: "string" },
+      "comment-id": { type: "string" },
+      message: { type: "string" },
+      platform: { type: "string" },
+      "profile-id": { type: "string" },
+    },
+  });
+  if (parsed.values.help) {
+    return result({ help: getHelpText(["comments", "reply"]) }, (stdout) => writeLine(stdout, getHelpText(["comments", "reply"])));
+  }
+  const postId = String(parsed.values["post-id"] || "").trim();
+  const commentId = String(parsed.values["comment-id"] || "").trim();
+  const message = String(parsed.values.message || "").trim();
+  if (!postId || !commentId || !message) {
+    throw new CliError(1, {
+      http_status: 0,
+      code: "invalid_args",
+      message: "--post-id, --comment-id, and --message are required.",
+    });
+  }
+  const body: JsonRecord = {
+    post_id: postId,
+    comment_id: commentId,
+    message,
+  };
+  if (typeof parsed.values.platform === "string" && parsed.values.platform.trim()) {
+    body.platform = parsed.values.platform.trim();
+  }
+  if (typeof parsed.values["profile-id"] === "string" && parsed.values["profile-id"].trim()) {
+    body.profile_id = parsed.values["profile-id"].trim();
+  }
+  const response = await apiRequest(deps, {
+    method: "POST",
+    baseUrl,
+    requestPath: "/api/v1/comments/reply",
+    apiKey,
+    body,
+  });
+  return result(response, (stdout) => {
+    const data = isObject(response) && isObject(response.data) ? (response.data as JsonRecord) : {};
+    writeLine(stdout, `Posted reply to comment ${formatValue(data.comment_id || commentId)}.`);
+    if (data.reply_id) writeLine(stdout, `Reply ID: ${formatValue(data.reply_id)}`);
+    if (data.platform) writeLine(stdout, `Platform: ${formatValue(data.platform)}`);
   });
 }
 
@@ -1369,6 +1482,19 @@ async function dispatchCommand(deps: CliDeps, globals: GlobalOptions): Promise<C
             http_status: 0,
             code: "invalid_command",
             message: "Unknown posts subcommand. Use create, list, or delete.",
+          });
+      }
+    case "comments":
+      switch (subcommand) {
+        case "list":
+          return runCommentsList(deps, baseUrl, rest);
+        case "reply":
+          return runCommentsReply(deps, baseUrl, rest);
+        default:
+          throw new CliError(1, {
+            http_status: 0,
+            code: "invalid_command",
+            message: "Unknown comments subcommand. Use list or reply.",
           });
       }
     case "jobs":

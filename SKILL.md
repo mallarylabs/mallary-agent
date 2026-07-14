@@ -1,6 +1,6 @@
 ---
 name: mallary
-description: Mallary is a multi-platform social media publishing tool for X, Facebook, Instagram, LinkedIn, YouTube, TikTok, Pinterest, Reddit, Threads, and Snapchat. Use it to upload media, create and schedule posts, inspect jobs, fetch analytics, list connected platforms, manage webhooks, update brand settings, and support developer or AI-agent publishing workflows.
+description: Mallary is a multi-platform social media publishing tool for X, Facebook, Instagram, LinkedIn, YouTube, TikTok, Pinterest, Reddit, Threads, and Snapchat. Use it to upload media, create and schedule posts, inspect jobs, list comments, reply to comments, fetch analytics, list connected platforms, manage webhooks, update brand settings, and support developer or AI-agent publishing workflows.
 version: 1.0.1
 homepage: https://mallary.ai/
 metadata:
@@ -51,7 +51,7 @@ If it is not set:
 
 **Do NOT proceed with post, upload, analytics, webhook, settings, or platform commands until the API key is set.**
 
-Mallary CLI access is available on paid plans only: Starter, Pro, and Business.
+Most Mallary CLI commands are available on paid plans only: Starter, Pro, and Business. `mallary comments list` and `mallary comments reply` are available on all plans.
 
 ---
 
@@ -63,7 +63,8 @@ The fundamental pattern for using Mallary CLI:
 2. **Prepare** - Upload local media files if needed
 3. **Post** - Create immediate or scheduled posts with shared fields or file-mode payloads
 4. **Inspect** - Check grouped posts and job status
-5. **Analyze** - Fetch analytics and review action-required outcomes
+5. **Engage** - List comments, reply to comments
+6. **Analyze** - Fetch analytics and review action-required outcomes
 
 ````bash
 # 1. Authenticate
@@ -79,7 +80,11 @@ mallary posts create --message "Content" --platform facebook --media ./image.jpg
 mallary posts list
 mallary jobs get 123
 
-# 5. Analyze
+# 5. Engage
+mallary comments list --post-id 123 --json
+mallary comments reply --post-id 123 --comment-id "1789..." --message "Thanks for checking this out."
+
+# 6. Analyze
 mallary analytics list --post-id 42
 
 
@@ -737,6 +742,8 @@ mallary upload <file> --json                                                    
 
 # Management
 mallary posts list                                       # List grouped posts
+mallary comments list --post-id <id>                    # List comments on a published post
+mallary comments reply --post-id <id> --comment-id <cid> --message "text"  # Post supplied reply text
 mallary posts delete <id>                                # Delete queued/scheduled post
 mallary jobs get <id>                                    # Get job status
 mallary jobs attach-tiktok-url <id> --url "<url>"        # Finish TikTok final URL flow

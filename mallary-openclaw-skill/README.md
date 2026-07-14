@@ -205,7 +205,7 @@ Platform-specific media rules:
 
 - The CLI uses the same platform media validation as the Mallary API.
 - YouTube requires exactly one video.
-- Instagram currently works best with one image or one video in the public publisher implementation.
+- Instagram supports `feed`, `story`, `reel`, and `carousel` via `platform_options.instagram.post_type`; Stories use one image/video, Reels use one video, and carousels use 2 to 10 mixed image/video items.
 - LinkedIn currently supports text-only posts or one image attachment only.
 - TikTok video posts require one video, and TikTok photo posts support up to 35 JPEG/WebP images.
 - Pinterest requires exactly one image or GIF, or exactly one video, plus `boardId`.
@@ -259,6 +259,8 @@ Facebook:
 Instagram:
 
 - `post_type`: `feed`, `story`, `reel`, or `carousel`
+- Stories do not support captions or follow-up comments; include story text in the media itself.
+- Carousels support 2 to 10 image/video items.
 
 ```json
 {

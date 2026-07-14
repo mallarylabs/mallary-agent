@@ -561,6 +561,107 @@ describe("mallary cli", () => {
     );
   });
 
+  it("lists comments and posts replies through the comments commands", async () => {
+    let replyBody = "";
+
+    await withServer(
+      async (req, res, _state, body) => {
+        const url = new URL(String(req.url || ""), "http://127.0.0.1");
+        if (url.pathname === "/api/v1/comments" && req.method === "GET") {
+          expect(url.searchParams.get("post_id")).toBe("123");
+          expect(url.searchParams.get("platform")).toBe("instagram");
+          expect(url.searchParams.get("profile_id")).toBe("brand-1");
+          expect(url.searchParams.get("limit")).toBe("25");
+          res.setHeader("content-type", "application/json");
+          res.end(
+            JSON.stringify({
+              status: "ok",
+              data: {
+                post_id: "123",
+                platform: "instagram",
+                comments: [{ id: "comment-1", text: "Great post", author_username: "reader" }],
+              },
+            })
+          );
+          return;
+        }
+        if (url.pathname === "/api/v1/comments/reply" && req.method === "POST") {
+          replyBody = body;
+          res.setHeader("content-type", "application/json");
+          res.end(
+            JSON.stringify({
+              status: "ok",
+              data: {
+                post_id: "123",
+                comment_id: "comment-1",
+                reply_id: "reply-1",
+                platform: "instagram",
+              },
+            })
+          );
+          return;
+        }
+        res.statusCode = 404;
+        res.end("not found");
+      },
+      async (baseUrl) => {
+        const env = { MALLARY_API_KEY: "test" };
+        const fetch = createMallaryFetch(baseUrl);
+
+        const listOut = new MemoryWriter();
+        expect(
+          await runCli(
+            [
+              "comments",
+              "list",
+              "--post-id",
+              "123",
+              "--platform",
+              "instagram",
+              "--profile-id",
+              "brand-1",
+              "--limit",
+              "25",
+              "--json",
+            ],
+            { stdout: listOut, stderr: new MemoryWriter(), env, fetch }
+          )
+        ).toBe(0);
+        expect(JSON.parse(listOut.toString()).data.comments[0].text).toBe("Great post");
+
+        const replyOut = new MemoryWriter();
+        expect(
+          await runCli(
+            [
+              "comments",
+              "reply",
+              "--post-id",
+              "123",
+              "--comment-id",
+              "comment-1",
+              "--message",
+              "Thanks for reading.",
+              "--platform",
+              "instagram",
+              "--profile-id",
+              "brand-1",
+              "--json",
+            ],
+            { stdout: replyOut, stderr: new MemoryWriter(), env, fetch }
+          )
+        ).toBe(0);
+        expect(JSON.parse(replyBody)).toEqual({
+          post_id: "123",
+          comment_id: "comment-1",
+          message: "Thanks for reading.",
+          platform: "instagram",
+          profile_id: "brand-1",
+        });
+        expect(JSON.parse(replyOut.toString()).data.reply_id).toBe("reply-1");
+      }
+    );
+  });
+
   it("shows needs-final-action text for TikTok media upload in posts list and job output", async () => {
     await withServer(
       async (req, res) => {
