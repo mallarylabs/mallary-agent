@@ -6,6 +6,8 @@ Mallary supports platform-specific settings through `platform_options` in file m
 
 Profiles are separate from provider settings. Omit `--profile-id` or `profile_id` to use the default Dashboard profile; use `mallary profiles list` and pass `--profile-id` or JSON `profile_id` for a non-default profile.
 
+Warning: `mallary posts create` publishes or schedules real content. Confirm the target profile, platform options, message/media, and timing before running these examples.
+
 ## Supported Platforms
 
 ### Platforms with Specific Settings

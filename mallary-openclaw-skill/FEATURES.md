@@ -56,6 +56,7 @@ Profiles are used to group your social media accounts. You can create a profile 
 - In JSON file mode, send `profile_id`.
 - Platform connections, posts, analytics, and AI auto-reply settings are profile-scoped.
 - The CLI lists and targets profiles; profile creation and rename workflows live in the dashboard or REST API.
+- Commands that create posts, upload files, update settings, manage webhooks, or disconnect platforms have side effects. Confirm the target profile and intended outcome before running them.
 
 ## Usage Modes
 
@@ -64,6 +65,8 @@ Mallary supports two main ways to create content.
 ### 1. Simple Mode (Command Line)
 
 For quick, simple posts:
+
+Warning: `mallary posts create` publishes or schedules real content on connected social-media accounts. Do not use these examples as harmless tests; use read-only commands such as `mallary health`, `mallary profiles list`, `mallary platforms list`, or `mallary posts list` for lower-impact smoke testing, and redact profile, platform, account, and post metadata before sharing output.
 
 ```bash
 # Single post
@@ -252,7 +255,7 @@ Mallary CLI is intentionally friendly to agents and automation.
 - prefer `--json` output for machine handling
 - call `mallary profiles list --json` before targeting a non-default profile
 - prefer `posts create --file` for advanced platform payloads
-- upload local files through Mallary first or let the CLI do it automatically
+- treat local uploads as remote data transfer to Mallary storage/CDN infrastructure; confirm file contents before using automatic CLI uploads
 - never pass third-party remote media URLs directly to the CLI
 - remember that free plans do not include CLI access
 
@@ -269,13 +272,13 @@ Mallary CLI is intentionally friendly to agents and automation.
 
 Mallary CLI supports the complete public Mallary publishing workflow:
 
-- upload local media
-- create direct or scheduled posts
-- add follow-up comments
+- upload local media to Mallary storage/CDN infrastructure
+- create direct or scheduled posts on connected social accounts
+- add follow-up comments to posts
 - inspect jobs
 - fetch analytics
-- manage webhooks
+- manage webhooks that transmit Mallary events to external URLs
 - list and target profiles
-- manage profile-scoped brand settings
+- manage profile-scoped brand settings that affect account behavior
 - list connected platforms for a profile
 - disconnect platforms from a profile

@@ -162,50 +162,73 @@ Human output or --json output
 
 1. `health`
    - check Mallary service health
+   - lowest-risk read-only command; does not require authentication
 
 2. `upload <file...>`
    - create upload URLs
    - upload local files end-to-end
+   - data-transmitting command: sends local files to Mallary storage/CDN infrastructure, including third-party hosting/CDN providers; confirm the file path and contents before running
 
 3. `posts create`
    - create or schedule posts
    - supports flag mode and file mode
+   - publish side effect: creates a real public or scheduled social-media post; do not use as a harmless test
 
 4. `posts list`
    - list grouped posts
+   - read-only command; output can expose post metadata and profile context, so redact before sharing
 
 5. `posts delete <id>`
    - delete queued or scheduled posts
+   - destructive command: permanently removes a queued/scheduled Mallary post/job that has not started publishing; confirm the post ID, profile, and schedule before running
 
 6. `jobs get <id>`
    - inspect job status and result data
+   - read-only command; output can expose job, post, profile, platform, or provider result metadata
 
 7. `jobs attach-tiktok-url <id> --url <url>`
    - attach a TikTok post URL for inbox-style TikTok publish flows
+   - state-changing command: records a public TikTok URL against a Mallary job; confirm the job ID and URL before running
 
 8. `analytics list`
    - fetch analytics rows
+   - read-only command; output can expose account performance and platform metadata
 
 9. `profiles list`
    - list profiles and their profile IDs
+   - read-only command; output exposes profile IDs and account structure, so minimize and redact
 
 10. `webhooks list|create|delete`
    - manage webhook endpoints
+   - external data-transmission and destructive commands: create sends future Mallary events to the configured URL; delete removes delivery configuration; confirm the destination URL, events, and webhook ID before running
 
 11. `settings get|update`
    - read or partially update profile-scoped settings
+   - settings update is account-impacting: can change brand context and AI auto-reply behavior; confirm the target profile and JSON fields before running
 
 12. `platforms list`
    - list Mallary-supported platforms and show which are connected for a profile
+   - read-only command; output exposes connected-platform state and account labels, so minimize and redact
 
 13. `platforms disconnect <platform>`
    - disconnect a connected social platform from a profile
+   - destructive/account-impacting command: removes Mallary's ability to post, reply, or fetch analytics for that platform until reconnected; confirm platform and profile before running
 
 ## Environment Variables
 
 | Variable | Required | Default | Usage |
 | --- | --- | --- | --- |
 | `MALLARY_API_KEY` | Yes | none | Authentication for all authenticated commands |
+
+### Credential Handling
+
+`MALLARY_API_KEY` is a bearer credential that can authorize posting, uploads, webhook changes, settings updates, and platform/account-management actions. Treat it as a secret.
+
+- Store keys in a local secret manager, a locked-down untracked env file, or a CI secret store; never commit them to source control.
+- Avoid shell-history exposure: do not paste a real key into shared terminals, documentation, tickets, prompts, or screenshots.
+- Do not print keys with `echo`, `printenv`, debug traces, request logs, or CI output; redact all but the last few characters before sharing logs.
+- In CI, pass the key through masked secrets such as `secrets.MALLARY_API_KEY`, disable shell tracing around Mallary commands, and restrict log access.
+- If a key appears in logs, chat, shell history, or a committed file, rotate or revoke it before continuing.
 
 ## Dependencies
 

@@ -13,8 +13,8 @@ node cli/dist/index.js --help
 # Or run it directly (it has a shebang)
 ./cli/dist/index.js --help
 
-# Example command
-export MALLARY_API_KEY=your_key
+# Example authenticated command; set MALLARY_API_KEY from a secret store first
+test -n "${MALLARY_API_KEY:-}" && echo "MALLARY_API_KEY is set"
 node cli/dist/index.js posts list
 node cli/dist/index.js profiles list
 ```
@@ -32,7 +32,6 @@ npm link
 mallary --help
 mallary profiles list
 mallary posts list
-mallary posts create --message "Hello!" --platform facebook --profile-id AbC123xYz90
 
 # To unlink later
 npm unlink -g @mallary/cli
@@ -49,7 +48,6 @@ npm run build
 npm run start -- --help
 npm run start -- profiles list
 npm run start -- posts list
-npm run start -- posts create --message "Hello" --platform facebook
 ```
 
 ## Option 4: Use npm/npx (Published Package)
@@ -81,11 +79,10 @@ npm run build
 
 ### Step 2: Set Your API Key
 
-```bash
-export MALLARY_API_KEY=your_api_key_here
+Security: `MALLARY_API_KEY` is a bearer secret. Do not commit it, paste it into prompts or tickets, print it in logs, or expose it in shell history. Use your password manager, a locked-down untracked env file, or a CI secret store for persistent use.
 
-# To make it permanent, add to your shell profile:
-echo 'export MALLARY_API_KEY=your_api_key_here' >> ~/.zshrc
+```bash
+read -rsp "Mallary API key: " MALLARY_API_KEY; echo; export MALLARY_API_KEY
 ```
 
 ### Step 3: Choose Your Method
@@ -125,10 +122,10 @@ echo $PATH
 ### "MALLARY_API_KEY is not set"
 
 ```bash
-export MALLARY_API_KEY=your_key
+read -rsp "Mallary API key: " MALLARY_API_KEY; echo; export MALLARY_API_KEY
 
-# Verify it's set
-echo $MALLARY_API_KEY
+# Verify it is set without printing the key
+test -n "${MALLARY_API_KEY:-}" && echo "MALLARY_API_KEY is set"
 ```
 
 ### Permission Denied
@@ -163,20 +160,26 @@ mallary --help
 node cli/dist/index.js help posts create
 ```
 
-### Test with Sample Command (requires API key)
+### Test with Safe Read-Only Commands (requires API key)
 
 ```bash
-export MALLARY_API_KEY=your_key
+test -n "${MALLARY_API_KEY:-}" && echo "MALLARY_API_KEY is set"
 
 # Health check
 mallary health
 
 # Profile discovery
 mallary profiles list
+```
 
-# Create a test post
+### Optional Real Publish Check
+
+Warning: `mallary posts create` publishes or schedules content through Mallary to the selected connected social-media account. Do not run this as a harmless test. Only use it after confirming the profile ID and platform point to an account where a real public post is intended.
+
+```bash
+# Publishes a real Facebook post to the selected profile
 mallary posts create \
-  --message "Test post from CLI" \
+  --message "Intentional publish from Mallary CLI" \
   --platform facebook \
   --profile-id AbC123xYz90
 ```
@@ -217,30 +220,26 @@ npm test
 
 - `MALLARY_API_KEY` - your Mallary API key
 
+Treat `MALLARY_API_KEY` as a bearer credential. Store it in a secret manager, a locked-down untracked env file, or a masked CI secret. Do not commit it, paste it into prompts or tickets, print it with `echo`/`printenv`, enable shell tracing around it, or share logs containing it. Rotate or revoke the key if it is exposed.
+
 ### Setting Environment Variables
 
 Temporary:
 
 ```bash
-# For bash/zsh
-export MALLARY_API_KEY=your_key
+# For bash/zsh, without printing the key
+read -rsp "Mallary API key: " MALLARY_API_KEY; echo; export MALLARY_API_KEY
 
-# For fish
-set -x MALLARY_API_KEY your_key
+# For fish, without printing the key
+read --silent --prompt-str "Mallary API key: " MALLARY_API_KEY; set -gx MALLARY_API_KEY $MALLARY_API_KEY
 
 # For PowerShell
 $env:MALLARY_API_KEY="your_key"
 ```
 
-Permanent:
+Persistent local storage:
 
-```bash
-# For bash
-echo 'export MALLARY_API_KEY=your_key' >> ~/.bashrc
-
-# For zsh
-echo 'export MALLARY_API_KEY=your_key' >> ~/.zshrc
-```
+Use a password manager, shell secret plugin, OS keychain, or untracked env file with restrictive permissions. Avoid writing real keys directly into shared dotfiles or commands that may be saved in shell history.
 
 ## Using Aliases
 
@@ -286,13 +285,14 @@ cd cli && npm install && npm run build
 # 2. Link globally
 npm link
 
-# 3. Set API key
-export MALLARY_API_KEY=your_key
+# 3. Confirm API key is available without printing it
+test -n "${MALLARY_API_KEY:-}" && echo "MALLARY_API_KEY is set"
 
 # 4. Test
 mallary health
 
-# 5. Start using
+# 5. Start with read-only commands
 mallary profiles list
-mallary posts create --message "My first post" --platform facebook --profile-id AbC123xYz90
 ```
+
+Do not include `mallary posts create` in setup smoke tests. It performs an external publish or schedule action on a connected social-media account. Use the optional real publish check above only after confirming the target profile, platform, message/media, and intent to create a public or scheduled post.

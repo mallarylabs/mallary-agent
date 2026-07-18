@@ -236,7 +236,7 @@ Mallary CLI is intentionally friendly to agents and automation.
 
 - prefer `--json` output for machine handling
 - prefer `posts create --file` for advanced platform payloads
-- upload local files through Mallary first or let the CLI do it automatically
+- treat local uploads as remote data transfer to Mallary storage/CDN infrastructure; confirm file contents before using automatic CLI uploads
 - never pass third-party remote media URLs directly to the CLI
 - remember that free plans do not include CLI access
 
@@ -253,7 +253,7 @@ Mallary CLI is intentionally friendly to agents and automation.
 
 Mallary CLI supports the complete public Mallary publishing workflow:
 
-- upload local media
+- upload local media to Mallary storage/CDN infrastructure
 - create direct or scheduled posts
 - add follow-up comments
 - inspect jobs

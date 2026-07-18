@@ -16,6 +16,8 @@ Profiles have random public IDs such as `AbC123xYz90`. Use these public IDs in C
 
 Find the profile ID in either place:
 
+Privacy warning: profile IDs, profile names, connected-platform state, and profile-scoped settings are sensitive operational metadata. Request only the specific profile ID needed and redact profile/account details before sharing logs, screenshots, tickets, or agent transcripts.
+
 ```bash
 mallary profiles list
 mallary profiles list --json
@@ -26,6 +28,8 @@ Or copy it from the **Dashboard profile** bar in the Mallary dashboard.
 ## CLI Commands That Accept Profiles
 
 The CLI can list profiles and target a profile with `--profile-id`:
+
+Warning: commands in this block are not all read-only. `posts create` publishes or schedules content, `settings update` changes profile behavior, and `platforms disconnect` removes Mallary's platform access until reconnect. Confirm the target profile ID and intended side effect before running those commands.
 
 ```bash
 mallary profiles list

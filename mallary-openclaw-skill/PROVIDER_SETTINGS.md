@@ -4,6 +4,8 @@ The Mallary CLI supports platform-specific publishing settings through JSON file
 
 Provider settings are independent of profiles. Omit `--profile-id` or `profile_id` to use the default profile. Use `mallary profiles list` to find the profile ID for a non-default profile, then pass `--profile-id` in flag mode or `profile_id` in file mode.
 
+Warning: `mallary posts create` publishes or schedules real content on connected social-media accounts. Confirm the profile, platform options, message/media, and timing before running these examples.
+
 ## How to Use Provider Settings
 
 ### Method 1: Command Line Flags

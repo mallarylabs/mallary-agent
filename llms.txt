@@ -3,7 +3,7 @@ Mallary CLI
 Mallary CLI is the official command-line interface for the Mallary public API.
 
 Purpose
-- Upload local media to Mallary
+- Upload local media to Mallary storage/CDN infrastructure; this transmits selected local file bytes
 - Create and schedule social posts
 - Inspect jobs and grouped posts
 - List comments and reply to commennts on published posts
@@ -32,7 +32,7 @@ Command inventory
 - mallary upload <file...>
 - mallary posts create
 - mallary posts list
-- mallary posts delete <id>
+- mallary posts delete <id> (destructive: deletes queued/scheduled Mallary post/job that has not started publishing)
 - mallary comments list --post-id <id>
 - mallary comments reply --post-id <id> --comment-id <cid> --message "text"
 - mallary jobs get <id>
@@ -43,7 +43,7 @@ Command inventory
 - mallary settings get
 - mallary settings update --file partial.json
 - mallary platforms list
-- mallary platforms disconnect <platform>
+- mallary platforms disconnect <platform> (destructive/account-impacting: disconnects a platform until reconnect)
 
 Output conventions
 - Human-readable output by default

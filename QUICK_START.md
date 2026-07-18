@@ -22,23 +22,24 @@ npx @mallary/cli --help
 
 ### 2. Set Environment Variable
 
+Security: `MALLARY_API_KEY` is a bearer secret. Do not commit it, paste it into prompts or tickets, print it in logs, or expose it in shell history. Use your password manager, a locked-down untracked env file, or a CI secret store for persistent use.
+
 ```bash
-# Bash/Zsh
-export MALLARY_API_KEY=your_api_key_here
+# Bash/Zsh, without printing the key
+read -rsp "Mallary API key: " MALLARY_API_KEY; echo; export MALLARY_API_KEY
 
-# Fish
-set -x MALLARY_API_KEY your_api_key_here
+# Fish, without printing the key
+read --silent --prompt-str "Mallary API key: " MALLARY_API_KEY; set -gx MALLARY_API_KEY $MALLARY_API_KEY
 
-# PowerShell
-$env:MALLARY_API_KEY="your_api_key_here"
+# PowerShell, without typing the key into command history
+$secureKey = Read-Host "Mallary API key" -AsSecureString
+$env:MALLARY_API_KEY = [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureKey))
 ```
 
-To make it permanent, add it to your shell profile:
+For an interactive bash/zsh session, you can avoid printing the key while setting it:
 
 ```bash
-# ~/.bashrc or ~/.zshrc
-echo 'export MALLARY_API_KEY=your_api_key_here' >> ~/.zshrc
-source ~/.zshrc
+read -rsp "Mallary API key: " MALLARY_API_KEY; echo; export MALLARY_API_KEY
 ```
 
 ### 3. Verify Installation
@@ -95,6 +96,8 @@ mallary posts list --page 2 --per-page 20
 ```
 
 ### Delete a Post
+
+Warning: `mallary posts delete` is destructive. It permanently removes a queued or scheduled Mallary post/job that has not started publishing. Confirm the exact post ID, profile, schedule, and intended cancellation before running it. This command does not remove content that is already published on external social platforms.
 
 ```bash
 mallary posts delete 123
@@ -190,7 +193,7 @@ done
 
 ```bash
 # Required for authenticated commands
-export MALLARY_API_KEY=your_key
+test -n "${MALLARY_API_KEY:-}" && echo "MALLARY_API_KEY is set"
 
 # The public CLI uses the fixed production base URL:
 # https://mallary.ai
@@ -203,8 +206,8 @@ export MALLARY_API_KEY=your_key
 If you see a `missing_api_key` error:
 
 ```bash
-export MALLARY_API_KEY=your_key
-echo $MALLARY_API_KEY
+read -rsp "Mallary API key: " MALLARY_API_KEY; echo; export MALLARY_API_KEY
+test -n "${MALLARY_API_KEY:-}" && echo "MALLARY_API_KEY is set"
 ```
 
 ### Command Not Found

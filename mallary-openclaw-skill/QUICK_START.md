@@ -23,23 +23,24 @@ npx @mallary/cli --help
 
 ### 2. Set Environment Variable
 
+Security: `MALLARY_API_KEY` is a bearer secret. Do not commit it, paste it into prompts or tickets, print it in logs, or expose it in shell history. Use your password manager, a locked-down untracked env file, or a CI secret store for persistent use.
+
 ```bash
-# Bash/Zsh
-export MALLARY_API_KEY=your_api_key_here
+# Bash/Zsh, without printing the key
+read -rsp "Mallary API key: " MALLARY_API_KEY; echo; export MALLARY_API_KEY
 
-# Fish
-set -x MALLARY_API_KEY your_api_key_here
+# Fish, without printing the key
+read --silent --prompt-str "Mallary API key: " MALLARY_API_KEY; set -gx MALLARY_API_KEY $MALLARY_API_KEY
 
-# PowerShell
-$env:MALLARY_API_KEY="your_api_key_here"
+# PowerShell, without typing the key into command history
+$secureKey = Read-Host "Mallary API key" -AsSecureString
+$env:MALLARY_API_KEY = [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureKey))
 ```
 
-To make it permanent, add it to your shell profile:
+For an interactive bash/zsh session, you can avoid printing the key while setting it:
 
 ```bash
-# ~/.bashrc or ~/.zshrc
-echo 'export MALLARY_API_KEY=your_api_key_here' >> ~/.zshrc
-source ~/.zshrc
+read -rsp "Mallary API key: " MALLARY_API_KEY; echo; export MALLARY_API_KEY
 ```
 
 ### 3. Verify Installation
@@ -52,9 +53,13 @@ mallary profiles list
 
 `mallary profiles list` shows each profile and its ID. Omit `--profile-id` to use the default profile.
 
+Treat profile IDs, profile names, and connected-platform state as sensitive operational metadata. Request only what you need and redact this output before sharing it in logs, screenshots, tickets, or agent transcripts.
+
 ## Basic Commands
 
 ### Create a Post
+
+Warning: `mallary posts create` creates a real social-media post or scheduled post on the selected connected account. Use this section only when you intend to publish. For lower-impact testing, use read-only commands such as `mallary health`, `mallary profiles list`, `mallary platforms list`, or `mallary posts list`, and redact profile, platform, account, and post metadata before sharing output.
 
 ```bash
 # Simple post
@@ -106,6 +111,8 @@ mallary posts list --page 2 --per-page 20
 
 ### Delete a Post
 
+Warning: `mallary posts delete` is destructive. It permanently removes a queued or scheduled Mallary post/job that has not started publishing. Confirm the exact post ID, profile, schedule, and intended cancellation before running it. This command does not remove already-published content from external social platforms.
+
 ```bash
 mallary posts delete 123
 ```
@@ -114,6 +121,8 @@ mallary posts delete 123
 
 Use `profiles list` to find profile IDs, then use `platforms list` to see which supported Mallary platforms are connected for the default or selected profile:
 
+Privacy warning: this read-only discovery can reveal internal account structure and connected-platform state. Minimize the query and redact profile IDs, account labels, and connection details before sharing output.
+
 ```bash
 mallary profiles list
 mallary platforms list
@@ -121,6 +130,8 @@ mallary platforms list --profile-id AbC123xYz90
 ```
 
 ### Upload Media
+
+Warning: `mallary upload` is data-transmitting. It sends selected local file contents to Mallary storage/CDN infrastructure, including third-party hosting/CDN providers. Confirm the file path and contents before running it, and do not upload sensitive, regulated, customer, or private files unless that remote transfer is intended and approved.
 
 ```bash
 mallary upload ./path/to/image.png
@@ -163,6 +174,8 @@ mallary posts create --message "Good night!" --platform facebook --scheduled-at 
 ```
 
 ### 4. Upload and Post Image
+
+Warning: this workflow uploads local media to Mallary storage/CDN infrastructure and can publish externally visible content. Confirm the file path, profile, platform, message, and intended public post before running it. Do not upload sensitive, regulated, customer, or private files unless that remote transfer is intended and approved.
 
 ```bash
 # First upload the image
@@ -207,7 +220,7 @@ done
 
 ```bash
 # Required for authenticated commands
-export MALLARY_API_KEY=your_key
+test -n "${MALLARY_API_KEY:-}" && echo "MALLARY_API_KEY is set"
 
 # The public CLI uses the fixed production base URL:
 # https://mallary.ai
@@ -220,8 +233,8 @@ export MALLARY_API_KEY=your_key
 If you see a `missing_api_key` error:
 
 ```bash
-export MALLARY_API_KEY=your_key
-echo $MALLARY_API_KEY
+read -rsp "Mallary API key: " MALLARY_API_KEY; echo; export MALLARY_API_KEY
+test -n "${MALLARY_API_KEY:-}" && echo "MALLARY_API_KEY is set"
 ```
 
 ### Command Not Found
@@ -262,8 +275,10 @@ node cli/dist/index.js help analytics list
 
 ## Next Steps
 
-1. try `mallary upload ./file.png`
-2. create a simple post with `mallary posts create`
+Start with read-only commands (`mallary health`, `mallary profiles list`, `mallary platforms list`, `mallary posts list`) before running commands with side effects. `upload`, `posts create`, and `settings update` require explicit confirmation because they transmit data, publish/schedule content, or change account settings.
+
+1. intentionally upload a confirmed local file with `mallary upload ./file.png`
+2. create a real post only when intended with `mallary posts create`
 3. move to file mode with `mallary posts create --file payload.json` for advanced platform options
 4. target non-default profiles with `mallary profiles list` and `--profile-id`
 5. fetch analytics with `mallary analytics list`

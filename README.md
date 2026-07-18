@@ -47,8 +47,16 @@ npm uninstall -g @mallary/cli
 Mallary CLI uses environment-variable auth only. Get your API key at https://mallary.ai now.
 
 ```bash
-export MALLARY_API_KEY="your_mallary_api_key"
+read -rsp "Mallary API key: " MALLARY_API_KEY; echo; export MALLARY_API_KEY
 ```
+
+Credential safety:
+
+- Treat `MALLARY_API_KEY` as a bearer secret that can authorize posting and account-management actions.
+- Store it in a password manager, locked-down untracked env file, or masked CI secret; never commit it.
+- Avoid shell-history exposure and do not paste real keys into prompts, tickets, screenshots, or shared terminals.
+- Do not print the key with `echo`, `printenv`, debug logs, shell tracing, or CI output; redact logs before sharing.
+- Rotate or revoke the key if it is exposed.
 
 Most CLI commands are available on paid plans only: Starter, Pro, and Business. Comment listing and supplied comment replies are available on all plans.
 
@@ -119,6 +127,8 @@ mallary health --json
 
 ### Upload
 
+> Privacy warning: `mallary upload` transmits the selected local file contents to Mallary storage/CDN infrastructure, including third-party hosting/CDN providers. Do not pass local paths that contain sensitive, regulated, customer, or private data unless that remote upload is intended and approved.
+
 ```bash
 mallary upload ./image.png
 mallary upload ./image.png ./video.mp4 --json
@@ -129,6 +139,8 @@ This command:
 1. calls Mallary to create a presigned upload URL
 2. uploads the local bytes for you
 3. returns the final Mallary media URL
+
+The same remote transfer happens when `mallary posts create` receives local media paths such as `--media ./launch.png`; the CLI uploads those files before creating the post.
 
 ### Posts
 
@@ -517,6 +529,7 @@ File mode example:
 AI auto reply:
 
 - AI Auto Replies automatically detect new comments on your published posts and uses OpenAI (ChatGPT) to post helpful replies based on your settings in configured the Mallary dashboard or as described in the settings section below. AI Auto Replies are supported on YouTube, Facebook, Instagram, LinkedIn, X (Twitter), Reddit.
+- Privacy warning: enabling AI Auto Replies causes Mallary to process comment text, post context, connected-platform metadata, and saved brand/profile settings, and to send relevant context to OpenAI for reply generation. Do not enable it for posts or accounts where comments may contain sensitive, regulated, confidential, or customer-private data unless that processing is intended and approved.
 - AI Auto Replies are available on Pro and Business plans only.
 - It depends on your saved brand/profile settings, not just the current post payload.
 - You can enable it account-wide in `mallary settings update`, or per post with `--auto-reply-enabled`.
@@ -554,6 +567,8 @@ mallary posts list --page 2 --per-page 25 --json
 
 Delete a queued or scheduled post:
 
+Warning: this is destructive. It permanently removes a queued or scheduled Mallary post/job that has not started publishing. Confirm the exact post ID, profile, schedule, and intended cancellation before deleting. This command does not remove already-published content from external social platforms.
+
 ```bash
 mallary posts delete 123
 ```
@@ -589,6 +604,8 @@ Profiles are used to group your social media accounts. You can create a profile 
 
 List connection profiles and copy the public profile ID for non-default profile commands:
 
+Privacy warning: profile lists and connected-platform state can reveal internal account structure, account labels, and operational configuration. Request only the specific profile ID needed, and redact profile IDs, profile names, account labels, and connected-platform details before sharing logs, screenshots, or agent transcripts.
+
 ```bash
 mallary profiles list
 mallary profiles list --json
@@ -620,6 +637,8 @@ mallary webhooks delete 12
 ### Settings
 
 Get current settings:
+
+Privacy warning: settings output can include brand context, contact information, pricing, FAQ content, and AI auto-reply configuration. Retrieve only what you need, avoid broad dumps, and redact sensitive values before sharing logs, screenshots, tickets, or agent transcripts.
 
 ```bash
 mallary settings get
@@ -681,6 +700,8 @@ mallary platforms list --profile-id AbC123xYz90
 
 Disconnect a platform:
 
+Warning: disconnecting a platform is destructive/account-impacting. It removes Mallary's ability to post, reply, and fetch analytics for that connected account until it is reconnected. Confirm the platform and profile before running.
+
 ```bash
 mallary platforms disconnect facebook
 mallary platforms disconnect facebook --profile-id AbC123xYz90
@@ -735,13 +756,17 @@ mallary upload ./launch.png --json
 
 ## Automation and CI
 
+> Warning: automation examples can upload local media and publish real posts to connected social-media accounts. Require explicit approval for the target profile, platforms, message/media, and timing before running them.
+
+Keep `MALLARY_API_KEY` in masked CI secrets and pass it through `env`. Do not enable `set -x` or otherwise print request headers, environment variables, or command output that could leak the key.
+
 Example shell script:
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-export MALLARY_API_KEY="${MALLARY_API_KEY:?missing}"
+: "${MALLARY_API_KEY:?missing}"
 
 UPLOAD_JSON="$(mallary upload ./hero.png --json)"
 MEDIA_URL="$(printf '%s' "$UPLOAD_JSON" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).uploads[0].media_url))')"

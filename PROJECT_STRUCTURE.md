@@ -162,6 +162,7 @@ Human output or --json output
 2. `upload <file...>`
    - create upload URLs
    - upload local files end-to-end
+   - data-transmitting command: sends local files to Mallary storage/CDN infrastructure, including third-party hosting/CDN providers; confirm the file path and contents before running
 
 3. `posts create`
    - create or schedule posts
@@ -172,6 +173,7 @@ Human output or --json output
 
 5. `posts delete <id>`
    - delete queued or scheduled posts
+   - destructive command: permanently removes a queued/scheduled Mallary post/job that has not started publishing; confirm the post ID, profile, and schedule before running
 
 6. `jobs get <id>`
    - inspect job status and result data
@@ -193,12 +195,23 @@ Human output or --json output
 
 12. `platforms disconnect <platform>`
    - disconnect a connected social platform
+   - destructive/account-impacting command: removes Mallary's ability to post, reply, or fetch analytics for that platform until reconnected; confirm platform and profile before running
 
 ## Environment Variables
 
 | Variable | Required | Default | Usage |
 | --- | --- | --- | --- |
 | `MALLARY_API_KEY` | Yes | none | Authentication for all authenticated commands |
+
+### Credential Handling
+
+`MALLARY_API_KEY` is a bearer credential that can authorize posting, uploads, webhook changes, settings updates, and platform/account-management actions. Treat it as a secret.
+
+- Store keys in a local secret manager, a locked-down untracked env file, or a CI secret store; never commit them to source control.
+- Avoid shell-history exposure: do not paste a real key into shared terminals, documentation, tickets, prompts, or screenshots.
+- Do not print keys with `echo`, `printenv`, debug traces, request logs, or CI output; redact all but the last few characters before sharing logs.
+- In CI, pass the key through masked secrets such as `secrets.MALLARY_API_KEY`, disable shell tracing around Mallary commands, and restrict log access.
+- If a key appears in logs, chat, shell history, or a committed file, rotate or revoke it before continuing.
 
 ## Dependencies
 

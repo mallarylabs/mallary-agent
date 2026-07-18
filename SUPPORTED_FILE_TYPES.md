@@ -1,6 +1,8 @@
 # Supported File Types for Upload
 
-Mallary CLI detects upload MIME types from file extensions and automatically uploads local files to Mallary's CDN before posting. The public upload path is built for image and video media. Audio, documents, and arbitrary binary files are not part of the normal public publishing flow.
+Mallary CLI detects upload MIME types from file extensions and automatically uploads selected local files to Mallary's remote storage/CDN before posting. This is not a local-only preparation step: invoking upload, or passing local media paths to posting commands, transmits file bytes to Mallary infrastructure and may make the resulting media externally hosted at a Mallary file URL. The public upload path is built for image and video media. Audio, documents, and arbitrary binary files are not part of the normal public publishing flow.
+
+Warning: `mallary upload` is data-transmitting. It sends selected local file contents to Mallary storage/CDN infrastructure, including third-party hosting/CDN providers. Confirm file paths and contents before running upload examples, especially in scripts or AI-agent workflows, and do not upload sensitive, regulated, customer, or private files unless that remote transfer is intended and approved.
 
 ## How It Works
 
@@ -141,6 +143,8 @@ Response:
 
 ### Upload and Use in Post
 
+Warning: this workflow uploads local media to Mallary storage/CDN infrastructure and then publishes or schedules real content on the selected connected social-media account. Confirm the file, profile, platform, message, and intended outcome first. Do not upload sensitive, regulated, customer, or private files unless that remote transfer is intended and approved.
+
 ```bash
 # 1. Upload the file
 RESULT=$(mallary upload video.mp4 --json)
@@ -235,8 +239,8 @@ launch.png
 ## Testing File Upload
 
 ```bash
-# Set API key
-export MALLARY_API_KEY="your_key"
+# Confirm API key is set without printing it
+test -n "${MALLARY_API_KEY:-}" && echo "MALLARY_API_KEY is set"
 
 # Test image upload
 mallary upload test-image.jpg
@@ -267,7 +271,7 @@ Make sure the file is readable by your current user.
 Set a valid Mallary API key:
 
 ```bash
-export MALLARY_API_KEY="your_key"
+read -rsp "Mallary API key: " MALLARY_API_KEY; echo; export MALLARY_API_KEY
 mallary upload test-image.jpg
 ```
 
