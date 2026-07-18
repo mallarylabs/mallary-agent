@@ -35,6 +35,7 @@ In the JSON file, specify platform-specific settings under `platform_options`:
   "platforms": ["reddit"],
   "platform_options": {
     "reddit": {
+      "message": "Reddit-specific discussion prompt",
       "post_type": "text",
       "subreddit": "programming"
     }
@@ -42,12 +43,15 @@ In the JSON file, specify platform-specific settings under `platform_options`:
 }
 ```
 
+Use `platform_options.<platform>.message` for a platform-specific message or caption. Omit it to use the top-level `message`.
+
 ## Supported Platforms & Settings
 
 ### Reddit (`reddit`)
 
 Settings:
 
+- `message`: optional Reddit-specific title/text source
 - `post_type` (required): `text`, `link`, or `image`
 - `subreddit` or `subredditName` (required): target subreddit name
 
@@ -59,6 +63,7 @@ Example:
   "platforms": ["reddit"],
   "platform_options": {
     "reddit": {
+      "message": "Reddit-specific discussion prompt",
       "post_type": "text",
       "subreddit": "socialmedia"
     }
@@ -70,6 +75,7 @@ Example:
 
 Settings:
 
+- `message`: optional YouTube-specific description/default-title source
 - `post_type`: `regular` or `shorts`
 - `title`: optional custom title
 - `visibility`: `public`, `unlisted`, or `private`
@@ -100,7 +106,7 @@ Example:
 
 Settings:
 
-- No additional platform-specific payload fields are currently consumed by the public Mallary CLI path
+- `message`: optional X-specific message
 
 Example:
 
@@ -108,7 +114,12 @@ Example:
 {
   "message": "Shipping a new feature today.",
   "platforms": ["x"],
-  "media": [{ "url": "./launch.png" }]
+  "media": [{ "url": "./launch.png" }],
+  "platform_options": {
+    "x": {
+      "message": "X-specific launch copy"
+    }
+  }
 }
 ```
 
@@ -116,6 +127,7 @@ Example:
 
 Settings:
 
+- `message`: optional LinkedIn-specific message
 - `author_urn` (optional): override the LinkedIn author or organization URN used for publishing
 
 Example:
@@ -127,6 +139,7 @@ Example:
   "media": [{ "url": "./update.png" }],
   "platform_options": {
     "linkedin": {
+      "message": "LinkedIn-specific company update",
       "author_urn": "urn:li:organization:123456"
     }
   }
@@ -137,6 +150,7 @@ Example:
 
 Settings:
 
+- `message`: optional Instagram-specific caption
 - `post_type` (required when needed): `feed`, `story`, `reel`, or `carousel`
 - `thumbnail_url`: optional on video media items for Instagram video/Reels covers. Use a Mallary-hosted image that matches the video placement.
 - `story` uses exactly one image or video. Captions and follow-up comments are not supported for Stories; include text in the media itself.
@@ -151,6 +165,7 @@ Example:
   "media": [{ "url": "./reel.mp4", "thumbnail_url": "./reel-cover.jpg" }],
   "platform_options": {
     "instagram": {
+      "message": "Instagram reel caption",
       "post_type": "reel"
     }
   }
@@ -161,6 +176,7 @@ Example:
 
 Settings:
 
+- `message`: optional TikTok-specific caption/title fallback
 - `post_type`: `video` or `photo`
 - `post_mode`: `DIRECT_POST` or `MEDIA_UPLOAD`
 - `source`: `FILE_UPLOAD` or `PULL_FROM_URL` for video posts
@@ -188,6 +204,7 @@ Example:
   "media": [{ "url": "./demo.mp4", "thumbnail_url": "./demo-cover.jpg" }],
   "platform_options": {
     "tiktok": {
+      "message": "TikTok-specific video caption",
       "post_type": "video",
       "post_mode": "DIRECT_POST",
       "source": "FILE_UPLOAD",
@@ -208,6 +225,7 @@ Example:
 
 Settings:
 
+- `message`: optional Facebook-specific message/caption
 - `post_type`: `feed` or `story`
 - `link`: optional destination URL for feed-style link posts
 - `pageId`: optional advanced override for a specific connected page
@@ -221,6 +239,7 @@ Example:
   "platforms": ["facebook"],
   "platform_options": {
     "facebook": {
+      "message": "Facebook caption for this announcement",
       "post_type": "feed",
       "link": "https://mallary.ai/blog"
     }
@@ -232,6 +251,7 @@ Example:
 
 Settings:
 
+- `message`: optional Pinterest-specific description/default title source
 - `post_type`: `image` or `video`
 - `boardId` (required): board id to publish into
 - `link`: optional destination URL
@@ -246,6 +266,7 @@ Example:
   "media": [{ "url": "./launch.png" }],
   "platform_options": {
     "pinterest": {
+      "message": "Pinterest-specific Pin description",
       "post_type": "image",
       "boardId": "920740542650170734",
       "link": "https://mallary.ai/pricing",
@@ -259,14 +280,20 @@ Example:
 
 Settings:
 
-- No additional platform-specific payload fields are currently required for the public CLI path
+- `message`: optional Threads-specific message
+- `post_type`: optional `text`, `image`, `video`, or `carousel`
 
 Example:
 
 ```json
 {
   "message": "Posting to Threads from Mallary",
-  "platforms": ["threads"]
+  "platforms": ["threads"],
+  "platform_options": {
+    "threads": {
+      "message": "Threads-specific post copy"
+    }
+  }
 }
 ```
 
@@ -274,7 +301,8 @@ Example:
 
 Settings:
 
-- No additional platform-specific payload fields are currently required for the public CLI path
+- `message`: optional Snapchat-specific message
+- `contentType`: optional `story`, `saved_story`, or `spotlight`
 
 Example:
 
@@ -282,13 +310,18 @@ Example:
 {
   "message": "Mallary launch update",
   "platforms": ["snapchat"],
-  "media": [{ "url": "./story.mp4" }]
+  "media": [{ "url": "./story.mp4" }],
+  "platform_options": {
+    "snapchat": {
+      "message": "Snapchat-specific story copy"
+    }
+  }
 }
 ```
 
 ## Platforms Without Specific Settings
 
-These usually work with the standard Mallary post body alone:
+These usually work with the standard Mallary post body alone, or `platform_options.<platform>.message` when platform-specific copy is needed:
 
 - `x`
 - `threads`

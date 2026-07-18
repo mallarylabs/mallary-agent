@@ -12,17 +12,17 @@ Profiles are separate from provider settings. Omit `--profile-id` or `profile_id
 
 | Platform | Type | Key Settings |
 |----------|------|--------------|
-| Reddit | `reddit` | `post_type`, `subreddit` |
-| YouTube | `youtube` | `post_type`, `title`, `visibility`, `categoryId`; media `thumbnail_url` for regular video thumbnails |
-| LinkedIn | `linkedin` | `author_urn` |
-| Instagram | `instagram` | `post_type`; media `thumbnail_url` for video/Reels covers |
-| TikTok | `tiktok` | `post_type`, `post_mode`, `source`, `privacy_level`; media `thumbnail_url` changes cover behavior |
-| Facebook | `facebook` | `post_type`, `link`, `pageId`; media `thumbnail_url` for video thumbnails |
-| Pinterest | `pinterest` | `post_type`, `boardId`, `link`, `alt_text` |
+| Reddit | `reddit` | `message`, `post_type`, `subreddit` |
+| YouTube | `youtube` | `message`, `post_type`, `title`, `visibility`, `categoryId`; media `thumbnail_url` for regular video thumbnails |
+| LinkedIn | `linkedin` | `message`, `author_urn` |
+| Instagram | `instagram` | `message`, `post_type`; media `thumbnail_url` for video/Reels covers |
+| TikTok | `tiktok` | `message`, `post_type`, `post_mode`, `source`, `privacy_level`; media `thumbnail_url` changes cover behavior |
+| Facebook | `facebook` | `message`, `post_type`, `link`, `pageId`; media `thumbnail_url` for video thumbnails |
+| Pinterest | `pinterest` | `message`, `post_type`, `boardId`, `link`, `alt_text` |
 
 ### Platforms with Default Settings
 
-These usually work with the standard payload alone:
+These usually work with the standard payload alone, or `message` inside platform options when they need platform-specific copy:
 
 - `x`
 - `threads`
@@ -54,6 +54,7 @@ Use file mode for platform-specific settings:
   "media": [{ "url": "./launch.mp4" }],
   "platform_options": {
     "youtube": {
+      "message": "YouTube-specific launch description",
       "post_type": "shorts",
       "title": "Launch update",
       "visibility": "public"
@@ -72,6 +73,7 @@ Use file mode for platform-specific settings:
   "platforms": ["reddit"],
   "platform_options": {
     "reddit": {
+      "message": "Reddit-specific discussion prompt",
       "post_type": "text",
       "subreddit": "socialmedia"
     }
@@ -160,7 +162,7 @@ Useful template patterns:
 - Reddit text post with `subreddit`
 - YouTube upload with `title` and `visibility`
 - TikTok video with direct-post options
-- Multi-platform payload with a different `platform_options` block per platform
+- Multi-platform payload with a different `platform_options` block and `message` per platform
 
 ## Finding Provider Types
 

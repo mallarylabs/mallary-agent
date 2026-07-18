@@ -172,7 +172,11 @@ Example `post.json`:
   "media": [{ "url": "./launch.mp4", "thumbnail_url": "./launch-cover.jpg" }],
   "platform_options": {
     "youtube": {
+      "message": "YouTube description for the launch video",
       "title": "Launch update"
+    },
+    "facebook": {
+      "message": "Facebook caption for this launch"
     }
   }
 }
@@ -190,6 +194,7 @@ Notes:
 - Existing remote `media[].thumbnail_url` values must also already be hosted on `https://files.mallary.ai/...`.
 - This is intentional because many social platforms only accept trusted media URLs. The CLI requires media to be uploaded to the Mallary CDN first.
 - Platform-specific payloads are supported in file mode via `platform_options`.
+- Use `platform_options.<platform>.message` when a destination needs a platform-specific message or caption.
 - Each key in `platform_options` should match the platform name you put in `platforms`.
 
 Video thumbnails:
@@ -234,9 +239,11 @@ Payload shape:
   "media": [{ "url": "./launch.mp4", "thumbnail_url": "./launch-cover.jpg" }],
   "platform_options": {
     "facebook": {
+      "message": "Facebook-specific launch copy",
       "post_type": "feed"
     },
     "youtube": {
+      "message": "YouTube-specific video description",
       "post_type": "shorts",
       "title": "Launch update",
       "visibility": "public"
@@ -247,6 +254,7 @@ Payload shape:
 
 Facebook:
 
+- `message`: optional Facebook-specific message/caption
 - `post_type`: `feed` or `story`
 - `link`: optional link URL for link-style feed posts without media
 - `pageId`: optional advanced override if you need to target a specific connected Facebook Page
@@ -257,6 +265,7 @@ Facebook:
   "platforms": ["facebook"],
   "platform_options": {
     "facebook": {
+      "message": "Facebook caption for this announcement",
       "post_type": "feed",
       "link": "https://example.com/blog/launch"
     }
@@ -266,6 +275,7 @@ Facebook:
 
 Instagram:
 
+- `message`: optional Instagram-specific caption
 - `post_type`: `feed`, `story`, `reel`, or `carousel`
 - Stories do not support captions or follow-up comments; include story text in the media itself.
 - Carousels support 2 to 10 image/video items.
@@ -277,6 +287,7 @@ Instagram:
 	  "media": [{ "url": "./reel.mp4", "thumbnail_url": "./reel-cover.jpg" }],
   "platform_options": {
     "instagram": {
+      "message": "Instagram reel caption",
       "post_type": "reel"
     }
   }
@@ -285,6 +296,7 @@ Instagram:
 
 LinkedIn:
 
+- `message`: optional LinkedIn-specific message
 - `author_urn`: optional advanced override for the LinkedIn author/org URN used when publishing
 
 ```json
@@ -294,6 +306,7 @@ LinkedIn:
   "media": [{ "url": "./update.png" }],
   "platform_options": {
     "linkedin": {
+      "message": "LinkedIn-specific company update",
       "author_urn": "urn:li:organization:123456"
     }
   }
@@ -302,6 +315,7 @@ LinkedIn:
 
 YouTube:
 
+- `message`: optional YouTube-specific description/default-title source
 - `post_type`: `regular` or `shorts`
 - `title`: optional custom title
 - `visibility`: `public`, `unlisted`, or `private`
@@ -315,6 +329,7 @@ YouTube:
 	  "media": [{ "url": "./walkthrough.mp4", "thumbnail_url": "./walkthrough-cover.jpg" }],
   "platform_options": {
     "youtube": {
+      "message": "YouTube-specific video description",
       "post_type": "shorts",
       "title": "Acme Co walkthrough",
       "visibility": "unlisted",
@@ -327,6 +342,7 @@ YouTube:
 
 TikTok:
 
+- `message`: optional TikTok-specific caption/title fallback
 - `post_type`: `video` or `photo`
 - `post_mode`: `DIRECT_POST` or `MEDIA_UPLOAD`
 - `source`: `FILE_UPLOAD` or `PULL_FROM_URL` for video posts; photo posts always use `PULL_FROM_URL`
@@ -402,6 +418,7 @@ Photo post example:
 
 Pinterest:
 
+- `message`: optional Pinterest-specific description/default title source
 - `post_type`: `image` or `video`
 - `boardId`: board id to publish into
 - `link`: optional destination URL
@@ -414,6 +431,7 @@ Pinterest:
   "media": [{ "url": "./launch.png" }],
   "platform_options": {
     "pinterest": {
+      "message": "Pinterest-specific Pin description",
       "post_type": "image",
       "boardId": "920740542650170734",
       "link": "https://example.com/pricing",
@@ -425,6 +443,7 @@ Pinterest:
 
 Reddit:
 
+- `message`: optional Reddit-specific title/text source
 - `post_type`: `text`, `link`, or `image`
 - `subreddit` or `subredditName`: target subreddit name
 
@@ -434,6 +453,7 @@ Reddit:
   "platforms": ["reddit"],
   "platform_options": {
     "reddit": {
+      "message": "Reddit-specific discussion prompt",
       "post_type": "text",
       "subreddit": "socialmedia"
     }
@@ -443,7 +463,7 @@ Reddit:
 
 X / Twitter:
 
-- No additional platform-specific payload fields are currently consumed by the public API beyond the standard post body.
+- `message`: optional X-specific message, supplied as `platform_options.x.message` or `platform_options.twitter.message`.
 
 Canonical reference for platform-specific post fields:
 
@@ -453,7 +473,12 @@ Canonical reference for platform-specific post fields:
 {
   "message": "Shipping a new feature today",
   "platforms": ["x"],
-  "media": [{ "url": "./launch.png" }]
+  "media": [{ "url": "./launch.png" }],
+  "platform_options": {
+    "x": {
+      "message": "X-specific launch copy"
+    }
+  }
 }
 ```
 

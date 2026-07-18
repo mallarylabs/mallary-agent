@@ -197,6 +197,7 @@ Platform-specific payloads:
 
 - These are available only in file mode with `mallary posts create --file payload.json`.
 - The CLI does not validate platform-specific keys itself; it passes them through to the Mallary API.
+- Use `platform_options.<platform>.message` for platform-specific messages or captions.
 - If you include `platform_options.instagram`, your `platforms` array should include `instagram`. The same rule applies to every platform.
 - For the exact currently documented `platform_options` fields and examples by platform, see:
   `https://docs.mallary.ai/api-reference/endpoint/create#body-platform-options`
@@ -435,7 +436,7 @@ Reddit:
 
 X / Twitter:
 
-- No additional platform-specific payload fields are currently consumed by the public API beyond the standard post body.
+- `message`: optional X-specific message, supplied as `platform_options.x.message` or `platform_options.twitter.message`.
 
 Canonical reference for platform-specific post fields:
 

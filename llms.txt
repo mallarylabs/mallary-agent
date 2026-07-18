@@ -81,14 +81,18 @@ Important constraints
 
 Platform-specific payloads
 - Use `platform_options` in file mode only.
+- Use `platform_options.<platform>.message` for platform-specific messages/captions.
 - Supported examples:
-  - facebook: `post_type`, `link`, `pageId`
-  - instagram: `post_type`
-  - linkedin: `author_urn`
-  - youtube: `post_type`, `title`, `visibility`, `categoryId`, `madeForKids`
-  - pinterest: `post_type`, `boardId`, `link`, `alt_text`
-  - reddit: `post_type`, `subreddit` or `subredditName`
-  - snapchat: `contentType` or `post_type`
+  - facebook: `message`, `post_type`, `link`, `pageId`
+  - instagram: `message`, `post_type`
+  - linkedin: `message`, `author_urn`
+  - youtube: `message`, `post_type`, `title`, `visibility`, `categoryId`, `madeForKids`
+  - tiktok: `message`, `post_type`, `post_mode`, `source`, `title`, `description`, `privacy_level`
+  - pinterest: `message`, `post_type`, `boardId`, `link`, `alt_text`
+  - reddit: `message`, `post_type`, `subreddit` or `subredditName`
+  - threads: `message`, `post_type`
+  - x/twitter: `message`
+  - snapchat: `message`, `contentType` or `post_type`
 
 Post enhancements
 - `comments_under_post` supports up to 3 follow-up comments.

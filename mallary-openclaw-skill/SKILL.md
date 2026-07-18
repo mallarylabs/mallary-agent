@@ -139,6 +139,7 @@ mallary settings get --profile-id AbC123xYz90
 For platform-specific fields, use:
 
 - `platform_options` in file mode
+- `platform_options.<platform>.message` for platform-specific messages or captions
 - `cli/PROVIDER_SETTINGS.md`
 - `https://docs.mallary.ai/api-reference/endpoint/create#body-platform-options`
 - `https://docs.mallary.ai/api-reference/endpoint/create#platform-specific-media-rules`
@@ -306,6 +307,7 @@ cat > reddit-post.json <<'EOF'
   "platforms": ["reddit"],
   "platform_options": {
     "reddit": {
+      "message": "Reddit-specific discussion prompt",
       "post_type": "text",
       "subreddit": "programming"
     }

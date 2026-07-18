@@ -44,6 +44,7 @@ In the JSON file, specify platform-specific settings under `platform_options`:
 
 Settings:
 
+- `message`: optional Reddit-specific title/text source
 - `post_type` (required): `text`, `link`, or `image`
 - `subreddit` or `subredditName` (required): target subreddit name
 
@@ -66,6 +67,7 @@ Example:
 
 Settings:
 
+- `message`: optional YouTube-specific description/default-title source
 - `post_type`: `regular` or `shorts`
 - `title`: optional custom title
 - `visibility`: `public`, `unlisted`, or `private`
@@ -96,7 +98,7 @@ Example:
 
 Settings:
 
-- No additional platform-specific payload fields are currently consumed by the public Mallary CLI path
+- `message`: optional X-specific message
 
 Example:
 
@@ -112,6 +114,7 @@ Example:
 
 Settings:
 
+- `message`: optional LinkedIn-specific message
 - `author_urn` (optional): override the LinkedIn author or organization URN used for publishing
 
 Example:
@@ -133,6 +136,7 @@ Example:
 
 Settings:
 
+- `message`: optional Instagram-specific caption
 - `post_type` (required when needed): `feed`, `story`, `reel`, or `carousel`
 - `thumbnail_url`: optional on video media items for Instagram video/Reels covers. Use a Mallary-hosted image that matches the video placement.
 - `story` uses exactly one image or video. Captions and follow-up comments are not supported for Stories; include text in the media itself.
@@ -157,6 +161,7 @@ Example:
 
 Settings:
 
+- `message`: optional TikTok-specific caption/title fallback
 - `post_type`: `video` or `photo`
 - `post_mode`: `DIRECT_POST` or `MEDIA_UPLOAD`
 - `source`: `FILE_UPLOAD` or `PULL_FROM_URL` for video posts
@@ -204,6 +209,7 @@ Example:
 
 Settings:
 
+- `message`: optional Facebook-specific message/caption
 - `post_type`: `feed` or `story`
 - `link`: optional destination URL for feed-style link posts
 - `pageId`: optional advanced override for a specific connected page
@@ -228,6 +234,7 @@ Example:
 
 Settings:
 
+- `message`: optional Pinterest-specific description/default title source
 - `post_type`: `image` or `video`
 - `boardId` (required): board id to publish into
 - `link`: optional destination URL
@@ -255,7 +262,8 @@ Example:
 
 Settings:
 
-- No additional platform-specific payload fields are currently required for the public CLI path
+- `message`: optional Threads-specific message
+- `post_type`: optional `text`, `image`, `video`, or `carousel`
 
 Example:
 
@@ -270,7 +278,8 @@ Example:
 
 Settings:
 
-- No additional platform-specific payload fields are currently required for the public CLI path
+- `message`: optional Snapchat-specific message
+- `contentType`: optional `story`, `saved_story`, or `spotlight`
 
 Example:
 

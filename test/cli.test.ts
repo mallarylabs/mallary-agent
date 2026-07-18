@@ -526,6 +526,46 @@ describe("mallary cli", () => {
     );
   });
 
+  it("passes platform-specific message overrides through in file mode", async () => {
+    const payload = {
+      message: "Shared fallback",
+      platforms: ["facebook", "x"],
+      platform_options: {
+        facebook: { message: "Facebook-specific caption" },
+        x: { message: "X-specific post" },
+      },
+    };
+    const payloadPath = await makeTempFile("post.json", JSON.stringify(payload));
+    let postedBody = "";
+
+    await withServer(
+      async (req, res, _state, body) => {
+        if (req.url === "/api/v1/post" && req.method === "POST") {
+          postedBody = body;
+          res.setHeader("content-type", "application/json");
+          res.end(JSON.stringify({ status: "queued", batch_id: "batch-platform-messages", jobs: [] }));
+          return;
+        }
+        res.statusCode = 404;
+        res.end("not found");
+      },
+      async (baseUrl) => {
+        const stdout = new MemoryWriter();
+        const stderr = new MemoryWriter();
+        const code = await runCli(["posts", "create", "--file", payloadPath, "--json"], {
+          stdout,
+          stderr,
+          env: { MALLARY_API_KEY: "test" },
+          fetch: createMallaryFetch(baseUrl),
+        });
+
+        expect(code).toBe(0);
+        expect(JSON.parse(postedBody)).toEqual(payload);
+        expect(stderr.toString()).toBe("");
+      }
+    );
+  });
+
   it("passes through list posts json unchanged", async () => {
     const responsePayload = {
       status: "ok",
@@ -641,10 +681,6 @@ describe("mallary cli", () => {
               "comment-1",
               "--message",
               "Thanks for reading.",
-              "--platform",
-              "instagram",
-              "--profile-id",
-              "brand-1",
               "--json",
             ],
             { stdout: replyOut, stderr: new MemoryWriter(), env, fetch }
@@ -654,8 +690,6 @@ describe("mallary cli", () => {
           post_id: "123",
           comment_id: "comment-1",
           message: "Thanks for reading.",
-          platform: "instagram",
-          profile_id: "brand-1",
         });
         expect(JSON.parse(replyOut.toString()).data.reply_id).toBe("reply-1");
       }

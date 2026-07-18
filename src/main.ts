@@ -548,7 +548,7 @@ function getHelpText(commandPath?: string[]): string {
     case "comments list":
       return "Usage: mallary comments list --post-id <id> [--platform <platform>] [--profile-id <id>] [--limit <n>] [--json]";
     case "comments reply":
-      return "Usage: mallary comments reply --post-id <id> --comment-id <comment_id> --message \"Reply text\" [--platform <platform>] [--profile-id <id>] [--json]";
+      return "Usage: mallary comments reply --post-id <id> --comment-id <comment_id> --message \"Reply text\" [--json]";
     case "jobs get":
       return "Usage: mallary jobs get <id> [--json]";
     case "jobs attach-tiktok-url":
@@ -993,8 +993,6 @@ async function runCommentsReply(deps: CliDeps, baseUrl: string, args: string[]):
       "post-id": { type: "string" },
       "comment-id": { type: "string" },
       message: { type: "string" },
-      platform: { type: "string" },
-      "profile-id": { type: "string" },
     },
   });
   if (parsed.values.help) {
@@ -1015,12 +1013,6 @@ async function runCommentsReply(deps: CliDeps, baseUrl: string, args: string[]):
     comment_id: commentId,
     message,
   };
-  if (typeof parsed.values.platform === "string" && parsed.values.platform.trim()) {
-    body.platform = parsed.values.platform.trim();
-  }
-  if (typeof parsed.values["profile-id"] === "string" && parsed.values["profile-id"].trim()) {
-    body.profile_id = parsed.values["profile-id"].trim();
-  }
   const response = await apiRequest(deps, {
     method: "POST",
     baseUrl,
