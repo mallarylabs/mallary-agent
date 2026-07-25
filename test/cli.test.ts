@@ -200,6 +200,73 @@ describe("mallary cli", () => {
     );
   });
 
+  it("prints platform post IDs and URLs from post and job responses", async () => {
+    await withServer(
+      async (req, res) => {
+        if (req.url === "/api/v1/post" && req.method === "POST") {
+          res.setHeader("content-type", "application/json");
+          res.end(
+            JSON.stringify({
+              status: "queued",
+              batch_id: "batch-links",
+              jobs: [
+                {
+                  platform: "facebook",
+                  jobId: "123",
+                  platform_post_id: "page_123",
+                  platform_post_url: "https://www.facebook.com/page/posts/123",
+                },
+              ],
+            })
+          );
+          return;
+        }
+        if (req.url === "/api/v1/jobs/123" && req.method === "GET") {
+          res.setHeader("content-type", "application/json");
+          res.end(
+            JSON.stringify({
+              status: "ok",
+              data: {
+                job: {
+                  id: "123",
+                  platform: "facebook",
+                  status: "completed",
+                  attemptsMade: 1,
+                  platform_post_id: "page_123",
+                  platform_post_url: "https://www.facebook.com/page/posts/123",
+                },
+              },
+            })
+          );
+          return;
+        }
+        res.statusCode = 404;
+        res.end("not found");
+      },
+      async (baseUrl) => {
+        const env = { MALLARY_API_KEY: "test" };
+        const fetch = createMallaryFetch(baseUrl);
+
+        const createOut = new MemoryWriter();
+        expect(
+          await runCli(["posts", "create", "--message", "Hello", "--platform", "facebook"], {
+            stdout: createOut,
+            stderr: new MemoryWriter(),
+            env,
+            fetch,
+          })
+        ).toBe(0);
+        expect(createOut.toString()).toContain("Post ID: page_123");
+        expect(createOut.toString()).toContain("Post URL: https://www.facebook.com/page/posts/123");
+
+        const jobOut = new MemoryWriter();
+        expect(await runCli(["jobs", "get", "123"], { stdout: jobOut, stderr: new MemoryWriter(), env, fetch })).toBe(0);
+        expect(jobOut.toString()).toContain("Post ID: page_123");
+        expect(jobOut.toString()).toContain("Post URL: https://www.facebook.com/page/posts/123");
+      }
+    );
+  });
+
   it("fails when the upload PUT request fails", async () => {
     const filePath = await makeTempFile("broken.txt", "oops");
 

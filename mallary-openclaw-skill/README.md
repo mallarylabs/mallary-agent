@@ -101,6 +101,8 @@ Inspect one job:
 mallary jobs get 123
 ```
 
+Completed publishing jobs show `Post ID` and `Post URL` when the platform returns or exposes them. JSON output includes the same values as `platform_post_id` and `platform_post_url`.
+
 List your connected platforms:
 
 ```bash
@@ -536,6 +538,8 @@ mallary posts list
 mallary posts list --page 2 --per-page 25 --json
 ```
 
+Grouped post results include per-platform post IDs and public post URLs after publishing when the provider makes them available.
+
 Delete a queued or scheduled post:
 
 Warning: this is destructive. It permanently removes a queued or scheduled Mallary post/job that has not started publishing. Confirm the exact post ID, profile, schedule, and intended cancellation before deleting. This command does not remove already-published content from external social platforms.
@@ -550,6 +554,8 @@ mallary posts delete 123
 mallary jobs get 123
 mallary jobs get 123 --json
 ```
+
+Completed jobs include `platform_post_id` and `platform_post_url` in JSON mode, and print `Post ID` / `Post URL` in normal output when available.
 
 ### Analytics
 

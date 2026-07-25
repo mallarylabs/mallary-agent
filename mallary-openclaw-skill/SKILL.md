@@ -111,7 +111,9 @@ mallary comments reply --post-id 123 --comment-id "1789..." --message "Thanks fo
 
 # 6. Analyze
 mallary analytics list --post-id 42
+````
 
+Completed publishing jobs and grouped post results include `platform_post_id` and `platform_post_url` when the provider returns or exposes the public platform post.
 
 ---
 

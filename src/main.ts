@@ -107,6 +107,15 @@ function extractPostActionRequired(post: unknown): JsonRecord | null {
   return null;
 }
 
+function platformPostIdentityLines(item: JsonRecord): string[] {
+  const lines: string[] = [];
+  const postId = item.platform_post_id;
+  const postUrl = item.platform_post_url;
+  if (postId) lines.push(`Post ID: ${formatValue(postId)}`);
+  if (postUrl) lines.push(`Post URL: ${formatValue(postUrl)}`);
+  return lines;
+}
+
 function extractApiError(status: number, body: unknown, raw: string): ApiErrorPayload {
   const obj = isObject(body) ? body : null;
   const topError = obj && isObject(obj.error) ? obj.error : null;
@@ -844,6 +853,9 @@ async function runPostsCreate(deps: CliDeps, baseUrl: string, args: string[]): P
       responseObj.jobs.forEach((job) => {
         if (isObject(job)) {
           writeLine(stdout, `- ${formatValue(job.platform)}: ${formatValue(job.jobId)}`);
+          for (const line of platformPostIdentityLines(job as JsonRecord)) {
+            writeLine(stdout, `  ${line}`);
+          }
         }
       });
     }
@@ -897,6 +909,16 @@ async function runPostsList(deps: CliDeps, baseUrl: string, args: string[]): Pro
         );
         if (actionRequired.message && actionRequired.message !== actionRequired.title) {
           writeLine(stdout, `  ${String(actionRequired.message)}`);
+        }
+      }
+      const platformResults = Array.isArray(post.results) ? post.results : [];
+      for (const platformResult of platformResults) {
+        if (!isObject(platformResult)) continue;
+        const identityLines = platformPostIdentityLines(platformResult as JsonRecord);
+        if (identityLines.length === 0) continue;
+        writeLine(stdout, `  ${formatValue(platformResult.platform)}:`);
+        for (const line of identityLines) {
+          writeLine(stdout, `    ${line}`);
         }
       }
     });
@@ -1068,6 +1090,9 @@ async function runJobGet(deps: CliDeps, baseUrl: string, args: string[]): Promis
       }
     }
     if (job.error) writeLine(stdout, `Error: ${formatValue(job.error)}`);
+    for (const line of platformPostIdentityLines(job)) {
+      writeLine(stdout, line);
+    }
     if (job.result) {
       writeLine(stdout, "Result:");
       writeLine(stdout, JSON.stringify(job.result, null, 2));

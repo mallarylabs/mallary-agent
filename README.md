@@ -1,5 +1,12 @@
 # Mallary CLI
 
+<p align="center">
+	<img alt="NPM Version" src="https://img.shields.io/npm/v/mallary-agent">
+	<img alt="GitHub License" src="https://img.shields.io/github/license/mallarylabs/mallary-agent">
+	<img alt="NPM Downloads" src="https://img.shields.io/npm/dm/mallary-agent">
+	<img alt="NPM Last Update" src="https://img.shields.io/npm/last-update/mallary-agent">
+</p>
+
 Mallary CLI is the official command-line interface for the https://mallary.ai social media scheduling/posting tool. It gives developers, operators, scripts, CI jobs, and AI agents a fast way to work with the same public platform that powers the Mallary.ai dashboard, REST API, and MCP server.
 
 With the CLI you can:
@@ -109,6 +116,8 @@ Inspect one job:
 ```bash
 mallary jobs get 123
 ```
+
+Completed publishing jobs show `Post ID` and `Post URL` when the platform returns or exposes them. JSON output includes the same values as `platform_post_id` and `platform_post_url`.
 
 List your connected platforms:
 
@@ -565,6 +574,8 @@ mallary posts list --profile-id AbC123xYz90
 mallary posts list --page 2 --per-page 25 --json
 ```
 
+Grouped post results include per-platform post IDs and public post URLs after publishing when the provider makes them available.
+
 Delete a queued or scheduled post:
 
 Warning: this is destructive. It permanently removes a queued or scheduled Mallary post/job that has not started publishing. Confirm the exact post ID, profile, schedule, and intended cancellation before deleting. This command does not remove already-published content from external social platforms.
@@ -589,6 +600,8 @@ The `comments` commands are designed to allow AI agents and automation to write 
 mallary jobs get 123
 mallary jobs get 123 --json
 ```
+
+Completed jobs include `platform_post_id` and `platform_post_url` in JSON mode, and print `Post ID` / `Post URL` in normal output when available.
 
 ### Analytics
 
