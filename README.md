@@ -1,12 +1,5 @@
 # Mallary CLI
 
-<p align="center">
-	<img alt="NPM Version" src="https://img.shields.io/npm/v/mallary-agent">
-	<img alt="GitHub License" src="https://img.shields.io/github/license/mallarylabs/mallary-agent">
-	<img alt="NPM Downloads" src="https://img.shields.io/npm/dm/mallary-agent">
-	<img alt="NPM Last Update" src="https://img.shields.io/npm/last-update/mallary-agent">
-</p>
-
 Mallary CLI is the official command-line interface for the https://mallary.ai social media scheduling/posting tool. It gives developers, operators, scripts, CI jobs, and AI agents a fast way to work with the same public platform that powers the Mallary.ai dashboard, REST API, and MCP server.
 
 With the CLI you can:
