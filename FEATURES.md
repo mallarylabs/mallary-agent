@@ -65,7 +65,7 @@ mallary posts create --message "Main" --platform facebook --comment "Comment 1" 
 
 ### 2. Advanced Mode (JSON Files)
 
-Use `--file` when you need platform-specific fields or a raw JSON payload.
+When you need platform-specific fields or a raw JSON payload, use `--file`.
 
 ```bash
 mallary posts create --file complex-post.json
@@ -216,12 +216,12 @@ type CreatePostPayload = {
 
 ## For AI Agents
 
-Mallary CLI is intentionally friendly to agents and automation.
+Mallary CLI supports agents and automation.
 
 ### When to Use Simple Mode
 
 - the agent is composing a small, standard post
-- local files should be uploaded automatically
+- you want the CLI to upload local files automatically
 - the workflow is shell-first
 - human review of the exact CLI command is useful
 
@@ -230,13 +230,13 @@ Mallary CLI is intentionally friendly to agents and automation.
 - the agent needs `platform_options`
 - the post spans multiple platforms with different rules
 - scheduling, comments, and platform-specific settings are combined
-- the payload should be generated and stored as an artifact
+- you want to generate the payload and store it as an artifact
 
 ### AI Agent Tips
 
 - prefer `--json` output for machine handling
 - prefer `posts create --file` for advanced platform payloads
-- treat local uploads as remote data transfer to Mallary storage/CDN infrastructure; confirm file contents before using automatic CLI uploads
+- treat local uploads as remote data transfer to Mallary storage/CDN infrastructure. Confirm file contents before you use automatic CLI uploads
 - never pass third-party remote media URLs directly to the CLI
 - remember that free plans do not include CLI access
 

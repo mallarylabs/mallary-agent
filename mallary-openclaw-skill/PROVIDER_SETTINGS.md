@@ -1,10 +1,10 @@
 # Provider-Specific Settings
 
-The Mallary CLI supports platform-specific publishing settings through JSON file mode. Different platforms have different options and media rules, so the safest path is to use `mallary posts create --file payload.json` whenever you need `platform_options`.
+The Mallary CLI supports platform-specific publishing settings through JSON file mode. Different platforms have different options and media rules. When you need `platform_options`, use `mallary posts create --file payload.json`.
 
-Provider settings are independent of profiles. Omit `--profile-id` or `profile_id` to use the default profile. Use `mallary profiles list` to find the profile ID for a non-default profile, then pass `--profile-id` in flag mode or `profile_id` in file mode.
+Provider settings are independent of profiles. Omit `--profile-id` or `profile_id` to use the default profile. Use `mallary profiles list` to find the profile ID of a non-default profile. Then pass `--profile-id` in flag mode, or `profile_id` in file mode.
 
-Warning: `mallary posts create` publishes or schedules real content on connected social-media accounts. Confirm the profile, platform options, message/media, and timing before running these examples.
+Warning: `mallary posts create` publishes or schedules real content on connected social-media accounts. Make sure that the profile, the platform options, and the message and media are correct. Also make sure that the timing is correct.
 
 ## How to Use Provider Settings
 
@@ -20,7 +20,7 @@ mallary posts create \
   --media ./launch.png
 ```
 
-Flag mode covers the common payload only. If you need platform-specific settings like `boardId`, `visibility`, or `post_type`, switch to file mode.
+Flag mode covers the common payload only. If you need platform-specific settings such as `boardId`, `visibility`, or `post_type`, switch to file mode.
 
 ### Method 2: JSON File
 
@@ -83,7 +83,7 @@ Settings:
 - `visibility`: `public`, `unlisted`, or `private`
 - `categoryId`: optional YouTube category id
 - `madeForKids`: optional boolean
-- `thumbnail_url`: optional on the video media item for regular YouTube videos. Use `jpg`, `jpeg`, or `png` up to 2 MB. Recommended: `1280x720` 16:9. Shorts thumbnails are skipped.
+- `thumbnail_url`: optional on the video media item for regular YouTube videos. Use `jpg`, `jpeg`, or `png` up to 2 MB. Use `1280x720` and the 16:9 ratio. Mallary skips Shorts thumbnails.
 
 Example:
 
@@ -153,10 +153,10 @@ Example:
 Settings:
 
 - `message`: optional Instagram-specific caption
-- `post_type` (required when needed): `feed`, `story`, `reel`, or `carousel`
-- `thumbnail_url`: optional on video media items for Instagram video/Reels covers. Use a Mallary-hosted image that matches the video placement.
-- `story` uses exactly one image or video. Captions and follow-up comments are not supported for Stories; include text in the media itself.
-- `carousel` uses 2 to 10 image/video media items.
+- `post_type`: `feed`, `story`, `reel`, or `carousel`. Set it for story, reel, and carousel posts.
+- `thumbnail_url`: optional on video media items for Instagram video covers and Reels covers. Use a Mallary-hosted image that matches the video placement.
+- `story` uses exactly one image or one video. Stories do not support captions or follow-up comments. Put the text in the media.
+- `carousel` uses 2 to 10 image or video media items.
 
 Example:
 
@@ -187,7 +187,7 @@ Settings:
 - `disable_duet`
 - `disable_stitch`
 - `video_cover_timestamp_ms`
-- `thumbnail_url` on video media overrides Mallary's timestamp cover behavior. TikTok video posts do not accept arbitrary image thumbnails through Mallary.
+- `thumbnail_url` on video media replaces the timestamp cover behavior of Mallary. TikTok video posts do not accept arbitrary image thumbnails through Mallary.
 - `title`
 - `description`
 - `auto_add_music`
@@ -231,7 +231,7 @@ Settings:
 - `post_type`: `feed` or `story`
 - `link`: optional destination URL for feed-style link posts
 - `pageId`: optional advanced override for a specific connected page
-- `thumbnail_url`: optional on video media items. Mallary accepts `jpg`, `jpeg`, or `png` thumbnails up to 10 MB and retries without the thumbnail if Meta rejects it.
+- `thumbnail_url`: optional on video media items. Mallary accepts `jpg`, `jpeg`, or `png` thumbnails up to 10 MB. If Meta rejects the thumbnail, Mallary tries again without it.
 
 Example:
 
@@ -323,7 +323,7 @@ Example:
 
 ## Platforms Without Specific Settings
 
-These usually work with the standard Mallary post body alone, or `platform_options.<platform>.message` when platform-specific copy is needed:
+These platforms work with the standard Mallary post body alone. For platform-specific copy, use `platform_options.<platform>.message`:
 
 - `x`
 - `threads`
@@ -331,8 +331,8 @@ These usually work with the standard Mallary post body alone, or `platform_optio
 
 Alias notes:
 
-- older data may still contain `twitter` as an alias for `x`
-- older data may still contain `meta` as an alias for `facebook`
+- older data can contain `twitter` as an alias for `x`
+- older data can contain `meta` as an alias for `facebook`
 
 ## Using JSON Files for Complex Settings
 
@@ -404,12 +404,12 @@ mallary posts create --file ./reddit-post.json
 
 ## Tips
 
-- Use `--file` whenever you need `platform_options`.
-- Keep `platform_options` keys aligned with the values in `platforms`.
-- Local media paths inside `media[].url` are uploaded automatically by the CLI before the post request is sent.
-- Local thumbnail paths inside `media[].thumbnail_url` are also uploaded automatically by the CLI before the post request is sent.
-- Remote media URLs must already be hosted on `https://files.mallary.ai/...`.
-- Remote thumbnail URLs must also already be hosted on `https://files.mallary.ai/...`.
+- When you need `platform_options`, use `--file`.
+- Keep the `platform_options` keys aligned with the values in `platforms`.
+- The CLI uploads local media paths in `media[].url` before it sends the post request.
+- The CLI also uploads local thumbnail paths in `media[].thumbnail_url`.
+- The Mallary CDN must host remote media URLs at `https://files.mallary.ai/...`.
+- The Mallary CDN must also host remote thumbnail URLs at `https://files.mallary.ai/...`.
 
 ## Finding Your Platform Name
 
@@ -426,13 +426,13 @@ Use the platform names Mallary expects:
 - `threads`
 - `snapchat`
 
-In file mode, each `platform_options` key should match the related entry in `platforms`.
+In file mode, each `platform_options` key must match the related entry in `platforms`.
 
 ## Common Errors
 
 ### Missing Platform Options Key
 
-If you specify platform-specific settings, the key must match the platform name:
+If you send platform-specific settings, the key must match the platform name:
 
 ```json
 {

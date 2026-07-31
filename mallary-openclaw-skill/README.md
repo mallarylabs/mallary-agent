@@ -1,13 +1,13 @@
 # Mallary CLI
 
-Mallary CLI is the official command-line interface for the https://mallary.ai social media scheduling/posting tool. It gives developers, operators, scripts, CI jobs, and AI agents a fast way to work with the same public platform that powers the Mallary.ai dashboard, REST API, and MCP server.
+Mallary CLI is the official command-line interface for the social media scheduling tool at https://mallary.ai. Developers, operators, scripts, CI jobs, and AI agents use it to work with the public Mallary platform. The same platform runs the Mallary.ai dashboard, the REST API, and the MCP server.
 
 With the CLI you can:
 
 - upload local media files to Mallary.ai
 - create and schedule posts to your social media accounts
 - inspect jobs and grouped posts
-- fetch post analytics
+- get post analytics
 - manage webhooks
 - list dashboard profiles and target non-default profiles
 - manage profile-scoped brand and AI auto-reply settings
@@ -44,7 +44,7 @@ npm uninstall -g @mallary/cli
 
 ## Authentication
 
-Mallary CLI uses environment-variable auth only. Get your API key at https://mallary.ai now.
+The Mallary CLI uses environment-variable authentication only. Get your API key at https://mallary.ai.
 
 ```bash
 read -rsp "Mallary API key: " MALLARY_API_KEY; echo; export MALLARY_API_KEY
@@ -53,30 +53,30 @@ read -rsp "Mallary API key: " MALLARY_API_KEY; echo; export MALLARY_API_KEY
 Credential safety:
 
 - Treat `MALLARY_API_KEY` as a bearer secret that can authorize posting and account-management actions.
-- Store it in a password manager, locked-down untracked env file, or masked CI secret; never commit it.
+- Store it in a password manager, a locked-down untracked env file, or a masked CI secret. Never commit it.
 - Avoid shell-history exposure and do not paste real keys into prompts, tickets, screenshots, or shared terminals.
-- Do not print the key with `echo`, `printenv`, debug logs, shell tracing, or CI output; redact logs before sharing.
-- Rotate or revoke the key if it is exposed.
+- Do not print the key with `echo`, `printenv`, debug logs, shell tracing, or CI output. Redact logs before you share them.
+- If the key is exposed, rotate or revoke it.
 
 The CLI is available on paid plans only: Starter, Pro, and Business.
 
 ## Quickstart
 
-Check the health of Mallary.ai services:
+Get the health of the Mallary.ai services:
 
 ```bash
 mallary health
 ```
 
-Upload a local file to Mallary.ai CDN:
+Upload a local file to the Mallary CDN:
 
-> Privacy warning: `mallary upload` sends the selected local file contents to Mallary storage/CDN infrastructure, including third-party hosting/CDN providers. Confirm the file path and contents before running it, and do not upload sensitive, regulated, customer, or private files unless that remote transfer is intended and approved.
+> Privacy warning: `mallary upload` sends the contents of the selected local files to Mallary storage and to the Mallary CDN. Third-party hosting and CDN providers also receive this data. Make sure that the file path and the file contents are correct before you run it. Do not upload sensitive, regulated, customer, or private files. If the user approves the remote transfer, you can upload these files.
 
 ```bash
 mallary upload ./launch.mp4
 ```
 
-> Warning: `mallary posts create` publishes immediately to the selected connected social-media account, or schedules a real future publish when scheduling flags are used. Do not run publish examples as harmless tests. Use `mallary health`, `mallary profiles list`, `mallary platforms list`, or `mallary posts list` for lower-impact read-only checks, and redact profile, platform, account, and post metadata before sharing output.
+> Warning: `mallary posts create` publishes immediately to the selected connected social-media account. If you use the scheduling flags, it schedules a real future publish. Do not run the publish examples as harmless tests. For read-only checks with a lower impact, use `mallary health`, `mallary profiles list`, `mallary platforms list`, or `mallary posts list`. Redact profile, platform, account, and post metadata before you share the output.
 
 Create a social media post from flags:
 
@@ -101,7 +101,7 @@ Inspect one job:
 mallary jobs get 123
 ```
 
-Completed publishing jobs show `Post ID` and `Post URL` when the platform returns or exposes them. JSON output includes the same values as `platform_post_id` and `platform_post_url`.
+When the platform returns them, completed publishing jobs show `Post ID` and `Post URL`. The JSON output gives the same values as `platform_post_id` and `platform_post_url`.
 
 List your connected platforms:
 
@@ -110,7 +110,7 @@ mallary platforms list
 mallary profiles list
 ```
 
-Use `mallary profiles list` to find a profile's ID. Pass it as `--profile-id` when you want a command to target a non-default Dashboard profile.
+Use `mallary profiles list` to find the ID of a profile. To target a non-default Dashboard profile, pass this ID as `--profile-id`.
 
 ## Commands
 
@@ -123,7 +123,7 @@ mallary health --json
 
 ### Upload
 
-> Privacy warning: `mallary upload` is data-transmitting. It sends the selected local file contents to Mallary storage/CDN infrastructure, including third-party hosting/CDN providers. Do not pass local paths that contain sensitive, regulated, customer, or private data unless that remote upload is intended and approved.
+> Privacy warning: `mallary upload` is data-transmitting. It sends the contents of the selected local files to Mallary storage and to the Mallary CDN. Third-party hosting and CDN providers also receive this data. Do not pass local paths with sensitive, regulated, customer, or private data. If the user approves the remote upload, you can pass these paths.
 
 ```bash
 mallary upload ./image.png
@@ -136,7 +136,7 @@ This command:
 2. uploads the local bytes for you
 3. returns the final Mallary media URL
 
-The same remote transfer happens when `mallary posts create` receives local media paths such as `--media ./launch.png`; the CLI uploads those files before creating the post.
+The same remote transfer happens when `mallary posts create` gets local media paths such as `--media ./launch.png`. The CLI uploads those files before it creates the post.
 
 ### Posts
 
@@ -189,34 +189,34 @@ Example `post.json`:
 
 Notes:
 
-- `--file` is for raw/advanced payloads and is mutually exclusive with payload-building flags.
-- In flag mode, use `--scheduled-at` with an absolute timestamp like `2026-04-06T18:30:00Z`, or pair a local time like `2026-04-06T14:30` with `--scheduled-timezone America/New_York`.
+- `--file` is for raw or advanced payloads. Do not use it together with the payload-building flags.
+- In flag mode, use `--scheduled-at` with an absolute timestamp such as `2026-04-06T18:30:00Z`. You can also pair a local time such as `2026-04-06T14:30` with `--scheduled-timezone America/New_York`.
 - `--scheduled-timezone` requires `--scheduled-at`.
-- In file mode, the CLI checks each `media[].url` value.
-- If `media[].url` is a local file path like `./launch.png`, the CLI uploads that file to the Mallary CDN first, then replaces it with the final hosted Mallary CDN file URL before sending the post request.
-- In file mode, local `media[].thumbnail_url` paths are also uploaded automatically.
-- If `media[].url` is already a remote URL, it must already be hosted on `https://files.mallary.ai/...`. External media URLs are rejected by the CLI.
-- Existing remote `media[].thumbnail_url` values must also already be hosted on `https://files.mallary.ai/...`.
-- This is intentional because many social platforms only accept trusted media URLs. The CLI requires media to be uploaded to the Mallary CDN first.
+- In file mode, the CLI reads each `media[].url` value.
+- If `media[].url` is a local file path such as `./launch.png`, the CLI uploads that file to the Mallary CDN. Then the CLI replaces the path with the hosted Mallary CDN URL. Then it sends the post request.
+- In file mode, the CLI also uploads local `media[].thumbnail_url` paths.
+- If `media[].url` is a remote URL, the Mallary CDN must host it at `https://files.mallary.ai/...`. The CLI rejects external media URLs.
+- The Mallary CDN must also host remote `media[].thumbnail_url` values at `https://files.mallary.ai/...`.
+- This rule is intentional. Many social platforms accept trusted media URLs only. Upload the media to the Mallary CDN first.
 - Platform-specific payloads are supported in file mode via `platform_options`.
-- Each key in `platform_options` should match the platform name you put in `platforms`.
+- Each key in `platform_options` must match a platform name in `platforms`.
 
 Video thumbnails:
 
 - In flag mode, use `--thumbnail` with exactly one `--media` item.
 - In file mode, put `thumbnail_url` on the video media item.
 - YouTube regular videos, Facebook videos, and Instagram videos/Reels can use custom thumbnails/covers.
-- YouTube accepts `jpg`, `jpeg`, or `png` thumbnails up to 2 MB. Recommended: `1280x720` 16:9. YouTube Shorts thumbnails are skipped.
+- YouTube accepts `jpg`, `jpeg`, or `png` thumbnails up to 2 MB. Use `1280x720` and the 16:9 ratio. Mallary skips YouTube Shorts thumbnails.
 - Facebook videos accept `jpg`, `jpeg`, or `png` thumbnails up to 10 MB.
-- TikTok video posts do not accept arbitrary image thumbnails through Mallary; supplying `thumbnail_url` disables Mallary's `video_cover_timestamp_ms` behavior and lets TikTok use its default cover.
-- TikTok photo posts can use `thumbnail_url` only when it exactly matches one of the supplied photo URLs and should become the cover photo.
+- TikTok video posts do not accept arbitrary image thumbnails through Mallary. If you supply `thumbnail_url`, Mallary stops its `video_cover_timestamp_ms` behavior. TikTok then uses its default cover.
+- TikTok photo posts can use `thumbnail_url` only when it matches one of the supplied photo URLs. That photo then becomes the cover photo.
 
 Platform-specific payloads:
 
 - These are available only in file mode with `mallary posts create --file payload.json`.
-- The CLI does not validate platform-specific keys itself; it passes them through to the Mallary API.
+- The CLI does not check the platform-specific keys. It sends them to the Mallary API.
 - Use `platform_options.<platform>.message` for platform-specific messages or captions.
-- If you include `platform_options.instagram`, your `platforms` array should include `instagram`. The same rule applies to every platform.
+- If you include `platform_options.instagram`, your `platforms` array must include `instagram`. The same rule applies to every platform.
 - For the exact currently documented `platform_options` fields and examples by platform, see:
   `https://docs.mallary.ai/api-reference/endpoint/create#body-platform-options`
 
@@ -224,11 +224,11 @@ Platform-specific media rules:
 
 - The CLI uses the same platform media validation as the Mallary API.
 - YouTube requires exactly one video.
-- Instagram supports `feed`, `story`, `reel`, and `carousel` via `platform_options.instagram.post_type`; Stories use one image/video, Reels use one video, and carousels use 2 to 10 mixed image/video items.
-- LinkedIn currently supports text-only posts or one image attachment only.
+- Instagram supports `feed`, `story`, `reel`, and `carousel` through `platform_options.instagram.post_type`. Stories use one image or one video. Reels use one video. Carousels use 2 to 10 image or video items.
+- LinkedIn supports text-only posts or one image attachment.
 - TikTok video posts require one video, and TikTok photo posts support up to 35 JPEG/WebP images.
 - Pinterest requires exactly one image or GIF, or exactly one video, plus `boardId`.
-- Reddit image posts require one image or GIF, and Reddit video upload is not supported by the current public API path.
+- Reddit image posts require one image or one GIF. The current public API path does not support Reddit video upload.
 - X allows up to 4 images, or 1 video, or 1 GIF.
 - Full matrix:
   `https://docs.mallary.ai/api-reference/endpoint/create#platform-specific-media-rules`
@@ -260,7 +260,7 @@ Facebook:
 
 - `post_type`: `feed` or `story`
 - `link`: optional link URL for link-style feed posts without media
-- `pageId`: optional advanced override if you need to target a specific connected Facebook Page
+- `pageId`: optional advanced override. Use it to target one connected Facebook Page.
 
 ```json
 {
@@ -278,7 +278,7 @@ Facebook:
 Instagram:
 
 - `post_type`: `feed`, `story`, `reel`, or `carousel`
-- Stories do not support captions or follow-up comments; include story text in the media itself.
+- Stories do not support captions or follow-up comments. Put the story text in the media.
 - Carousels support 2 to 10 image/video items.
 
 ```json
@@ -296,7 +296,7 @@ Instagram:
 
 LinkedIn:
 
-- `author_urn`: optional advanced override for the LinkedIn author/org URN used when publishing
+- `author_urn`: optional advanced override for the LinkedIn author URN or organization URN
 
 ```json
 {
@@ -340,16 +340,16 @@ TikTok:
 
 - `post_type`: `video` or `photo`
 - `post_mode`: `DIRECT_POST` or `MEDIA_UPLOAD`
-- `source`: `FILE_UPLOAD` or `PULL_FROM_URL` for video posts; photo posts always use `PULL_FROM_URL`
-- TikTok `PULL_FROM_URL` media must already be hosted on Mallary CDN at `https://files.mallary.ai/...`
-- TikTok photo posts currently accept only `jpg`, `jpeg`, or `webp` images; `png` files are rejected
+- `source`: `FILE_UPLOAD` or `PULL_FROM_URL` for video posts. Photo posts always use `PULL_FROM_URL`
+- The Mallary CDN must host TikTok `PULL_FROM_URL` media at `https://files.mallary.ai/...`
+- TikTok photo posts accept `jpg`, `jpeg`, or `webp` images only. Mallary rejects `png` files
 - `privacy_level`: optional direct-post override, must match TikTok creator info
 - `disable_comment`: optional for direct post
 - `disable_duet`: optional for direct-post video
 - `disable_stitch`: optional for direct-post video
 - `video_cover_timestamp_ms`: optional direct-post video cover frame
-- `thumbnail_url` on a TikTok video media item overrides Mallary's timestamp cover behavior; Mallary does not send arbitrary image thumbnails to TikTok video posts
-- `title`: optional override; defaults to `message`
+- `thumbnail_url` on a TikTok video media item replaces the timestamp cover behavior of Mallary. Mallary does not send arbitrary image thumbnails to TikTok video posts
+- `title`: optional override. The default is `message`
 - `description`: optional for photo posts
 - `auto_add_music`: optional for direct-post photo
 - `brand_content_toggle`, `brand_organic_toggle`: optional TikTok disclosure toggles
@@ -361,8 +361,8 @@ Defaults:
 
 - Video posts default to `post_mode=MEDIA_UPLOAD` and `source=FILE_UPLOAD`.
 - Photo posts default to `post_mode=MEDIA_UPLOAD`.
-- If `privacy_level` is omitted for direct post, Mallary first tries the first allowed privacy level from TikTok creator info, preferring `PUBLIC_TO_EVERYONE`, then `MUTUAL_FOLLOW_FRIENDS`, then `FOLLOWER_OF_CREATOR`, then `SELF_ONLY`. If TikTok returns the private-account-only direct-post restriction, Mallary retries once with the most private allowed level.
-- If `disable_comment`, `disable_duet`, or `disable_stitch` are omitted for direct post, Mallary falls back to the creator settings returned by TikTok.
+- If you omit `privacy_level` for a direct post, Mallary uses the first allowed privacy level from the TikTok creator info. The order is `PUBLIC_TO_EVERYONE`, then `MUTUAL_FOLLOW_FRIENDS`, then `FOLLOWER_OF_CREATOR`, then `SELF_ONLY`. If TikTok returns the private-account-only restriction, Mallary tries again with the most private allowed level.
+- If you omit `disable_comment`, `disable_duet`, or `disable_stitch` for a direct post, Mallary uses the creator settings from TikTok.
 
 ```json
 {
@@ -502,13 +502,13 @@ File mode example:
 
 AI auto reply:
 
-- AI Auto Replies automatically detect new comments on your published posts and uses OpenAI (ChatGPT) to post helpful replies based on your settings in configured the Mallary dashboard or as described in the settings section below. AI Auto Replies are supported on YouTube, Facebook, Instagram, LinkedIn, X (Twitter), Reddit.
-- Privacy warning: enabling AI Auto Replies causes Mallary to process comment text, post context, connected-platform metadata, and saved brand/profile settings, and to send relevant context to OpenAI for reply generation. Do not enable it for posts or accounts where comments may contain sensitive, regulated, confidential, or customer-private data unless that processing is intended and approved.
+- AI Auto Replies detect new comments on your published posts. Mallary then uses OpenAI (ChatGPT) to write replies from your settings. Configure these settings in the Mallary dashboard, or with the settings section below. AI Auto Replies work on YouTube, Facebook, Instagram, LinkedIn, X (Twitter), and Reddit.
+- Privacy warning: AI Auto Replies make Mallary process the comment text, the post context, the connected-platform metadata, and the saved brand and profile settings. Mallary also sends the related context to OpenAI, which writes the reply. If the comments can contain sensitive, regulated, confidential, or customer-private data, do not turn on this feature. If the user approves this processing, you can turn it on.
 - AI Auto Replies are available on Pro and Business plans only.
-- It depends on your saved profile-scoped brand settings, not just the current post payload.
+- It uses your saved profile-scoped brand settings, and not only the current post payload.
 - You can enable it for the selected profile in `mallary settings update`, or per post with `--auto-reply-enabled`.
 - If you omit `--auto-reply-enabled`, the post uses the selected profile's saved setting.
-- To enable it successfully, your settings must include: `business_name`, `website_url`, `business_description`, `services`, and `contact_info`.
+- To turn it on, your settings must include `business_name`, `website_url`, `business_description`, `services`, and `contact_info`.
 
 Per-post example:
 
@@ -538,11 +538,11 @@ mallary posts list
 mallary posts list --page 2 --per-page 25 --json
 ```
 
-Grouped post results include per-platform post IDs and public post URLs after publishing when the provider makes them available.
+When the provider makes them available, grouped post results include per-platform post IDs and public post URLs.
 
 Delete a queued or scheduled post:
 
-Warning: this is destructive. It permanently removes a queued or scheduled Mallary post/job that has not started publishing. Confirm the exact post ID, profile, schedule, and intended cancellation before deleting. This command does not remove already-published content from external social platforms.
+Warning: this command is destructive. It deletes a queued or scheduled Mallary post. It works only before the publish job starts. Make sure that the post ID, the profile, and the schedule are correct before you delete the post. This command does not delete published content from the external social platforms.
 
 ```bash
 mallary posts delete 123
@@ -555,7 +555,7 @@ mallary jobs get 123
 mallary jobs get 123 --json
 ```
 
-Completed jobs include `platform_post_id` and `platform_post_url` in JSON mode, and print `Post ID` / `Post URL` in normal output when available.
+In JSON mode, completed jobs include `platform_post_id` and `platform_post_url`. In normal output, they print `Post ID` and `Post URL` when the platform supplies them.
 
 ### Analytics
 
@@ -569,13 +569,13 @@ Analytics are profile-scoped. Omit `--profile-id` to use the default profile.
 
 ### Profiles
 
-Profiles are used to group your social media accounts. You can create a profile for each of your businesses, and then connect your social media accounts for each business inside this profile. Your default profile will be used if you don't pass a `profile_id` when making requests.
+Profiles group your social media accounts. You can create one profile for each of your businesses. Then connect the social media accounts of each business inside its profile. If you do not send a `profile_id` with a request, Mallary uses your default profile.
 
-Profiles group social platform connections, posts, analytics, and brand or AI auto-reply settings. The Mallary dashboard has one top-level **Dashboard profile** bar; everything underneath it belongs to the selected profile.
+Profiles group social platform connections, posts, analytics, and brand or AI auto-reply settings. The Mallary dashboard has one top-level **Dashboard profile** bar. Everything below this bar belongs to the selected profile.
 
 Every user has a default profile. Omit `--profile-id` to use it. For non-default profiles, list profiles and copy the random public profile ID:
 
-Privacy warning: profile lists and connected-platform state can reveal internal account structure, account labels, and operational configuration. Request only the specific profile ID needed, and redact profile IDs, profile names, account labels, and connected-platform details before sharing logs, screenshots, or agent transcripts.
+Privacy warning: profile lists and connected-platform state can show the internal account structure, the account labels, and the operational settings. Request only the profile ID that you need. Redact profile IDs, profile names, account labels, and connected-platform details before you share logs, screenshots, or agent transcripts.
 
 ```bash
 mallary profiles list
@@ -584,7 +584,7 @@ mallary profiles list --json
 
 Use that ID with profile-aware commands:
 
-Warning: profile-aware examples below include real publishing, settings updates, and platform disconnects. Confirm the target profile ID and intended side effect before running non-read-only commands.
+Warning: the profile-aware examples below include real publishing, settings updates, and platform disconnects. Make sure that the target profile ID and the side effect are correct. Do this before you run a command that is not read-only.
 
 ```bash
 mallary posts create --message "Launch update" --platform linkedin --profile-id AbC123xYz90
@@ -596,7 +596,7 @@ mallary platforms list --profile-id AbC123xYz90
 mallary platforms disconnect facebook --profile-id AbC123xYz90
 ```
 
-In file mode, use `profile_id` in the payload. The CLI currently lists and targets profiles; create and rename profile workflows are handled in the dashboard or REST API. See [PROFILES.md](./PROFILES.md).
+In file mode, use `profile_id` in the payload. The CLI lists profiles and targets them. The dashboard and the REST API create and rename profiles. See [PROFILES.md](./PROFILES.md).
 
 ### Webhooks
 
@@ -608,7 +608,7 @@ mallary webhooks list
 
 Create:
 
-Warning: creating a webhook sends future Mallary event data to the configured external URL. Confirm the destination URL, event list, and owner before running this command.
+Warning: a new webhook sends future Mallary event data to the external URL. Make sure that the destination URL, the event list, and the owner are correct before you run this command.
 
 ```bash
 mallary webhooks create \
@@ -619,7 +619,7 @@ mallary webhooks create \
 
 Delete:
 
-Warning: deleting a webhook removes event delivery for that webhook ID. Confirm the webhook ID before running this command.
+Warning: this command stops the event delivery for that webhook ID. Make sure that the webhook ID is correct before you run this command.
 
 ```bash
 mallary webhooks delete 12
@@ -629,7 +629,7 @@ mallary webhooks delete 12
 
 Get current settings:
 
-Privacy warning: settings output can include brand context, contact information, pricing, FAQ content, and AI auto-reply configuration. Retrieve only what you need, avoid broad dumps, and redact sensitive values before sharing logs, screenshots, tickets, or agent transcripts.
+Privacy warning: the settings output can include brand context, contact information, pricing, FAQ content, and AI auto-reply settings. Get only the values that you need. Do not make broad dumps. Redact sensitive values before you share logs, screenshots, tickets, or agent transcripts.
 
 ```bash
 mallary settings get
@@ -638,7 +638,7 @@ mallary settings get --profile-id AbC123xYz90
 
 Update settings from a partial JSON file:
 
-Warning: `settings update` changes profile-scoped brand context and can affect AI auto-reply behavior. Inspect the JSON file and confirm the target profile before running.
+Warning: `settings update` changes the profile-scoped brand context. It can also change the AI auto-reply behavior. Read the JSON file and make sure that the target profile is correct before you run it.
 
 ```bash
 mallary settings update --file ./settings.partial.json
@@ -679,14 +679,14 @@ Notes:
 
 - `mallary settings update --file ...` accepts partial updates, so you can send only the fields you want to change.
 - Settings are profile-scoped. Omit `--profile-id` to use the default profile.
-- `auto_reply_enabled` can only be turned on for paid plans that include AI auto reply.
-- Enabling `auto_reply_enabled` also requires these settings fields to be populated: `business_name`, `website_url`, `business_description`, `services`, and `contact_info`.
+- You can turn on `auto_reply_enabled` only on a paid plan with AI auto reply.
+- `auto_reply_enabled` also requires these settings fields: `business_name`, `website_url`, `business_description`, `services`, and `contact_info`.
 
 ### Platforms
 
 Disconnect a platform:
 
-Warning: disconnecting a platform removes Mallary's ability to post, reply, and fetch analytics for that connected account until it is reconnected. Confirm the platform and profile before running.
+Warning: after you disconnect a platform, Mallary cannot post, reply, or get analytics for that connected account. This continues until you connect the account again. Make sure that the platform and the profile are correct before you run it.
 
 ```bash
 mallary platforms list
@@ -709,11 +709,11 @@ Output rules:
 
 - direct API wrapper commands emit the API response body
 - convenience flows like `upload` emit CLI-specific JSON
-- `posts create` emits CLI-specific JSON when local file uploads occur before submission
+- `posts create` emits CLI-specific JSON when it uploads local files before it sends the post
 
 Example:
 
-> Privacy warning: this example uploads local file bytes to Mallary storage/CDN infrastructure, including third-party hosting/CDN providers. Confirm the file path and contents before using it in automation, and do not upload sensitive, regulated, customer, or private files unless that remote transfer is intended and approved.
+> Privacy warning: this example uploads local file bytes to Mallary storage and to the Mallary CDN. Third-party hosting and CDN providers also receive this data. Make sure that the file path and the file contents are correct before you use this example in automation. Do not upload sensitive, regulated, customer, or private files. If the user approves the remote transfer, you can upload these files.
 
 ```bash
 mallary upload ./launch.png --json
@@ -738,14 +738,14 @@ mallary upload ./launch.png --json
 ## Exit Codes
 
 - `0`: success
-- `1`: local CLI/config/input failure
+- `1`: local CLI, settings, or input failure
 - `2`: remote API or upload failure
 
 ## Automation and CI
 
-> Warning: automation examples can upload local media and publish real posts to connected social-media accounts. Require explicit approval for the target profile, platforms, message/media, and timing before running them.
+> Warning: the automation examples can upload local media and publish real posts to connected social-media accounts. Get explicit approval for the target profile, the platforms, the message and media, and the timing before you run them.
 
-Keep `MALLARY_API_KEY` in masked CI secrets and pass it through `env`. Do not enable `set -x` or otherwise print request headers, environment variables, or command output that could leak the key.
+Keep `MALLARY_API_KEY` in masked CI secrets and pass it through `env`. Do not enable `set -x`. Do not print request headers, environment variables, or command output that can leak the key.
 
 Example shell script:
 
@@ -785,11 +785,11 @@ GitHub Actions example:
 
 ## AI Agent Notes
 
-If you are an AI agent or building an agent integration:
+If you are an AI agent, or if you build an agent integration:
 
 - read [SKILL.md](./SKILL.md) first for the compact command and workflow summary
 - read [PROFILES.md](./PROFILES.md) before targeting a non-default Dashboard profile
-- use `--json` whenever the CLI is part of an automated toolchain
+- if the CLI is part of an automated toolchain, use `--json`
 - prefer `mallary posts create --file payload.json` for complex platform-specific payloads
 
 ## Links

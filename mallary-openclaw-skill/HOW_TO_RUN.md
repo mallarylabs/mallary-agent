@@ -1,8 +1,8 @@
 # How to Run the Mallary CLI
 
-There are several ways to run the CLI, depending on your needs.
+You can run the CLI in several ways.
 
-## Option 1: Direct Execution (Quick Test)
+## Option 1: Run the Built File Directly
 
 The built file at `cli/dist/index.js` is executable.
 
@@ -13,7 +13,7 @@ node cli/dist/index.js --help
 # Or run it directly (it has a shebang)
 ./cli/dist/index.js --help
 
-# Example authenticated command; set MALLARY_API_KEY from a secret store first
+# Example authenticated command. Set MALLARY_API_KEY from a secret store first
 test -n "${MALLARY_API_KEY:-}" && echo "MALLARY_API_KEY is set"
 node cli/dist/index.js posts list
 node cli/dist/index.js profiles list
@@ -37,7 +37,7 @@ mallary posts list
 npm unlink -g @mallary/cli
 ```
 
-After linking, you can use `mallary` from any directory.
+After you link the package, you can use `mallary` from any directory.
 
 ## Option 3: Use npm Scripts (From `cli/`)
 
@@ -52,7 +52,7 @@ npm run start -- posts list
 
 ## Option 4: Use npm/npx (Published Package)
 
-Once published or installed from npm:
+After you publish or install the package from npm:
 
 ```bash
 # Install globally
@@ -108,14 +108,14 @@ mallary --help
 If you linked globally but still get this error:
 
 ```bash
-# Check if it's linked
+# Make sure that the link exists
 which mallary
 
-# If not found, try linking again
+# If it is not found, link it again
 cd cli
 npm link
 
-# Or check your PATH
+# Or look at your PATH
 echo $PATH
 ```
 
@@ -124,13 +124,13 @@ echo $PATH
 ```bash
 read -rsp "Mallary API key: " MALLARY_API_KEY; echo; export MALLARY_API_KEY
 
-# Verify it is set without printing the key
+# Make sure that it is set without printing the key
 test -n "${MALLARY_API_KEY:-}" && echo "MALLARY_API_KEY is set"
 ```
 
 ### Permission Denied
 
-If you get permission errors when running the built file directly:
+If you get permission errors when you run the built file directly:
 
 ```bash
 # Make the file executable
@@ -142,14 +142,14 @@ chmod +x cli/dist/index.js
 
 ### Rebuild After Changes
 
-After making code changes, rebuild:
+After you change the code, build it again:
 
 ```bash
 cd cli
 npm run build
 ```
 
-If you linked globally, your changes will be reflected after the rebuild.
+If you linked globally, the new build applies to the `mallary` command.
 
 ## Testing the CLI
 
@@ -174,7 +174,7 @@ mallary profiles list
 
 ### Optional Real Publish Check
 
-Warning: `mallary posts create` publishes or schedules content through Mallary to the selected connected social-media account. Do not run this as a harmless test. Only use it after confirming the profile ID and platform point to an account where a real public post is intended.
+Warning: `mallary posts create` publishes or schedules content on the selected connected social-media account. Do not run it as a harmless test. First, make sure that the profile ID and the platform point to the account for the real public post.
 
 ```bash
 # Publishes a real Facebook post to the selected profile
@@ -220,7 +220,7 @@ npm test
 
 - `MALLARY_API_KEY` - your Mallary API key
 
-Treat `MALLARY_API_KEY` as a bearer credential. Store it in a secret manager, a locked-down untracked env file, or a masked CI secret. Do not commit it, paste it into prompts or tickets, print it with `echo`/`printenv`, enable shell tracing around it, or share logs containing it. Rotate or revoke the key if it is exposed.
+Treat `MALLARY_API_KEY` as a bearer credential. Store it in a secret manager, a locked-down untracked env file, or a masked CI secret. Do not commit it. Do not paste it into prompts or tickets. Do not print it with `echo` or `printenv`. Do not enable shell tracing around it. Do not share logs that contain it. If the key is exposed, rotate or revoke it.
 
 ### Setting Environment Variables
 
@@ -239,7 +239,7 @@ $env:MALLARY_API_KEY="your_key"
 
 Persistent local storage:
 
-Use a password manager, shell secret plugin, OS keychain, or untracked env file with restrictive permissions. Avoid writing real keys directly into shared dotfiles or commands that may be saved in shell history.
+Use a password manager, a shell secret plugin, an OS keychain, or an untracked env file with restrictive permissions. Do not write real keys into shared dotfiles. Do not write them into commands that the shell history can save.
 
 ## Using Aliases
 
@@ -295,4 +295,4 @@ mallary health
 mallary profiles list
 ```
 
-Do not include `mallary posts create` in setup smoke tests. It performs an external publish or schedule action on a connected social-media account. Use the optional real publish check above only after confirming the target profile, platform, message/media, and intent to create a public or scheduled post.
+Do not include `mallary posts create` in setup smoke tests. It publishes or schedules a post on a connected social-media account. Before you use the optional real publish check above, make sure that the target profile and the platform are correct. Also make sure that the message and the media are correct. Also make sure that the user wants a public or scheduled post.

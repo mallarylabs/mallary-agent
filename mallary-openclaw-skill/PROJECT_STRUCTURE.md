@@ -2,7 +2,7 @@
 
 ## Overview
 
-Mallary CLI is the official command-line interface for the public Mallary API. It is designed for developers, operators, and AI agents that need to automate media uploads, posting, scheduling, analytics, dashboard profile targeting, profile-scoped settings, connected platform listing, webhooks, and platform disconnects.
+Mallary CLI is the official command-line interface for the public Mallary API. Developers, operators, and AI agents use it to automate media uploads, posts, scheduling, and analytics. They also use it for dashboard profile targeting, profile-scoped settings, connected platform lists, webhooks, and platform disconnects.
 
 ## Directory Structure
 
@@ -49,16 +49,16 @@ cli/
 #### `src/main.ts`
 
 - primary implementation file
-- uses Node’s built-in `parseArgs`
+- uses the built-in `parseArgs` module of Node
 - validates CLI input
 - resolves local media files
 - uploads local files to Mallary
 - sends authenticated requests to the Mallary API
-- renders human output and JSON output
+- shows human output and JSON output
 
 #### `src/version.ts`
 
-- exports the CLI version used in help/version output
+- exports the CLI version for the help output and the version output
 
 ### Configuration Files
 
@@ -162,57 +162,57 @@ Human output or --json output
 
 1. `health`
    - check Mallary service health
-   - lowest-risk read-only command; does not require authentication
+   - read-only command with the lowest risk. It does not require authentication
 
 2. `upload <file...>`
    - create upload URLs
    - upload local files end-to-end
-   - data-transmitting command: sends local files to Mallary storage/CDN infrastructure, including third-party hosting/CDN providers; confirm the file path and contents before running
+   - data-transmitting command. It sends local files to Mallary storage and to the Mallary CDN. Make sure that the file path and the file contents are correct before you run it
 
 3. `posts create`
    - create or schedule posts
    - supports flag mode and file mode
-   - publish side effect: creates a real public or scheduled social-media post; do not use as a harmless test
+   - publish side effect. It creates a real public or scheduled social-media post. Do not use it as a harmless test
 
 4. `posts list`
    - list grouped posts
-   - read-only command; output can expose post metadata and profile context, so redact before sharing
+   - read-only command. The output can expose post metadata and profile context. Redact it before you share it
 
 5. `posts delete <id>`
    - delete queued or scheduled posts
-   - destructive command: permanently removes a queued/scheduled Mallary post/job that has not started publishing; confirm the post ID, profile, and schedule before running
+   - destructive command. It deletes a queued or scheduled Mallary post before the publish job starts. Make sure that the post ID, the profile, and the schedule are correct before you run it
 
 6. `jobs get <id>`
    - inspect job status and result data
-   - read-only command; output can expose job, post, profile, platform, or provider result metadata
+   - read-only command. The output can expose job, post, profile, platform, or provider result metadata
 
 7. `jobs attach-tiktok-url <id> --url <url>`
    - attach a TikTok post URL for inbox-style TikTok publish flows
-   - state-changing command: records a public TikTok URL against a Mallary job; confirm the job ID and URL before running
+   - state-changing command. It records a public TikTok URL on a Mallary job. Make sure that the job ID and the URL are correct before you run it
 
 8. `analytics list`
-   - fetch analytics rows
-   - read-only command; output can expose account performance and platform metadata
+   - get analytics rows
+   - read-only command. The output can expose account performance and platform metadata
 
 9. `profiles list`
    - list profiles and their profile IDs
-   - read-only command; output exposes profile IDs and account structure, so minimize and redact
+   - read-only command. The output exposes profile IDs and account structure. Minimize it and redact it
 
 10. `webhooks list|create|delete`
    - manage webhook endpoints
-   - external data-transmission and destructive commands: create sends future Mallary events to the configured URL; delete removes delivery configuration; confirm the destination URL, events, and webhook ID before running
+   - data-transmitting and destructive commands. `create` sends future Mallary events to the external URL. `delete` stops the event delivery. Make sure that the destination URL, the events, and the webhook ID are correct before you run them
 
 11. `settings get|update`
    - read or partially update profile-scoped settings
-   - settings update is account-impacting: can change brand context and AI auto-reply behavior; confirm the target profile and JSON fields before running
+   - `settings update` is account-impacting. It can change the brand context and the AI auto-reply behavior. Make sure that the target profile and the JSON fields are correct before you run it
 
 12. `platforms list`
    - list Mallary-supported platforms and show which are connected for a profile
-   - read-only command; output exposes connected-platform state and account labels, so minimize and redact
+   - read-only command. The output exposes connected-platform state and account labels. Minimize it and redact it
 
 13. `platforms disconnect <platform>`
    - disconnect a connected social platform from a profile
-   - destructive/account-impacting command: removes Mallary's ability to post, reply, or fetch analytics for that platform until reconnected; confirm platform and profile before running
+   - destructive and account-impacting command. After the disconnect, Mallary cannot post, reply, or get analytics for that platform. Make sure that the platform and the profile are correct before you run it
 
 ## Environment Variables
 
@@ -222,13 +222,13 @@ Human output or --json output
 
 ### Credential Handling
 
-`MALLARY_API_KEY` is a bearer credential that can authorize posting, uploads, webhook changes, settings updates, and platform/account-management actions. Treat it as a secret.
+`MALLARY_API_KEY` is a bearer credential. It can authorize posts, uploads, webhook changes, settings updates, and account-management actions. Treat it as a secret.
 
-- Store keys in a local secret manager, a locked-down untracked env file, or a CI secret store; never commit them to source control.
+- Store keys in a local secret manager, a locked-down untracked env file, or a CI secret store. Never commit them to source control.
 - Avoid shell-history exposure: do not paste a real key into shared terminals, documentation, tickets, prompts, or screenshots.
-- Do not print keys with `echo`, `printenv`, debug traces, request logs, or CI output; redact all but the last few characters before sharing logs.
-- In CI, pass the key through masked secrets such as `secrets.MALLARY_API_KEY`, disable shell tracing around Mallary commands, and restrict log access.
-- If a key appears in logs, chat, shell history, or a committed file, rotate or revoke it before continuing.
+- Do not print keys with `echo`, `printenv`, debug traces, request logs, or CI output. Redact all characters except the last few before you share logs.
+- In CI, pass the key through masked secrets such as `secrets.MALLARY_API_KEY`. Disable shell tracing around Mallary commands. Restrict log access.
+- If a key appears in logs, chat, shell history, or a committed file, rotate or revoke it before you continue.
 
 ## Dependencies
 
@@ -269,7 +269,7 @@ Human output or --json output
 13. `GET /api/v1/platforms`
 14. `POST /api/v1/disconnect`
 
-Profile-aware endpoints accept a public `profile_id` where relevant. Omitting it selects the default Dashboard profile.
+Profile-aware endpoints accept a public `profile_id`. If you omit it, Mallary selects the default Dashboard profile.
 
 Authentication:
 
@@ -300,7 +300,7 @@ npm publish --access public
 # Build
 cd cli && npm run build
 
-# Test without API key (should fail for authenticated commands)
+# Test without an API key. Authenticated commands must fail
 node dist/index.js posts list
 
 # Test general help
@@ -316,10 +316,10 @@ npm test
 
 ## Future Enhancements
 
-- richer command-specific help without requiring auth
-- additional platform-specific helper commands where they make sense
+- more command-specific help without authentication
+- more platform-specific helper commands
 - more structured JSON output for automation-heavy workflows
-- broader CLI-side validation for advanced `platform_options`
+- more CLI-side checks for advanced `platform_options`
 
 ## Support
 

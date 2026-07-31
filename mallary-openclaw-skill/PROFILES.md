@@ -1,14 +1,14 @@
 # Mallary Profiles
 
-Profiles are used to group your social media accounts. You can create a profile for each of your businesses, and then connect your social media accounts for each business inside this profile. Your default profile will be used if you don't pass a `profile_id` when making requests.
+Profiles group your social media accounts. You can create one profile for each of your businesses. Then connect the social media accounts of each business inside its profile. If you do not send a `profile_id` with a request, Mallary uses your default profile.
 
-Mallary profiles group social platform connections, posts, analytics, and brand or AI auto-reply settings. The dashboard has one top-level **Dashboard profile** bar; once a profile is selected there, posts, platforms, analytics, and settings underneath the dashboard belong to that selected profile.
+Mallary profiles group social platform connections, posts, analytics, and brand or AI auto-reply settings. The dashboard has one top-level **Dashboard profile** bar. After you select a profile there, the posts, platforms, analytics, and settings below belong to that profile.
 
 ## Default Profile
 
 Every user has a default profile. If a CLI command or API request omits `profile_id`, Mallary uses the user's default profile.
 
-Use a non-default profile when a user manages more than one brand, business, client, or set of social accounts.
+When a user manages more than one brand, business, client, or set of social accounts, use a non-default profile.
 
 ## Public Profile IDs
 
@@ -16,7 +16,7 @@ Profiles have random public IDs such as `AbC123xYz90`. Use these public IDs in C
 
 Find the profile ID in either place:
 
-Privacy warning: profile IDs, profile names, connected-platform state, and profile-scoped settings are sensitive operational metadata. Request only the specific profile ID needed and redact profile/account details before sharing logs, screenshots, tickets, or agent transcripts.
+Privacy warning: profile IDs, profile names, connected-platform state, and profile-scoped settings are sensitive operational metadata. Request only the profile ID that you need. Redact the profile details and the account details before you share logs, screenshots, tickets, or agent transcripts.
 
 ```bash
 mallary profiles list
@@ -29,7 +29,7 @@ Or copy it from the **Dashboard profile** bar in the Mallary dashboard.
 
 The CLI can list profiles and target a profile with `--profile-id`:
 
-Warning: commands in this block are not all read-only. `posts create` publishes or schedules content, `settings update` changes profile behavior, and `platforms disconnect` removes Mallary's platform access until reconnect. Confirm the target profile ID and intended side effect before running those commands.
+Warning: the commands in this block are not all read-only. `posts create` publishes or schedules content. `settings update` changes the profile behavior. `platforms disconnect` ends the platform access of Mallary until you connect the platform again. Make sure that the target profile ID and the side effect are correct before you run these commands.
 
 ```bash
 mallary profiles list
@@ -52,7 +52,7 @@ In file mode, send `profile_id` in the JSON payload:
 }
 ```
 
-The CLI currently lists and targets profiles. Create and rename profile workflows are handled in the dashboard or by the REST API.
+The CLI lists profiles and targets them. The dashboard and the REST API create and rename profiles.
 
 ## API Endpoints
 
@@ -61,7 +61,7 @@ Profile-aware API behavior:
 - `GET /api/v1/profiles` lists profiles, each profile's connected platforms, and the user's profile/account limit.
 - `POST /api/v1/profiles` creates a named non-default profile.
 - `POST /api/v1/profiles/{id}` renames a profile.
-- `profile_id` can be sent when creating posts, listing posts, listing analytics, listing platforms, disconnecting a platform, and reading or updating settings.
+- you can send `profile_id` with these operations: create a post, list posts, list analytics, list platforms, disconnect a platform, and read or update settings.
 - Omitting `profile_id` selects the default profile.
 
 ## Profile-Scoped Behavior
@@ -69,12 +69,12 @@ Profile-aware API behavior:
 - Platform connections are profile-scoped. Connect accounts in the dashboard after selecting the intended Dashboard profile.
 - Posts and grouped post history are profile-scoped.
 - Analytics queries are profile-scoped.
-- Settings are profile-scoped, including `auto_reply_enabled`, business fields, brand profile text, and AI auto-reply context.
-- `--auto-reply-enabled` on a post still depends on the selected profile's saved settings and plan access.
+- Settings are profile-scoped. They include `auto_reply_enabled`, the business fields, the brand profile text, and the AI auto-reply context.
+- `--auto-reply-enabled` on a post also depends on the saved settings of the selected profile and on the plan access.
 
 ## Limits
 
-`GET /api/v1/profiles` returns `data.limits.max_accounts_per_platform`. The dashboard uses that value to disable **New profile** once the user reaches their allowed profile/account count.
+`GET /api/v1/profiles` returns `data.limits.max_accounts_per_platform`. When the user reaches the allowed profile count, the dashboard disables **New profile**.
 
 Current backend limit values:
 

@@ -2,7 +2,7 @@
 
 ## Complete Feature Set
 
-Mallary CLI is the official command-line interface for Mallary.ai. It is designed for developers, operators, CI jobs, and AI agents that need to upload media, create posts, inspect jobs, fetch analytics, manage webhooks, list and target dashboard profiles, update profile-scoped brand settings, list connected platforms, and disconnect platforms from one command surface.
+Mallary CLI is the official command-line interface for Mallary.ai. Developers, operators, CI jobs, and AI agents use it from one command surface. With the CLI they upload media, create posts, look at jobs, get analytics, and manage webhooks. They also list and target dashboard profiles, update profile-scoped brand settings, list connected platforms, and disconnect platforms.
 
 The CLI mirrors the public Mallary API. It does not bypass plan limits, feature gates, connected-account requirements, or platform validation rules.
 
@@ -19,17 +19,17 @@ Mallary supports both simple post creation and advanced payload-based publishing
 #### Multiple Media per Post/Comment
 
 - Mallary supports multi-media posts where the target platform allows it.
-- Local file paths are uploaded automatically before the post request is sent.
-- Local video thumbnail paths in `media[].thumbnail_url` are uploaded automatically before the post request is sent.
-- Remote third-party media URLs are rejected by the CLI.
-- Already-hosted `https://files.mallary.ai/...` URLs are allowed.
+- The CLI uploads local file paths before it sends the post request.
+- The CLI also uploads local video thumbnail paths in `media[].thumbnail_url`.
+- The CLI rejects remote third-party media URLs.
+- The CLI accepts `https://files.mallary.ai/...` URLs.
 
 #### Multi-Platform Posting
 
 - One `posts create` request can target multiple platforms at once.
 - Use repeatable `--platform` flags in flag mode.
 - Use the `platforms` array in file mode.
-- Platform-specific behavior can be customized in file mode with `platform_options`.
+- In file mode, `platform_options` changes the platform-specific behavior.
 
 #### Advanced Features
 
@@ -47,7 +47,7 @@ Mallary supports both simple post creation and advanced payload-based publishing
 
 #### Profiles
 
-Profiles are used to group your social media accounts. You can create a profile for each of your businesses, and then connect your social media accounts for each business inside this profile. Your default profile will be used if you don't pass a `profile_id` when making requests.
+Profiles group your social media accounts. You can create one profile for each of your businesses. Then connect the social media accounts of each business inside its profile. If you do not send a `profile_id` with a request, Mallary uses your default profile.
 
 - Every user has a default profile.
 - Omit `--profile-id` or `profile_id` to use the default profile.
@@ -55,8 +55,8 @@ Profiles are used to group your social media accounts. You can create a profile 
 - Pass `--profile-id` to target a non-default profile in `posts create`, `posts list`, `analytics list`, `settings get/update`, `platforms list`, and `platforms disconnect`.
 - In JSON file mode, send `profile_id`.
 - Platform connections, posts, analytics, and AI auto-reply settings are profile-scoped.
-- The CLI lists and targets profiles; profile creation and rename workflows live in the dashboard or REST API.
-- Commands that create posts, upload files, update settings, manage webhooks, or disconnect platforms have side effects. Confirm the target profile and intended outcome before running them.
+- The CLI lists profiles and targets them. The dashboard and the REST API create and rename profiles.
+- Commands that create posts, upload files, update settings, manage webhooks, or disconnect platforms have side effects. Make sure that the target profile and the result you want are correct before you run them.
 
 ## Usage Modes
 
@@ -66,7 +66,7 @@ Mallary supports two main ways to create content.
 
 For quick, simple posts:
 
-Warning: `mallary posts create` publishes or schedules real content on connected social-media accounts. Do not use these examples as harmless tests; use read-only commands such as `mallary health`, `mallary profiles list`, `mallary platforms list`, or `mallary posts list` for lower-impact smoke testing, and redact profile, platform, account, and post metadata before sharing output.
+Warning: `mallary posts create` publishes or schedules real content on connected social-media accounts. Do not use these examples as harmless tests. For smoke tests with a lower impact, use read-only commands: `mallary health`, `mallary profiles list`, `mallary platforms list`, or `mallary posts list`. Redact profile, platform, account, and post metadata before you share the output.
 
 ```bash
 # Single post
@@ -81,7 +81,7 @@ mallary posts create --message "Main" --platform facebook --comment "Comment 1" 
 
 ### 2. Advanced Mode (JSON Files)
 
-Use `--file` when you need platform-specific fields or a raw JSON payload.
+When you need platform-specific fields or a raw JSON payload, use `--file`.
 
 ```bash
 mallary posts create --file complex-post.json
@@ -91,10 +91,10 @@ Advanced mode is best when:
 
 - you need `platform_options`
 - you want to preserve a reusable payload file
-- an AI agent is assembling a complex request
-- you are mixing scheduling, media, comments, and platform-specific settings
+- an AI agent assembles a complex request
+- you mix scheduling, media, comments, and platform-specific settings
 
-## Real-World Examples
+## Examples
 
 ### Example 1: Product Launch with Follow-up Comments
 
@@ -159,7 +159,7 @@ Advanced mode is best when:
 
 ## API Structure Reference
 
-Mallary CLI ultimately submits to the Mallary API: `POST /api/v1/post`.
+Mallary CLI sends the post to the Mallary API: `POST /api/v1/post`.
 
 ### Complete Create Payload Shape
 
@@ -234,12 +234,12 @@ type CreatePostPayload = {
 
 ## For AI Agents
 
-Mallary CLI is intentionally friendly to agents and automation.
+Mallary CLI supports agents and automation.
 
 ### When to Use Simple Mode
 
-- the agent is composing a small, standard post
-- local files should be uploaded automatically
+- the agent composes a small, standard post
+- the CLI must upload the local files automatically
 - the workflow is shell-first
 - human review of the exact CLI command is useful
 
@@ -247,17 +247,17 @@ Mallary CLI is intentionally friendly to agents and automation.
 
 - the agent needs `platform_options`
 - the post spans multiple platforms with different rules
-- scheduling, comments, and platform-specific settings are combined
-- the payload should be generated and stored as an artifact
+- the post combines scheduling, comments, and platform-specific settings
+- you must keep the payload as an artifact file
 
 ### AI Agent Tips
 
 - prefer `--json` output for machine handling
 - call `mallary profiles list --json` before targeting a non-default profile
 - prefer `posts create --file` for advanced platform payloads
-- treat local uploads as remote data transfer to Mallary storage/CDN infrastructure; confirm file contents before using automatic CLI uploads
+- treat local uploads as a remote data transfer to Mallary storage. Make sure that the file contents are correct before you use the automatic CLI uploads
 - never pass third-party remote media URLs directly to the CLI
-- remember that free plans do not include CLI access
+- free plans do not include CLI access
 
 ## Files and Documentation
 
@@ -272,12 +272,12 @@ Mallary CLI is intentionally friendly to agents and automation.
 
 Mallary CLI supports the complete public Mallary publishing workflow:
 
-- upload local media to Mallary storage/CDN infrastructure
+- upload local media to Mallary storage and to the Mallary CDN
 - create direct or scheduled posts on connected social accounts
 - add follow-up comments to posts
 - inspect jobs
-- fetch analytics
-- manage webhooks that transmit Mallary events to external URLs
+- get analytics
+- manage webhooks that send Mallary events to external URLs
 - list and target profiles
 - manage profile-scoped brand settings that affect account behavior
 - list connected platforms for a profile

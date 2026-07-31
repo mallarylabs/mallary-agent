@@ -1,6 +1,6 @@
 ---
 name: mallary
-description: Use this skill only when the user explicitly asks to use Mallary, Mallary CLI, Mallary API, or Mallary MCP, or asks to manage an existing Mallary workflow. It covers Mallary-specific publishing, scheduling, uploads, comments, analytics, webhooks, settings, and platform connections. Prefer read-only Mallary discovery first; do not suggest or run posting, uploads, replies, deletes, webhook changes, settings updates, or platform disconnects without explicit user intent and confirmation.
+description: Use this skill only when the user explicitly asks to use Mallary, Mallary CLI, Mallary API, or Mallary MCP, or asks to manage an existing Mallary workflow. It covers Mallary-specific publishing, scheduling, uploads, comments, analytics, webhooks, settings, and platform connections. Prefer read-only Mallary discovery first. Do not suggest or run posting, uploads, replies, deletes, webhook changes, settings updates, or platform disconnects without explicit user intent and confirmation.
 version: 1.0.1
 homepage: https://mallary.ai/
 metadata:
@@ -12,7 +12,7 @@ metadata:
         - MALLARY_API_KEY
 ---
 
-## Install Mallary if it doesn't exist
+## Install Mallary if it does not exist
 
 ```bash
 npm install -g @mallary/cli
@@ -117,7 +117,7 @@ Mallary exposes a lightweight connected-platform discovery command in the CLI.
 
 Instead, use:
 
-Read-only discovery can still expose sensitive operational metadata. Connected-platform state and saved settings can reveal internal account structure, brand configuration, and AI auto-reply behavior. Agents should request only the minimum needed fields, avoid broad dumps, and redact account labels, platform connection details, settings values, and profile IDs before sharing logs, transcripts, or summaries.
+Read-only discovery can still expose sensitive operational metadata. Connected-platform state and saved settings can reveal internal account structure, brand configuration, and AI auto-reply behavior. Request only the minimum needed fields. Do not make broad dumps. Redact account labels, platform connection details, settings values, and profile IDs before you share logs, transcripts, or summaries.
 
 ```bash
 # List connected-platform state only when needed; redact before sharing

@@ -3,10 +3,10 @@ Mallary CLI
 Mallary CLI is the official command-line interface for the Mallary public API.
 
 Purpose
-- Upload local media to Mallary storage/CDN infrastructure; this transmits selected local file bytes
+- Upload local media to Mallary storage/CDN infrastructure. This transmits selected local file bytes
 - Create and schedule social posts
 - Inspect jobs and grouped posts
-- List comments and reply to commennts on published posts
+- List comments and reply to comments on published posts
 - Fetch analytics
 - Manage webhooks
 - Read and update brand/settings data
@@ -70,7 +70,7 @@ Typical workflows
 
 Important constraints
 - The CLI is a direct client for the public API. It does not bypass plan limits or validation rules.
-- Free-plan users can use `comments list` and `comments reply`; other CLI commands return `upgrade_required`.
+- Free-plan users can use `comments list` and `comments reply`. Other CLI commands return `upgrade_required`.
 - Settings updates are file-based in v1.
 - For advanced per-platform payloads, prefer posts create --file.
 - comments_under_post remains limited by the API.
@@ -96,7 +96,7 @@ Platform-specific payloads
 
 Post enhancements
 - `comments_under_post` supports up to 3 follow-up comments.
-- Custom video thumbnails/covers are supported for YouTube regular videos, Facebook videos, and Instagram videos/Reels. TikTok video posts do not accept arbitrary image thumbnails through Mallary; TikTok photo posts can use `thumbnail_url` only when it matches one of the supplied photo URLs.
+- Mallary supports custom video thumbnails/covers for YouTube regular videos, Facebook videos, and Instagram videos/Reels. TikTok video posts do not accept arbitrary image thumbnails through Mallary. TikTok photo posts can use `thumbnail_url`. It works only when the URL matches one of the supplied photo URLs.
 - `auto_reply_enabled` can be set per post, but AI auto-replies still require an eligible paid plan plus a complete brand profile in settings.
 
 Out of scope

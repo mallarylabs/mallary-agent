@@ -139,7 +139,7 @@ Settings:
 - `message`: optional Instagram-specific caption
 - `post_type` (required when needed): `feed`, `story`, `reel`, or `carousel`
 - `thumbnail_url`: optional on video media items for Instagram video/Reels covers. Use a Mallary-hosted image that matches the video placement.
-- `story` uses exactly one image or video. Captions and follow-up comments are not supported for Stories; include text in the media itself.
+- `story` uses exactly one image or video. Stories do not support captions or follow-up comments. Include the text in the media itself.
 - `carousel` uses 2 to 10 image/video media items.
 
 Example:
@@ -178,7 +178,7 @@ Settings:
 - `brand_organic_toggle`
 - `is_aigc`
 - `photo_cover_index`
-- `thumbnail_url` on photo media selects the cover only when it exactly matches one of the supplied photo URLs
+- `thumbnail_url` on photo media selects the cover. It works only when the URL exactly matches one of the supplied photo URLs
 
 Example:
 
@@ -213,7 +213,7 @@ Settings:
 - `post_type`: `feed` or `story`
 - `link`: optional destination URL for feed-style link posts
 - `pageId`: optional advanced override for a specific connected page
-- `thumbnail_url`: optional on video media items. Mallary accepts `jpg`, `jpeg`, or `png` thumbnails up to 10 MB and retries without the thumbnail if Meta rejects it.
+- `thumbnail_url`: optional on video media items. Mallary accepts `jpg`, `jpeg`, or `png` thumbnails up to 10 MB. If Meta rejects the thumbnail, Mallary retries without it.
 
 Example:
 
@@ -301,8 +301,8 @@ These usually work with the standard Mallary post body alone:
 
 Alias notes:
 
-- older data may still contain `twitter` as an alias for `x`
-- older data may still contain `meta` as an alias for `facebook`
+- older data can still contain `twitter` as an alias for `x`
+- older data can still contain `meta` as an alias for `facebook`
 
 ## Using JSON Files for Complex Settings
 
@@ -396,7 +396,7 @@ Use the platform names Mallary expects:
 - `threads`
 - `snapchat`
 
-In file mode, each `platform_options` key should match the related entry in `platforms`.
+In file mode, each `platform_options` key must match the related entry in `platforms`.
 
 ## Common Errors
 

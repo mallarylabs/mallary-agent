@@ -37,7 +37,7 @@ $secureKey = Read-Host "Mallary API key" -AsSecureString
 $env:MALLARY_API_KEY = [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureKey))
 ```
 
-For an interactive bash/zsh session, you can avoid printing the key while setting it:
+In an interactive bash or zsh session, you can set the key without printing it:
 
 ```bash
 read -rsp "Mallary API key: " MALLARY_API_KEY; echo; export MALLARY_API_KEY
@@ -53,13 +53,13 @@ mallary profiles list
 
 `mallary profiles list` shows each profile and its ID. Omit `--profile-id` to use the default profile.
 
-Treat profile IDs, profile names, and connected-platform state as sensitive operational metadata. Request only what you need and redact this output before sharing it in logs, screenshots, tickets, or agent transcripts.
+Treat profile IDs, profile names, and connected-platform state as sensitive operational metadata. Request only the data that you need. Redact this output before you share it in logs, screenshots, tickets, or agent transcripts.
 
 ## Basic Commands
 
 ### Create a Post
 
-Warning: `mallary posts create` creates a real social-media post or scheduled post on the selected connected account. Use this section only when you intend to publish. For lower-impact testing, use read-only commands such as `mallary health`, `mallary profiles list`, `mallary platforms list`, or `mallary posts list`, and redact profile, platform, account, and post metadata before sharing output.
+Warning: `mallary posts create` creates a real social-media post or scheduled post on the selected connected account. Use this section only for real publishing. For tests with a lower impact, use read-only commands: `mallary health`, `mallary profiles list`, `mallary platforms list`, or `mallary posts list`. Redact profile, platform, account, and post metadata before you share the output.
 
 ```bash
 # Simple post
@@ -111,17 +111,17 @@ mallary posts list --page 2 --per-page 20
 
 ### Delete a Post
 
-Warning: `mallary posts delete` is destructive. It permanently removes a queued or scheduled Mallary post/job that has not started publishing. Confirm the exact post ID, profile, schedule, and intended cancellation before running it. This command does not remove already-published content from external social platforms.
+Warning: `mallary posts delete` is destructive. It deletes a queued or scheduled Mallary post. It works only before the publish job starts. Make sure that the post ID, the profile, and the schedule are correct before you run it. This command does not delete published content from the external social platforms.
 
 ```bash
 mallary posts delete 123
 ```
 
-### Check Connected Platforms
+### List Connected Platforms
 
-Use `profiles list` to find profile IDs, then use `platforms list` to see which supported Mallary platforms are connected for the default or selected profile:
+Use `profiles list` to find the profile IDs. Then use `platforms list` to see the connected platforms of the default profile or the selected profile:
 
-Privacy warning: this read-only discovery can reveal internal account structure and connected-platform state. Minimize the query and redact profile IDs, account labels, and connection details before sharing output.
+Privacy warning: this read-only discovery can show the internal account structure and the connected-platform state. Minimize the query. Redact profile IDs, account labels, and connection details before you share the output.
 
 ```bash
 mallary profiles list
@@ -131,7 +131,7 @@ mallary platforms list --profile-id AbC123xYz90
 
 ### Upload Media
 
-Warning: `mallary upload` is data-transmitting. It sends selected local file contents to Mallary storage/CDN infrastructure, including third-party hosting/CDN providers. Confirm the file path and contents before running it, and do not upload sensitive, regulated, customer, or private files unless that remote transfer is intended and approved.
+Warning: `mallary upload` is data-transmitting. It sends the contents of the selected local files to Mallary storage and to the Mallary CDN. Third-party hosting and CDN providers also receive this data. Make sure that the file path and the file contents are correct before you run it. Do not upload sensitive, regulated, customer, or private files. If the user approves the remote transfer, you can upload these files.
 
 ```bash
 mallary upload ./path/to/image.png
@@ -140,14 +140,14 @@ mallary upload ./path/to/video.mp4 --json
 
 ## Common Workflows
 
-### 1. Check Your Setup
+### 1. Make Sure That the Setup Is Correct
 
 ```bash
-# Verify the service is healthy
+# Get the service health
 mallary health
 ```
 
-Then confirm your connected accounts with `mallary platforms list` or in the Mallary dashboard before posting. Select the intended Dashboard profile before connecting accounts in the dashboard.
+Then make sure that your accounts are connected. Use `mallary platforms list` or the Mallary dashboard before you post. In the dashboard, select the intended Dashboard profile before you connect the accounts.
 
 ### 2. Create Multi-Platform Post
 
@@ -175,7 +175,7 @@ mallary posts create --message "Good night!" --platform facebook --scheduled-at 
 
 ### 4. Upload and Post Image
 
-Warning: this workflow uploads local media to Mallary storage/CDN infrastructure and can publish externally visible content. Confirm the file path, profile, platform, message, and intended public post before running it. Do not upload sensitive, regulated, customer, or private files unless that remote transfer is intended and approved.
+Warning: this workflow uploads local media to Mallary storage and to the Mallary CDN. It can also publish content that the public can see. Make sure that the file path, the profile, and the platform are correct. Also make sure that the message and the public post are correct. Do not upload sensitive, regulated, customer, or private files. If the user approves the remote transfer, you can upload these files.
 
 ```bash
 # First upload the image
@@ -185,12 +185,12 @@ mallary upload ./my-image.png
 mallary posts create --message "Check out this image!" --platform instagram --media ./my-image.png
 ```
 
-## Tips & Tricks
+## Tips
 
 ### Using with jq for JSON Parsing
 
 ```bash
-# Get just the post IDs
+# Get the post IDs
 mallary posts list --json | jq '.data.posts[] | .id'
 
 # Get analytics rows
@@ -257,8 +257,8 @@ Common causes:
 - your plan does not include CLI access
 - the target platform is not connected
 - the target platform is connected to a different Dashboard profile
-- you passed an unknown profile ID; run `mallary profiles list`
-- the media does not meet the target platform’s rules
+- you passed an unknown profile ID. Run `mallary profiles list`
+- the media does not match the rules of the target platform
 - you passed an external remote media URL instead of a Mallary-hosted one
 
 ## Getting Help
@@ -275,13 +275,13 @@ node cli/dist/index.js help analytics list
 
 ## Next Steps
 
-Start with read-only commands (`mallary health`, `mallary profiles list`, `mallary platforms list`, `mallary posts list`) before running commands with side effects. `upload`, `posts create`, and `settings update` require explicit confirmation because they transmit data, publish/schedule content, or change account settings.
+Start with read-only commands before you run commands with side effects: `mallary health`, `mallary profiles list`, `mallary platforms list`, and `mallary posts list`. `upload`, `posts create`, and `settings update` need explicit approval. They send data, publish or schedule content, or change account settings.
 
-1. intentionally upload a confirmed local file with `mallary upload ./file.png`
-2. create a real post only when intended with `mallary posts create`
+1. upload one approved local file with `mallary upload ./file.png`
+2. when you want to publish, create a real post with `mallary posts create`
 3. move to file mode with `mallary posts create --file payload.json` for advanced platform options
 4. target non-default profiles with `mallary profiles list` and `--profile-id`
-5. fetch analytics with `mallary analytics list`
+5. get analytics with `mallary analytics list`
 6. configure AI auto reply settings with `mallary settings update --file ... --profile-id ...`
 
 ## Links

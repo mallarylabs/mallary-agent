@@ -1,12 +1,14 @@
 # Supported File Types for Upload
 
-Mallary CLI detects upload MIME types from file extensions and automatically uploads selected local files to Mallary's remote storage/CDN before posting. This is not a local-only preparation step: invoking upload, or passing local media paths to posting commands, transmits file bytes to Mallary infrastructure and may make the resulting media externally hosted at a Mallary file URL. The public upload path is built for image and video media. Audio, documents, and arbitrary binary files are not part of the normal public publishing flow.
+Mallary CLI reads the upload MIME type from the file extension. It uploads the selected local files to Mallary storage and to the Mallary CDN before it publishes the post. This step is not local-only. The upload command sends the file bytes to Mallary infrastructure, and local media paths in posting commands do the same. The media can then become externally hosted at a Mallary file URL.
 
-Warning: `mallary upload` is data-transmitting. It sends selected local file contents to Mallary storage/CDN infrastructure, including third-party hosting/CDN providers. Confirm file paths and contents before running upload examples, especially in scripts or AI-agent workflows, and do not upload sensitive, regulated, customer, or private files unless that remote transfer is intended and approved.
+The public upload path is for image and video media. Audio, documents, and other binary files are not part of the public publishing flow.
+
+Warning: `mallary upload` is data-transmitting. It sends the contents of the selected local files to Mallary storage and to the Mallary CDN. Third-party hosting and CDN providers also receive this data. Make sure that the file paths and the file contents are correct before you run the upload examples. This also applies to scripts and to AI-agent workflows. Do not upload sensitive, regulated, customer, or private files. If the user approves the remote transfer, you can upload these files.
 
 ## How It Works
 
-The CLI infers the content type from the local filename:
+The CLI gets the content type from the local filename:
 
 ```bash
 mallary upload video.mp4
@@ -71,8 +73,8 @@ mallary upload demo.mkv
 
 Notes:
 
-- the public Mallary upload flow is designed for publishable social media image/video assets
-- audio-only uploads are not part of the current public CLI workflow
+- the public Mallary upload flow is for social media image assets and video assets
+- audio-only uploads are not part of the public CLI workflow
 
 ### Documents
 
@@ -82,14 +84,14 @@ Notes:
 | `.doc`    | `application/octet-stream` | No        |
 | `.docx`   | `application/octet-stream` | No        |
 
-If you need a document-style asset, convert or export it into an image or video format that the destination platform supports.
+If you need a document-style asset, convert it into an image or video format. The destination platform must support that format.
 
 ### Other Files
 
 For unknown extensions, the CLI falls back to:
 
 - MIME type: `application/octet-stream`
-- Result: usually not suitable for Mallary's public social publishing upload flow
+- Result: not suitable for the public Mallary upload flow
 
 ## Usage Examples
 
@@ -143,7 +145,7 @@ Response:
 
 ### Upload and Use in Post
 
-Warning: this workflow uploads local media to Mallary storage/CDN infrastructure and then publishes or schedules real content on the selected connected social-media account. Confirm the file, profile, platform, message, and intended outcome first. Do not upload sensitive, regulated, customer, or private files unless that remote transfer is intended and approved.
+Warning: this workflow uploads local media to Mallary storage and to the Mallary CDN. It then publishes or schedules real content on the selected connected social-media account. First, make sure that the file, the profile, the platform, the message, and the result you want are correct. Do not upload sensitive, regulated, customer, or private files. If the user approves the remote transfer, you can upload these files.
 
 ```bash
 # 1. Upload the file
@@ -184,22 +186,22 @@ mallary upload video1.mp4 video2.mov
 
 - requires exactly one video
 - `post_type` can be `regular` or `shorts`
-- custom thumbnails for regular videos can use `jpg`, `jpeg`, or `png` up to 2 MB; recommended `1280x720` 16:9
-- YouTube Shorts thumbnails are skipped
+- custom thumbnails for regular videos can use `jpg`, `jpeg`, or `png` up to 2 MB. Use `1280x720` and the 16:9 ratio
+- Mallary skips YouTube Shorts thumbnails
 
 ### Instagram
 
 - choose `feed`, `story`, `reel`, or `carousel` through `platform_options.instagram.post_type`
-- stories use exactly one image or video and do not support captions/follow-up comments
+- stories use exactly one image or one video. They do not support captions or follow-up comments
 - reels use exactly one video
-- carousels use 2 to 10 mixed image/video items
-- video/Reels covers can be supplied with `media[].thumbnail_url`
+- carousels use 2 to 10 image or video items
+- use `media[].thumbnail_url` for video covers and Reels covers
 
 ### Facebook
 
 - video thumbnails can use `jpg`, `jpeg`, or `png` up to 10 MB through `media[].thumbnail_url`
 
-### Twitter/X
+### X (Twitter)
 
 - supports up to 4 images, or 1 video, or 1 GIF
 
@@ -211,7 +213,7 @@ mallary upload video1.mp4 video2.mov
 
 ### "Upload failed: Unsupported file type"
 
-The file is probably not a supported image or video format for Mallary's public uploader.
+The public Mallary uploader does not support this image or video format.
 
 Solution: convert it first.
 
@@ -225,11 +227,11 @@ mallary upload output.mp4
 
 ### File Size Limits
 
-Mallary's upload path accepts files up to 5 GB, but each social platform still enforces its own limits after upload.
+The Mallary upload path accepts files up to 5 GB. Each social platform also applies its own limits after the upload.
 
 ### "MIME type mismatch"
 
-Do not rename a file to a different extension just to force a MIME type.
+Do not rename a file to a different extension to force a MIME type.
 
 ```bash
 # Wrong: PNG renamed to JPG
@@ -259,7 +261,7 @@ mallary upload test-audio.mp3
 
 ### File Not Found
 
-Check the local path:
+Look at the local path:
 
 ```bash
 mallary upload ./missing-file.jpg
@@ -267,7 +269,7 @@ mallary upload ./missing-file.jpg
 
 ### No Permission
 
-Make sure the file is readable by your current user.
+Make sure that your current user can read the file.
 
 ### Invalid API Key
 
@@ -281,6 +283,6 @@ mallary upload test-image.jpg
 ## Summary
 
 - Mallary CLI supports image and video uploads for the public social publishing workflow.
-- Uploaded media is hosted on `https://files.mallary.ai/...`.
+- The Mallary CDN hosts the uploaded media at `https://files.mallary.ai/...`.
 - Audio, documents, and unknown binary types are not normal public upload targets.
-- Always check platform media rules before sending the same asset to multiple destinations.
+- Always read the platform media rules before you send the same asset to more than one destination.

@@ -1,12 +1,12 @@
 # Provider-Specific Settings - Quick Reference
 
-## What's Supported
+## What Mallary Supports
 
 Mallary supports platform-specific settings through `platform_options` in file mode. Shared fields can be sent from flags, but platform-specific publish options belong in `mallary posts create --file payload.json`.
 
-Profiles are separate from provider settings. Omit `--profile-id` or `profile_id` to use the default Dashboard profile; use `mallary profiles list` and pass `--profile-id` or JSON `profile_id` for a non-default profile.
+Profiles are separate from provider settings. Omit `--profile-id` or `profile_id` to use the default Dashboard profile. For a non-default profile, use `mallary profiles list`. Then pass `--profile-id` in flag mode, or `profile_id` in file mode.
 
-Warning: `mallary posts create` publishes or schedules real content. Confirm the target profile, platform options, message/media, and timing before running these examples.
+Warning: `mallary posts create` publishes or schedules real content. Make sure that the target profile, the platform options, and the message and media are correct. Also make sure that the timing is correct.
 
 ## Supported Platforms
 
@@ -15,16 +15,16 @@ Warning: `mallary posts create` publishes or schedules real content. Confirm the
 | Platform | Type | Key Settings |
 |----------|------|--------------|
 | Reddit | `reddit` | `message`, `post_type`, `subreddit` |
-| YouTube | `youtube` | `message`, `post_type`, `title`, `visibility`, `categoryId`; media `thumbnail_url` for regular video thumbnails |
+| YouTube | `youtube` | `message`, `post_type`, `title`, `visibility`, `categoryId`. Media `thumbnail_url` sets regular video thumbnails |
 | LinkedIn | `linkedin` | `message`, `author_urn` |
-| Instagram | `instagram` | `message`, `post_type`; media `thumbnail_url` for video/Reels covers |
-| TikTok | `tiktok` | `message`, `post_type`, `post_mode`, `source`, `privacy_level`; media `thumbnail_url` changes cover behavior |
-| Facebook | `facebook` | `message`, `post_type`, `link`, `pageId`; media `thumbnail_url` for video thumbnails |
+| Instagram | `instagram` | `message`, `post_type`. Media `thumbnail_url` sets video covers and Reels covers |
+| TikTok | `tiktok` | `message`, `post_type`, `post_mode`, `source`, `privacy_level`. Media `thumbnail_url` changes the cover behavior |
+| Facebook | `facebook` | `message`, `post_type`, `link`, `pageId`. Media `thumbnail_url` sets video thumbnails |
 | Pinterest | `pinterest` | `message`, `post_type`, `boardId`, `link`, `alt_text` |
 
 ### Platforms with Default Settings
 
-These usually work with the standard payload alone, or `message` inside platform options when they need platform-specific copy:
+These platforms work with the standard payload alone. For platform-specific copy, use `message` inside the platform options:
 
 - `x`
 - `threads`
@@ -100,7 +100,7 @@ Use file mode for platform-specific settings:
 }
 ```
 
-### Twitter/X Standard Post
+### X (Twitter) Standard Post
 
 ```bash
 mallary posts create \
@@ -200,14 +200,14 @@ Use it for:
 
 ## Tips
 
-- Use JSON file mode for anything beyond the simplest shared payload.
-- Keep `platform_options` keys aligned with the values in `platforms`.
-- Remote media URLs must already be hosted on `https://files.mallary.ai/...`.
-- Check media rules before sending multi-platform video or image payloads.
+- For every payload that is more than the simple shared payload, use JSON file mode.
+- Keep the `platform_options` keys aligned with the values in `platforms`.
+- The Mallary CDN must host remote media URLs at `https://files.mallary.ai/...`.
+- Read the media rules before you send multi-platform video or image payloads.
 
 ## Summary
 
 - Mallary supports platform-specific publish settings where the public API exposes them.
 - The main workflow is `mallary posts create --file payload.json`.
-- X, Threads, and Snapchat usually work with the standard body alone.
-- Pinterest, TikTok, YouTube, Instagram, LinkedIn, Facebook, and Reddit often need structured `platform_options`.
+- X, Threads, and Snapchat work with the standard body alone.
+- Pinterest, TikTok, YouTube, Instagram, LinkedIn, Facebook, and Reddit need structured `platform_options`.

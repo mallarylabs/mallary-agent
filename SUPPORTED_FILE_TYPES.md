@@ -1,8 +1,8 @@
 # Supported File Types for Upload
 
-Mallary CLI detects upload MIME types from file extensions and automatically uploads selected local files to Mallary's remote storage/CDN before posting. This is not a local-only preparation step: invoking upload, or passing local media paths to posting commands, transmits file bytes to Mallary infrastructure and may make the resulting media externally hosted at a Mallary file URL. The public upload path is built for image and video media. Audio, documents, and arbitrary binary files are not part of the normal public publishing flow.
+Mallary CLI detects upload MIME types from file extensions and automatically uploads selected local files to Mallary's remote storage/CDN before posting. This is not a local-only preparation step. The `upload` command transmits file bytes to Mallary infrastructure. Local media paths in posting commands do the same. Mallary can then host that media externally at a Mallary file URL. The public upload path is built for image and video media. Audio, documents, and arbitrary binary files are not part of the normal public publishing flow.
 
-Warning: `mallary upload` is data-transmitting. It sends selected local file contents to Mallary storage/CDN infrastructure, including third-party hosting/CDN providers. Confirm file paths and contents before running upload examples, especially in scripts or AI-agent workflows, and do not upload sensitive, regulated, customer, or private files unless that remote transfer is intended and approved.
+Warning: `mallary upload` is data-transmitting. It sends selected local file contents to Mallary storage/CDN infrastructure, including third-party hosting/CDN providers. Confirm file paths and contents before you run upload examples. This is important in scripts and in AI-agent workflows. Do not upload sensitive, regulated, customer, or private files unless you intend and approve that remote transfer.
 
 ## How It Works
 
@@ -181,7 +181,7 @@ mallary upload video1.mp4 video2.mov
 
 - requires exactly one video
 - `post_type` can be `regular` or `shorts`
-- custom thumbnails for regular videos can use `jpg`, `jpeg`, or `png` up to 2 MB; recommended `1280x720` 16:9
+- custom thumbnails for regular videos can use `jpg`, `jpeg`, or `png` up to 2 MB. Use `1280x720` 16:9
 - YouTube Shorts thumbnails are skipped
 
 ### Instagram

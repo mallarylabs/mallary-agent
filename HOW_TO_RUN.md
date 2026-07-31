@@ -128,7 +128,7 @@ test -n "${MALLARY_API_KEY:-}" && echo "MALLARY_API_KEY is set"
 
 ### Permission Denied
 
-If you get permission errors when running the built file directly:
+If you get permission errors when you run the built file directly:
 
 ```bash
 # Make the file executable
@@ -217,7 +217,7 @@ npm test
 
 - `MALLARY_API_KEY` - your Mallary API key
 
-Treat `MALLARY_API_KEY` as a bearer credential. Store it in a secret manager, a locked-down untracked env file, or a masked CI secret. Do not commit it, paste it into prompts or tickets, print it with `echo`/`printenv`, enable shell tracing around it, or share logs containing it. Rotate or revoke the key if it is exposed.
+Treat `MALLARY_API_KEY` as a bearer credential. Store it in a secret manager, a locked-down untracked env file, or a masked CI secret. Do not commit it, paste it into prompts or tickets, print it with `echo`/`printenv`, enable shell tracing around it, or share logs that contain it. If the key is exposed, rotate or revoke it.
 
 ### Setting Environment Variables
 
@@ -236,7 +236,7 @@ $env:MALLARY_API_KEY="your_key"
 
 Persistent local storage:
 
-Use a password manager, shell secret plugin, OS keychain, or untracked env file with restrictive permissions. Avoid writing real keys directly into shared dotfiles or commands that may be saved in shell history.
+Use a password manager, shell secret plugin, OS keychain, or untracked env file with restrictive permissions. Do not write real keys directly into shared dotfiles. Do not write them into commands that the shell can save in its history.
 
 ## Using Aliases
 

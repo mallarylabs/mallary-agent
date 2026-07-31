@@ -11,11 +11,11 @@ Mallary supports platform-specific settings through `platform_options` in file m
 | Platform | Type | Key Settings |
 |----------|------|--------------|
 | Reddit | `reddit` | `post_type`, `subreddit` |
-| YouTube | `youtube` | `post_type`, `title`, `visibility`, `categoryId`; media `thumbnail_url` for regular video thumbnails |
+| YouTube | `youtube` | `post_type`, `title`, `visibility`, `categoryId`. Media `thumbnail_url` sets regular video thumbnails. |
 | LinkedIn | `linkedin` | `author_urn` |
-| Instagram | `instagram` | `post_type`; media `thumbnail_url` for video/Reels covers |
-| TikTok | `tiktok` | `post_type`, `post_mode`, `source`, `privacy_level`; media `thumbnail_url` changes cover behavior |
-| Facebook | `facebook` | `post_type`, `link`, `pageId`; media `thumbnail_url` for video thumbnails |
+| Instagram | `instagram` | `post_type`. Media `thumbnail_url` sets video/Reels covers. |
+| TikTok | `tiktok` | `post_type`, `post_mode`, `source`, `privacy_level`. Media `thumbnail_url` changes cover behavior. |
+| Facebook | `facebook` | `post_type`, `link`, `pageId`. Media `thumbnail_url` sets video thumbnails. |
 | Pinterest | `pinterest` | `post_type`, `boardId`, `link`, `alt_text` |
 
 ### Platforms with Default Settings

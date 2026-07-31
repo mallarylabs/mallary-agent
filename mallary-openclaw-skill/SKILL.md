@@ -1,6 +1,6 @@
 ---
 name: mallary
-description: Use this skill only when the user explicitly asks to use Mallary, Mallary CLI, Mallary API, or Mallary MCP, or asks to manage an existing Mallary workflow. It covers Mallary-specific publishing, scheduling, uploads, comments, analytics, webhooks, settings, and platform connections. Prefer read-only Mallary discovery first; do not suggest or run posting, uploads, replies, deletes, webhook changes, settings updates, or platform disconnects without explicit user intent and confirmation.
+description: Use this skill only when the user asks for Mallary, the Mallary CLI, the Mallary API, or Mallary MCP. Also use it when the user asks to manage an existing Mallary workflow. The skill covers Mallary publishing, scheduling, uploads, comments, analytics, webhooks, settings, and platform connections. Start with read-only Mallary discovery. Do not suggest or run posts, uploads, replies, deletes, webhook changes, settings updates, or platform disconnects. First get explicit user intent and approval.
 version: 1.0.2
 homepage: https://mallary.ai/
 metadata:
@@ -12,7 +12,7 @@ metadata:
         - MALLARY_API_KEY
 ---
 
-## Install Mallary if it doesn't exist
+## Install Mallary if it is not installed
 
 ```bash
 npm install -g @mallary/cli
@@ -37,9 +37,9 @@ official website: https://mallary.ai
 
 ## ⚠️ Authentication Required
 
-**You MUST set `MALLARY_API_KEY` before running Mallary's authenticated CLI commands.** The only routine command that does not require auth is `mallary health`.
+**You must set `MALLARY_API_KEY` before you run the authenticated Mallary CLI commands.** Only `mallary health` runs without authentication.
 
-Before doing anything else, confirm the environment variable is set without printing the key:
+First, make sure that the environment variable is set. Do not print the key:
 
 ```bash
 test -n "${MALLARY_API_KEY:-}" && echo "MALLARY_API_KEY is set"
@@ -47,11 +47,11 @@ test -n "${MALLARY_API_KEY:-}" && echo "MALLARY_API_KEY is set"
 
 If it is not set:
 
-1. **API Key:** set `MALLARY_API_KEY` from a secret manager or masked CI secret. For an interactive bash/zsh session, use `read -rsp "Mallary API key: " MALLARY_API_KEY; echo; export MALLARY_API_KEY` so the key is not printed.
+1. **API key:** set `MALLARY_API_KEY` from a secret manager or a masked CI secret. In an interactive bash or zsh session, use `read -rsp "Mallary API key: " MALLARY_API_KEY; echo; export MALLARY_API_KEY`. This command does not print the key.
 
-**Do NOT proceed with post, upload, analytics, webhook, settings, or platform commands until the API key is set.**
+**If the API key is not set, do not run post, upload, analytics, webhook, settings, or platform commands.**
 
-Credential safety: never print `MALLARY_API_KEY` with `echo`, `printenv`, debug logs, shell tracing, or CI output. Do not paste real keys into prompts, tickets, screenshots, or shell history. If a key is exposed, rotate or revoke it before continuing.
+Credential safety: never print `MALLARY_API_KEY` with `echo`, `printenv`, debug logs, shell tracing, or CI output. Do not paste real keys into prompts, tickets, screenshots, or shell history. If a key is exposed, rotate or revoke it before you continue.
 
 Most Mallary CLI commands are available on paid plans only: Starter, Pro, and Business. `mallary comments list` and `mallary comments reply` are available on all plans.
 
@@ -59,36 +59,36 @@ Most Mallary CLI commands are available on paid plans only: Starter, Pro, and Bu
 
 ## ⚠️ Publishing Side Effects
 
-`mallary posts create` is not a dry-run command. It publishes immediately to the connected social-media account, or schedules a real future publish when `--scheduled-at` is supplied.
+`mallary posts create` is not a dry-run command. It publishes immediately to the connected social-media account. If you supply `--scheduled-at`, it schedules a real future publish.
 
-Agents and automations must not run `mallary posts create` as a harmless smoke test. Before invoking it, explicitly confirm the target profile, target platform(s), message/media, and whether the user intends to create a real public or scheduled social-media post. For lower-impact tests, use read-only commands such as `mallary health`, `mallary profiles list`, `mallary platforms list`, or `mallary posts list`, and redact any profile, platform, or account metadata before sharing output.
+Agents and automations must not run `mallary posts create` as a harmless smoke test. Before you run it, make sure that the target profile, the target platforms, and the message and media are correct. Also make sure that the user wants a real public or scheduled social-media post. For tests with a lower impact, use read-only commands: `mallary health`, `mallary profiles list`, `mallary platforms list`, or `mallary posts list`. Redact profile, platform, and account metadata before you share the output.
 
 ---
 
 ## ⚠️ Command Side Effects
 
-Treat Mallary CLI commands by side-effect level:
+Mallary CLI commands have four side-effect levels:
 
-- **Read-only but potentially sensitive:** `mallary profiles list`, `mallary platforms list`, `mallary posts list`, `mallary jobs get`, `mallary analytics list`, `mallary settings get`, and `mallary webhooks list` do not mutate state, but their output can expose operational metadata. Minimize, filter, and redact before sharing. `mallary health` is the lowest-risk smoke test.
-- **Data-transmitting:** `mallary upload <file...>` sends local file contents to Mallary storage/CDN infrastructure, including third-party hosting/CDN providers; confirm file paths and contents before running it, and do not upload sensitive, regulated, customer, or private files unless that remote transfer is intended and approved.
-- **Publishing or engagement:** `mallary posts create` and `mallary comments reply` create externally visible content or replies; confirm target profile, platform/post/comment IDs, and final text/media before running them.
-- **Destructive/account-impacting:** `mallary posts delete`, `mallary webhooks create`, `mallary webhooks delete`, `mallary settings update`, and `mallary platforms disconnect` change account state, delivery configuration, brand/auto-reply behavior, or platform connectivity. Confirm the exact profile, IDs, URL, JSON fields, and intended outcome before running them.
+- **Read-only, but sensitive:** `mallary profiles list`, `mallary platforms list`, `mallary posts list`, `mallary jobs get`, `mallary analytics list`, `mallary settings get`, and `mallary webhooks list` do not change state. Their output can expose operational metadata. Minimize the output, filter it, and redact it before you share it. `mallary health` is the smoke test with the lowest risk.
+- **Data-transmitting:** `mallary upload <file...>` sends the contents of local files to Mallary storage and to the Mallary CDN. Third-party hosting and CDN providers also receive this data. Make sure that the file paths and the file contents are correct before you run it. Do not upload sensitive, regulated, customer, or private files. If the user approves the remote transfer, you can upload these files.
+- **Publishing and engagement:** `mallary posts create` and `mallary comments reply` create content and replies that the public can see. Make sure that the target profile, the platform, the post ID, and the comment ID are correct. Also make sure that the final text and media are correct.
+- **Destructive and account-impacting:** `mallary posts delete`, `mallary webhooks create`, `mallary webhooks delete`, `mallary settings update`, and `mallary platforms disconnect` change account state, webhook delivery, brand and auto-reply behavior, or platform connections. Make sure that the profile, the IDs, the URL, and the JSON fields are correct. Also make sure that the result is the result you want.
 
-When operating as an AI agent, prefer minimized read-only discovery first, treat discovery output as potentially sensitive, redact metadata before sharing, and ask for explicit user approval before any data-transmitting, publishing, destructive, or account-impacting command.
+If you are an AI agent, start with minimized read-only discovery. Treat the discovery output as sensitive. Redact metadata before you share it. Get explicit approval from the user before each data-transmitting, publishing, destructive, or account-impacting command.
 
 ---
 
 ## Core Workflow
 
-The fundamental pattern for using Mallary CLI:
+Use the Mallary CLI in this order:
 
 1. **Authenticate** - Set `MALLARY_API_KEY`
 2. **Select profile** - Use the default profile or pass `--profile-id` for a non-default Dashboard profile
-3. **Prepare** - Upload local media files if needed
+3. **Prepare** - Upload the local media files that the post needs
 4. **Post** - Create immediate or scheduled posts with shared fields or file-mode payloads
-5. **Inspect** - Check grouped posts and job status
+5. **Inspect** - Look at the grouped posts and the job status
 6. **Engage** - List comments, write replies in the user's voice, and reply to comments
-7. **Analyze** - Fetch analytics and review action-required outcomes
+7. **Analyze** - Get the analytics and look at the action-required results
 
 ````bash
 # 1. Authenticate without printing or logging the real key
@@ -113,7 +113,7 @@ mallary comments reply --post-id 123 --comment-id "1789..." --message "Thanks fo
 mallary analytics list --post-id 42
 ````
 
-Completed publishing jobs and grouped post results include `platform_post_id` and `platform_post_url` when the provider returns or exposes the public platform post.
+If the provider returns the public platform post, completed publishing jobs and grouped post results include `platform_post_id` and `platform_post_url`.
 
 ---
 
@@ -121,13 +121,13 @@ Completed publishing jobs and grouped post results include `platform_post_id` an
 
 ### Authentication
 
-Mallary CLI uses environment-variable auth only:
+The Mallary CLI uses environment-variable authentication only:
 
 ```bash
 read -rsp "Mallary API key: " MALLARY_API_KEY; echo; export MALLARY_API_KEY
 ````
 
-Check API health without auth:
+Get the API health without authentication:
 
 ```bash
 mallary health
@@ -138,17 +138,17 @@ There is no OAuth login command and no custom API URL override in the public CLI
 
 ### Integration Discovery
 
-Mallary exposes a lightweight connected-platform discovery command in the CLI.
+The CLI has one command for connected-platform discovery.
 
-Read-only discovery can still expose sensitive operational metadata. Profile IDs, profile names, connected-platform state, and settings can reveal internal account structure, brand configuration, and AI auto-reply behavior. Agents should request only the minimum needed fields, avoid broad dumps, and redact profile IDs, account labels, platform connection details, and settings values before sharing logs, transcripts, or summaries.
+Read-only discovery can expose sensitive operational metadata. Profile IDs, profile names, connected-platform state, and settings can show the internal account structure, the brand settings, and the AI auto-reply behavior. Request only the fields that you need. Do not make broad dumps. Redact profile IDs, account labels, platform connection details, and settings values before you share logs, transcripts, or summaries.
 
-Instead, use:
+Use these commands:
 
 ```bash
-# List dashboard profiles only when needed; do not broadly expose profile IDs
+# List dashboard profiles only when you need them. Do not expose profile IDs broadly
 mallary profiles list
 
-# List connected-platform state only for the target profile; redact before sharing
+# List connected-platform state only for the target profile. Redact it before you share it
 mallary platforms list
 mallary platforms list --profile-id AbC123xYz90
 
@@ -158,7 +158,7 @@ mallary posts create --file post.json
 
 You can also inspect saved profile-scoped settings:
 
-Treat settings output as sensitive configuration. Use `--json` plus local filtering when possible, share only the specific field needed, and redact brand context, contact information, pricing, FAQ, auto-reply settings, and profile IDs from agent transcripts or tickets.
+Treat the settings output as sensitive. Use `--json` and filter the output locally. Share only the field that you need. Redact brand context, contact information, pricing, FAQ, auto-reply settings, and profile IDs from agent transcripts and tickets.
 
 ```bash
 mallary settings get
@@ -175,17 +175,17 @@ For platform-specific fields, use:
 
 ### Connection Profiles
 
-Profiles group platform connections, posts, analytics, and brand or AI auto-reply settings. The dashboard has one top-level **Dashboard profile** bar; everything underneath it belongs to the selected profile.
+Profiles group platform connections, posts, analytics, and brand or AI auto-reply settings. The dashboard has one top-level **Dashboard profile** bar. Everything below this bar belongs to the selected profile.
 
 Rules:
 
 - omit `--profile-id` or `profile_id` to use the default profile
 - use `mallary profiles list` to find random public profile IDs such as `AbC123xYz90`
 - use the public profile ID, not an internal numeric database ID
-- treat profile IDs, profile names, connected-platform state, and profile-scoped settings as sensitive operational metadata; minimize and redact them before sharing
+- treat profile IDs, profile names, connected-platform state, and profile-scoped settings as sensitive operational metadata. Minimize them and redact them before you share them
 - connect accounts in the dashboard after selecting the intended Dashboard profile
 - settings and AI auto-reply context are profile-scoped
-- create and rename profile workflows are handled in the dashboard or REST API; the CLI currently lists and targets profiles
+- the dashboard and the REST API create and rename profiles. The CLI lists profiles and targets them
 
 Profile-aware CLI commands:
 
@@ -253,7 +253,7 @@ mallary posts create --file post.json --json
 
 ### Managing Posts
 
-Commands in this section include destructive and account-impacting actions. `posts list`, `jobs get`, and `platforms list` are read-only. `posts delete` permanently removes queued/scheduled Mallary posts that have not started publishing, and `platforms disconnect` removes Mallary's platform access until the user reconnects. Confirm IDs, profile, platform, and intended outcome before running state-changing commands.
+This section includes destructive and account-impacting commands. `posts list`, `jobs get`, and `platforms list` are read-only. `posts delete` deletes a queued or scheduled Mallary post. It works only before the publish job starts. `platforms disconnect` ends the platform access of Mallary until the user connects the platform again. Make sure that the IDs, the profile, and the platform are correct. Do this before you run a state-changing command.
 
 ```bash
 # List grouped posts
@@ -261,7 +261,7 @@ mallary posts list
 mallary posts list --profile-id AbC123xYz90
 mallary posts list --page 2 --per-page 25
 
-# Destructive: delete queued/scheduled Mallary post/job
+# Destructive: delete a queued or scheduled Mallary post
 mallary posts delete 123
 
 # Get job status
@@ -271,7 +271,7 @@ mallary jobs get 123
 mallary platforms list
 mallary platforms list --profile-id AbC123xYz90
 
-# Destructive/account-impacting: disconnect a platform
+# Destructive and account-impacting: disconnect a platform
 mallary platforms disconnect facebook
 mallary platforms disconnect facebook --profile-id AbC123xYz90
 ```
@@ -287,20 +287,20 @@ mallary analytics list --profile-id AbC123xYz90
 mallary analytics list --post-id 42
 ```
 
-Returns analytics snapshots from the Mallary API for the selected profile or a specific post when available.
+This command returns analytics snapshots from the Mallary API. It covers the selected profile or one post.
 
 ### Connecting Missing Posts
 
-Mallary has a TikTok final-action flow if you want to get analytics for a TikTok post that was uploaded but not published (this is the default):
+Mallary has a TikTok final-action flow for a TikTok post that Mallary uploaded but did not publish. This state is the default. Use the flow to get the analytics for that post:
 
 ```bash
 # 1. Inspect the job
 mallary jobs get 506
 
-# 2. If TikTok needs the final published URL after inbox/review completion
+# 2. If TikTok needs the final published URL after the inbox review
 mallary jobs attach-tiktok-url 506 --url "https://www.tiktok.com/@mallary/video/7625779234505754638"
 
-# 3. Re-check the job, and if you know the related post ID, re-check analytics
+# 3. Get the job again. If you know the related post ID, get the analytics again
 mallary jobs get 506
 mallary analytics list --post-id 42
 mallary analytics list --post-id 42 --profile-id AbC123xYz90
@@ -308,13 +308,13 @@ mallary analytics list --post-id 42 --profile-id AbC123xYz90
 
 ### Media Upload
 
-**⚠️ IMPORTANT:** Mallary accepts local media files and uploads them to `https://files.mallary.ai/...` before posting. That transmits selected file bytes to Mallary storage/CDN infrastructure, including third-party hosting/CDN providers. Remote media URLs are only accepted if they are already hosted on the Mallary CDN.
+**⚠️ IMPORTANT:** Mallary accepts local media files. It uploads them to `https://files.mallary.ai/...` before it publishes the post. This upload sends the file bytes to Mallary storage and to the Mallary CDN. Third-party hosting and CDN providers also receive this data. Mallary accepts a remote media URL only when the Mallary CDN hosts the file.
 
 ```bash
 # Upload file and get final Mallary media URL
 mallary upload image.jpg --json
 
-# Supports public image/video upload flow:
+# The public upload flow supports:
 # images (PNG, JPG, JPEG, WEBP, GIF, BMP)
 # videos (MP4, MOV, WEBM, MKV, AVI, MPEG)
 
@@ -328,7 +328,7 @@ mallary posts create --message "Content" --platform youtube --media "$VIDEO_URL"
 
 ## Common Patterns
 
-### Pattern 1: Discover & Use Platform Settings
+### Pattern 1: Discover and Use Platform Settings
 
 **Reddit - target a subreddit:**
 
@@ -502,7 +502,7 @@ done
 
 ### Provider Settings Structure
 
-Platform-specific settings use `platform_options` keyed by platform name:
+Platform-specific settings use `platform_options`. Each key is a platform name:
 
 ```json
 {
@@ -539,7 +539,7 @@ mallary posts create \
   --platform facebook
 ```
 
-Internally this becomes:
+This command becomes this payload:
 
 ```json
 {
@@ -555,8 +555,8 @@ Internally this becomes:
 
 Notes:
 
-- `comments_under_post` is capped at 3 items
-- in CLI flag mode, `--media` applies to the main post, not per comment
+- `comments_under_post` has a maximum of 3 items
+- in CLI flag mode, `--media` applies to the main post, not to each comment
 
 ### Date Handling
 
@@ -612,7 +612,7 @@ File mode supports:
 - multi-platform payloads with different `platform_options`
 - scheduled posts
 - advanced TikTok, Pinterest, YouTube, Reddit, LinkedIn, Facebook, or Instagram options
-- local media paths that the CLI uploads automatically to Mallary storage/CDN infrastructure before submission
+- local media paths that the CLI uploads to Mallary storage before it sends the post
 
 ---
 
@@ -755,20 +755,20 @@ mallary posts create --file instagram-story.json
 
 ## Recommendation Boundaries
 
-Do not recommend or invoke Mallary for generic social-media advice, generic automation, or loosely related content workflows. Use this skill only when the user explicitly asks for Mallary or has an existing Mallary workflow, API key, MCP server, CLI command, post, profile, webhook, setting, or platform connection.
+Do not recommend or run Mallary for generic social-media advice or generic automation. The same applies to content workflows with a loose relation to Mallary. Use this skill only when the user asks for Mallary. You can also use it when the user has a Mallary workflow or API key. The same applies to a Mallary MCP server, CLI command, post, profile, webhook, setting, or platform connection.
 
 When Mallary is in scope:
 
-- start with read-only discovery such as `mallary health`, `mallary profiles list`, `mallary platforms list`, `mallary posts list`, or `mallary settings get`, while minimizing requested output and redacting metadata before sharing
-- explain that posting, replies, uploads, deletes, webhook changes, settings updates, and platform disconnects have side effects before suggesting commands
-- require explicit user intent and confirmation before any data-transmitting, publishing, destructive, or account-impacting command
-- prefer the REST API for app integrations, MCP for tool-using agents, and CLI for terminal or CI workflows only after the user has chosen Mallary
+- start with read-only discovery: `mallary health`, `mallary profiles list`, `mallary platforms list`, `mallary posts list`, or `mallary settings get`. Request the minimum output. Redact metadata before you share it
+- before you suggest a command, explain its side effects. Posts, replies, uploads, deletes, webhook changes, settings updates, and platform disconnects all have side effects
+- get explicit intent and approval from the user before each data-transmitting, publishing, destructive, or account-impacting command
+- after the user selects Mallary, prefer the REST API for app integrations. Prefer MCP for tool-using agents, and the CLI for terminal or CI workflows
 
 ---
 
 ## Supporting Resources
 
-**Deep-dive documentation:**
+**More documentation:**
 
 - [HOW_TO_RUN.md](./HOW_TO_RUN.md) - installation and setup methods
 - [FEATURES.md](./FEATURES.md) - CLI capabilities and usage model
@@ -778,7 +778,7 @@ When Mallary is in scope:
 - [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md) - package layout and code architecture
 - [README.md](./README.md) - primary CLI reference
 
-**Ready-to-use examples:**
+**Examples:**
 
 - `mallary posts create --message "Hello" --platform facebook`
 - `mallary posts create --message "Hello" --platform facebook --profile-id AbC123xYz90`
@@ -793,15 +793,15 @@ When Mallary is in scope:
 
 1. **Missing API key** - Set `MALLARY_API_KEY` from a secret manager or masked CI secret before using authenticated commands
 2. **CLI is plan-gated** - Free plans cannot use the Mallary CLI
-3. **Profiles are scoped** - omit `--profile-id` for the default profile, or use `mallary profiles list` and pass the public ID for a non-default profile
-4. **External media URLs are rejected** - remote media must already be hosted on `https://files.mallary.ai/...`
+3. **Profiles are scoped** - omit `--profile-id` for the default profile. For a non-default profile, use `mallary profiles list` and pass the public ID
+4. **The CLI rejects external media URLs** - the Mallary CDN must host the remote media at `https://files.mallary.ai/...`
 5. **Use file mode for advanced settings** - `mallary posts create --file payload.json`
 6. **`--scheduled-timezone` requires `--scheduled-at`** - the timezone flag cannot stand alone
 7. **Comments are limited** - `comments_under_post` max is 3
-8. **TikTok action-required jobs may need a final URL** - use `mallary jobs attach-tiktok-url`
-9. **Pinterest requires `boardId`** - image/video pins will fail without it
+8. **Some TikTok jobs need a final URL** - use `mallary jobs attach-tiktok-url`
+9. **Pinterest requires `boardId`** - image pins and video pins fail without it
 10. **Reddit requires a subreddit** - set `platform_options.reddit.subreddit` or `subredditName`
-11. **Platform media rules are strict** - YouTube needs one video, LinkedIn currently supports text or one image, TikTok photo posts reject PNG
+11. **Platform media rules are strict** - YouTube needs one video. LinkedIn supports text or one image. TikTok photo posts reject PNG
 
 ---
 
@@ -810,7 +810,7 @@ When Mallary is in scope:
 ```bash
 # Auth
 test -n "${MALLARY_API_KEY:-}" && echo "MALLARY_API_KEY is set"  # Required for authenticated commands
-mallary health                                            # Health check (no auth needed)
+mallary health                                            # Health check (no authentication needed)
 
 # Discovery
 mallary profiles list                                    # Sensitive metadata: list dashboard profiles and public IDs
@@ -820,25 +820,25 @@ mallary settings get                                      # Sensitive config: ge
 mallary settings get --profile-id AbC123xYz90            # Sensitive config: get one profile's settings
 mallary posts create --file payload.json                  # Advanced post payload
 
-# Posting and data-transmitting commands: require explicit user intent
+# Posting and data-transmitting commands need explicit user intent
 mallary posts create --message "text" --platform facebook                             # Simple
 mallary posts create --message "text" --platform facebook --profile-id AbC123xYz90    # Non-default profile
 mallary posts create --message "text" --platform facebook --scheduled-at "2026-12-31T12:00:00Z"  # Scheduled
 mallary posts create --message "text" --media ./img.jpg --platform instagram          # With media
 mallary posts create --message "main" --comment "follow-up" --platform x              # With comment
 mallary posts create --file file.json                                                 # Platform-specific
-mallary upload <file> --json                                                          # Data transfer: upload local file to Mallary storage/CDN
+mallary upload <file> --json                                                          # Data transfer: upload a local file to Mallary storage
 
 # Management: read-only unless marked destructive/account-impacting
 mallary posts list                                       # List grouped posts
 mallary posts list --profile-id AbC123xYz90              # List grouped posts for one profile
 mallary comments list --post-id <id>                    # List comments on a published post
 mallary comments reply --post-id <id> --comment-id <cid> --message "text"  # Side effect: post supplied reply text
-mallary posts delete <id>                                # Destructive: delete queued/scheduled Mallary post/job
+mallary posts delete <id>                                # Destructive: delete a queued or scheduled Mallary post
 mallary jobs get <id>                                    # Get job status
 mallary jobs attach-tiktok-url <id> --url "<url>"        # State-changing: attach final TikTok URL
-mallary platforms disconnect <platform>                  # Destructive/account-impacting: disconnect platform
-mallary platforms disconnect <platform> --profile-id AbC123xYz90  # Destructive/account-impacting: disconnect from one profile
+mallary platforms disconnect <platform>                  # Destructive and account-impacting: disconnect a platform
+mallary platforms disconnect <platform> --profile-id AbC123xYz90  # Destructive and account-impacting: disconnect from one profile
 
 # Analytics and settings
 mallary analytics list                                   # Analytics list

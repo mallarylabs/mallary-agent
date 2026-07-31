@@ -53,10 +53,10 @@ read -rsp "Mallary API key: " MALLARY_API_KEY; echo; export MALLARY_API_KEY
 Credential safety:
 
 - Treat `MALLARY_API_KEY` as a bearer secret that can authorize posting and account-management actions.
-- Store it in a password manager, locked-down untracked env file, or masked CI secret; never commit it.
-- Avoid shell-history exposure and do not paste real keys into prompts, tickets, screenshots, or shared terminals.
-- Do not print the key with `echo`, `printenv`, debug logs, shell tracing, or CI output; redact logs before sharing.
-- Rotate or revoke the key if it is exposed.
+- Store it in a password manager, locked-down untracked env file, or masked CI secret. Never commit it.
+- Do not paste real keys into prompts, tickets, screenshots, or shared terminals. This prevents shell-history exposure.
+- Do not print the key with `echo`, `printenv`, debug logs, shell tracing, or CI output. Redact logs before you share them.
+- If the key is exposed, rotate or revoke it.
 
 Most CLI commands are available on paid plans only: Starter, Pro, and Business. Comment listing and supplied comment replies are available on all plans.
 
@@ -110,7 +110,7 @@ Inspect one job:
 mallary jobs get 123
 ```
 
-Completed publishing jobs show `Post ID` and `Post URL` when the platform returns or exposes them. JSON output includes the same values as `platform_post_id` and `platform_post_url`.
+Completed publishing jobs show `Post ID` and `Post URL` when the platform provides them. JSON output includes the same values as `platform_post_id` and `platform_post_url`.
 
 List your connected platforms:
 
@@ -142,7 +142,7 @@ This command:
 2. uploads the local bytes for you
 3. returns the final Mallary media URL
 
-The same remote transfer happens when `mallary posts create` receives local media paths such as `--media ./launch.png`; the CLI uploads those files before creating the post.
+The same remote transfer happens when `mallary posts create` receives local media paths such as `--media ./launch.png`. The CLI uploads those files before it creates the post.
 
 ### Posts
 
@@ -208,8 +208,8 @@ Notes:
 - Existing remote `media[].thumbnail_url` values must also already be hosted on `https://files.mallary.ai/...`.
 - This is intentional because many social platforms only accept trusted media URLs. The CLI requires media to be uploaded to the Mallary CDN first.
 - Platform-specific payloads are supported in file mode via `platform_options`.
-- Use `platform_options.<platform>.message` when a destination needs a platform-specific message or caption.
-- Each key in `platform_options` should match the platform name you put in `platforms`.
+- When a destination needs a platform-specific message or caption, use `platform_options.<platform>.message`.
+- Each key in `platform_options` must match the platform name you put in `platforms`.
 
 Video thumbnails:
 
@@ -218,14 +218,14 @@ Video thumbnails:
 - YouTube regular videos, Facebook videos, and Instagram videos/Reels can use custom thumbnails/covers.
 - YouTube accepts `jpg`, `jpeg`, or `png` thumbnails up to 2 MB. Recommended: `1280x720` 16:9. YouTube Shorts thumbnails are skipped.
 - Facebook videos accept `jpg`, `jpeg`, or `png` thumbnails up to 10 MB.
-- TikTok video posts do not accept arbitrary image thumbnails through Mallary; supplying `thumbnail_url` disables Mallary's `video_cover_timestamp_ms` behavior and lets TikTok use its default cover.
-- TikTok photo posts can use `thumbnail_url` only when it exactly matches one of the supplied photo URLs and should become the cover photo.
+- TikTok video posts do not accept arbitrary image thumbnails through Mallary. A `thumbnail_url` value disables Mallary's `video_cover_timestamp_ms` behavior. TikTok then uses its default cover.
+- TikTok photo posts can use `thumbnail_url` for the cover photo. It works only when the URL exactly matches one of the supplied photo URLs.
 
 Platform-specific payloads:
 
 - These are available only in file mode with `mallary posts create --file payload.json`.
-- The CLI does not validate platform-specific keys itself; it passes them through to the Mallary API.
-- If you include `platform_options.instagram`, your `platforms` array should include `instagram`. The same rule applies to every platform.
+- The CLI does not validate platform-specific keys itself. It passes them through to the Mallary API.
+- If you include `platform_options.instagram`, your `platforms` array must include `instagram`. The same rule applies to every platform.
 - For the exact currently documented `platform_options` fields and examples by platform, see:
   `https://docs.mallary.ai/api-reference/endpoint/create#body-platform-options`
 
@@ -233,7 +233,7 @@ Platform-specific media rules:
 
 - The CLI uses the same platform media validation as the Mallary API.
 - YouTube requires exactly one video.
-- Instagram supports `feed`, `story`, `reel`, and `carousel` via `platform_options.instagram.post_type`; Stories use one image/video, Reels use one video, and carousels use 2 to 10 mixed image/video items.
+- Instagram supports `feed`, `story`, `reel`, and `carousel` via `platform_options.instagram.post_type`. Stories use one image or video. Reels use one video. Carousels use 2 to 10 mixed image/video items.
 - LinkedIn currently supports text-only posts or one image attachment only.
 - TikTok video posts require one video, and TikTok photo posts support up to 35 JPEG/WebP images.
 - Pinterest requires exactly one image or GIF, or exactly one video, plus `boardId`.
@@ -291,7 +291,7 @@ Instagram:
 
 - `message`: optional Instagram-specific caption
 - `post_type`: `feed`, `story`, `reel`, or `carousel`
-- Stories do not support captions or follow-up comments; include story text in the media itself.
+- Stories do not support captions or follow-up comments. Include the story text in the media itself.
 - Carousels support 2 to 10 image/video items.
 
 ```json
@@ -359,22 +359,22 @@ TikTok:
 - `message`: optional TikTok-specific caption/title fallback
 - `post_type`: `video` or `photo`
 - `post_mode`: `DIRECT_POST` or `MEDIA_UPLOAD`
-- `source`: `FILE_UPLOAD` or `PULL_FROM_URL` for video posts; photo posts always use `PULL_FROM_URL`
+- `source`: `FILE_UPLOAD` or `PULL_FROM_URL` for video posts. Photo posts always use `PULL_FROM_URL`
 - TikTok `PULL_FROM_URL` media must already be hosted on Mallary CDN at `https://files.mallary.ai/...`
-- TikTok photo posts currently accept only `jpg`, `jpeg`, or `webp` images; `png` files are rejected
+- TikTok photo posts currently accept only `jpg`, `jpeg`, or `webp` images. TikTok rejects `png` files
 - `privacy_level`: optional direct-post override, must match TikTok creator info
 - `disable_comment`: optional for direct post
 - `disable_duet`: optional for direct-post video
 - `disable_stitch`: optional for direct-post video
 - `video_cover_timestamp_ms`: optional direct-post video cover frame
-- `thumbnail_url` on a TikTok video media item overrides Mallary's timestamp cover behavior; Mallary does not send arbitrary image thumbnails to TikTok video posts
-- `title`: optional override; defaults to `message`
+- `thumbnail_url` on a TikTok video media item overrides Mallary's timestamp cover behavior. Mallary does not send arbitrary image thumbnails to TikTok video posts
+- `title`: optional override. It defaults to `message`
 - `description`: optional for photo posts
 - `auto_add_music`: optional for direct-post photo
 - `brand_content_toggle`, `brand_organic_toggle`: optional TikTok disclosure toggles
 - `is_aigc`: optional direct-post video AI-content label
 - `photo_cover_index`: optional photo cover selection
-- `thumbnail_url` on a TikTok photo media item selects the cover only when it exactly matches one of the supplied photo URLs
+- `thumbnail_url` on a TikTok photo media item selects the cover. It works only when the URL exactly matches one of the supplied photo URLs
 
 Defaults:
 
@@ -530,10 +530,10 @@ File mode example:
 
 AI auto reply:
 
-- AI Auto Replies automatically detect new comments on your published posts and uses OpenAI (ChatGPT) to post helpful replies based on your settings in configured the Mallary dashboard or as described in the settings section below. AI Auto Replies are supported on YouTube, Facebook, Instagram, LinkedIn, X (Twitter), Reddit.
-- Privacy warning: enabling AI Auto Replies causes Mallary to process comment text, post context, connected-platform metadata, and saved brand/profile settings, and to send relevant context to OpenAI for reply generation. Do not enable it for posts or accounts where comments may contain sensitive, regulated, confidential, or customer-private data unless that processing is intended and approved.
+- AI Auto Replies detect new comments on your published posts. They use OpenAI (ChatGPT) to post replies. The replies follow the settings that you configure in the Mallary dashboard, or the settings section below. Mallary supports AI Auto Replies on YouTube, Facebook, Instagram, LinkedIn, X (Twitter), and Reddit.
+- Privacy warning: do not enable AI Auto Replies for posts or accounts where comments can contain sensitive, regulated, confidential, or customer-private data. Enable them only when you intend and approve that processing. When you enable AI Auto Replies, Mallary processes comment text, post context, connected-platform metadata, and saved brand/profile settings. Mallary also sends relevant context to OpenAI for reply generation.
 - AI Auto Replies are available on Pro and Business plans only.
-- It depends on your saved brand/profile settings, not just the current post payload.
+- AI Auto Replies depend on your saved brand/profile settings, not only on the current post payload.
 - You can enable it account-wide in `mallary settings update`, or per post with `--auto-reply-enabled`.
 - If you omit `--auto-reply-enabled`, the post uses your saved account-level setting.
 - To enable it successfully, your settings must include: `business_name`, `website_url`, `business_description`, `services`, and `contact_info`.
@@ -567,7 +567,7 @@ mallary posts list --profile-id AbC123xYz90
 mallary posts list --page 2 --per-page 25 --json
 ```
 
-Grouped post results include per-platform post IDs and public post URLs after publishing when the provider makes them available.
+After Mallary publishes a post, grouped post results include per-platform post IDs and public post URLs. This applies only when the provider makes them available.
 
 Delete a queued or scheduled post:
 
@@ -606,7 +606,7 @@ mallary analytics list --post-id 123
 
 ### Profiles
 
-Profiles are used to group your social media accounts. You can create a profile for each of your businesses, and then connect your social media accounts for each business inside this profile. Your default profile will be used if you don't pass a `profile_id` when making requests.
+Use profiles to group your social media accounts. You can create a profile for each of your businesses. Then connect the social media accounts for each business inside this profile. If you do not pass a `profile_id` in a request, Mallary uses your default profile.
 
 List connection profiles and copy the public profile ID for non-default profile commands:
 
@@ -713,7 +713,7 @@ mallary platforms disconnect facebook
 mallary platforms disconnect facebook --profile-id AbC123xYz90
 ```
 
-Mallary profiles are used to group your social media accounts. You can create a profile for each of your businesses, and then connect your social media accounts for each business inside this profile. Your default profile will be used if you don't pass a `profile_id` when making requests.
+Use Mallary profiles to group your social media accounts. You can create a profile for each of your businesses. Then connect the social media accounts for each business inside this profile. If you do not pass a `profile_id` in a request, Mallary uses your default profile.
 
 
 ## JSON Output
@@ -762,9 +762,9 @@ mallary upload ./launch.png --json
 
 ## Automation and CI
 
-> Warning: automation examples can upload local media and publish real posts to connected social-media accounts. Require explicit approval for the target profile, platforms, message/media, and timing before running them.
+> Warning: automation examples can upload local media and publish real posts to connected social-media accounts. Require explicit approval for the target profile, platforms, message/media, and timing before you run them.
 
-Keep `MALLARY_API_KEY` in masked CI secrets and pass it through `env`. Do not enable `set -x` or otherwise print request headers, environment variables, or command output that could leak the key.
+Keep `MALLARY_API_KEY` in masked CI secrets and pass it through `env`. Do not enable `set -x` or otherwise print request headers, environment variables, or command output that can leak the key.
 
 Example shell script:
 
