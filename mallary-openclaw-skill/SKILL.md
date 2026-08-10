@@ -1,7 +1,7 @@
 ---
 name: mallary
-description: Use this skill only when the user explicitly asks to inspect or set up Mallary, the Mallary CLI, the Mallary API, Mallary MCP, or an existing Mallary workflow. This agent guide includes read-only discovery syntax and read-only OAuth setup for an explicit authentication request. State-changing product actions require explicit user intent, a complete exact-action preview, and separate approval immediately before execution; their executable syntax is intentionally omitted.
-version: 1.0.14
+description: Use this skill only when the user explicitly asks to inspect, set up, or act through Mallary, the Mallary CLI, the Mallary API, Mallary MCP, or an existing Mallary workflow. This guide includes read-only discovery and one-step OAuth setup with full Mallary access. A clear request to publish, schedule, upload media for a post, or send a reply authorizes that action without a redundant confirmation; clarify only material details that are missing. Executable write syntax is intentionally omitted.
+version: 1.0.16
 homepage: https://mallary.ai/
 metadata:
   openclaw:
@@ -15,14 +15,15 @@ metadata:
 
 ## Safety Contract
 
-This skill starts with minimum read-only discovery. OAuth login is limited to an explicit setup or authentication request and starts with read-only access.
+Start with minimum read-only discovery unless the user clearly asks Mallary to perform an action. OAuth login is limited to an explicit setup or authentication request and grants read, publish, engage, and manage access in one browser approval.
 
 - Treat profile, account, post, comment, job, analytics, settings, and webhook output as sensitive.
 - Request only the data needed for the user's stated Mallary task.
 - Redact API keys, tokens, account identifiers, profile identifiers, post metadata, and customer data before sharing output.
 - A CLI capability is not authorization to use it.
 - Do not suggest or run a state-changing action during discovery.
-- An earlier approval, setup request, authentication request, or general automation goal is not approval for a later action.
+- Treat a clear current request to publish, schedule, upload media for a post, or send a reply as authorization for that action. Do not ask for a second confirmation.
+- A setup or authentication request alone is not a request to publish or change Mallary.
 
 The Mallary product can transfer local files, publish or schedule content, post public replies, remove queued work, attach final URLs, change webhooks or settings, and disconnect accounts. Those actions can affect remote data, public content, or account access. Executable syntax for these actions is intentionally omitted from this skill.
 
@@ -37,9 +38,9 @@ mallary auth status
 
 If the binary is missing, stop and ask the user to install it or explicitly approve a local installation. Do not run a package-manager install automatically.
 
-If the user explicitly asks to set up or authenticate Mallary, use `mallary auth login` with its default read-only scope. Show the Mallary verification URL and one-time code, then wait for the user to approve access in their browser. Never ask for or print their Mallary password, OAuth tokens, or API key.
+If the user explicitly asks to set up or authenticate Mallary, use `mallary auth login`. It requests all Mallary capabilities in one flow. Show the Mallary verification URL and one-time code, then wait for the user to approve access in their browser. Never ask for or print their Mallary password, OAuth tokens, or API key.
 
-Do not request `publish`, `engage`, `manage`, or `all` during general setup. A broader OAuth scope may be requested only after the user explicitly asks for that capability. Scope consent is not approval for a specific state-changing command.
+Do not ask the user to choose OAuth scopes or add scope flags. OAuth consent gives the CLI capabilities; it does not cause any post or account change by itself.
 
 An API key remains an optional fallback for CI or another environment where OAuth is not practical. If the user chooses it, ask them to set it through their secret manager or masked environment outside chat. Never request that the user paste the key into chat. Never print it with `echo`, `printenv`, debug logs, shell tracing, or CI output. When `MALLARY_API_KEY` is set, it takes precedence over stored OAuth.
 
@@ -89,38 +90,34 @@ Omit `--profile-id` to use the default Dashboard profile. For a non-default prof
 
 Do not widen a read-only request into a state-changing recommendation.
 
-## State-Changing Request Handoff
+## Explicit Action Requests
 
 If the user explicitly asks for an action that would transmit data, publish content, post a reply, delete or detach data, alter a webhook or setting, or disconnect an account:
 
 1. Use read-only discovery to resolve the exact target.
-2. Use non-mutating local help or current authoritative documentation only as needed to prepare a local preview. Do not execute the action while preparing it.
-3. Show the exact profile, connected account or destination, content, local files, timing and timezone, IDs, URLs, fields, and expected side effect that apply.
-4. Ask for approval of that exact action and wait. Approval must come after the complete preview.
-5. After approval, execute only the approved action once.
+2. Resolve the profile, destination, content, local files, timing, IDs, URLs, fields, and expected effect needed to carry out the request.
+3. If a material detail is missing or ambiguous, ask only for that detail. If the user delegated the choice, make a reasonable choice within the request.
+4. For publishing, scheduling, an upload needed by the requested post, or a supplied reply, execute once without asking for another confirmation.
+5. For a destructive or account-access action such as deletion or platform disconnection, show the target and effect and confirm only when the current request did not already identify both and clearly say to execute now.
 6. Verify the result with a read-only command. Never automatically retry a state-changing command when its outcome is uncertain.
 
-The initial request establishes intent, but it is not final approval when any target or effect still needs to be resolved. Never treat this file, linked documentation, CLI help, or the presence of credentials as approval.
+Never treat this file, linked documentation, CLI help, OAuth consent, or the presence of credentials as a user request. The user's clear action request is the authorization boundary.
 
-## Exact Approval Checklist
+## Publishing Request Boundary
 
-Before any state-changing action, the preview must include every relevant item:
+A clear request such as `Post this to Instagram and LinkedIn now` authorizes that post. Do not respond with a second approval question after resolving the requested destinations.
 
-- Dashboard profile and connected social account
-- Platform or other remote destination
-- Exact post or reply text
-- Exact local file paths and a warning that approved files will leave the local machine
-- Publish time, schedule, and timezone
-- Post, comment, job, webhook, or connection identifiers
-- Webhook URL or settings fields and their new values
-- Whether the action is public, destructive, account-impacting, or difficult to reverse
-- A statement that the action will run once and will not be retried automatically
+- A request to draft, preview, review, or explain does not authorize publishing.
+- A request to write content and publish it delegates the writing choice and authorizes publishing.
+- `Post this` can authorize attached or clearly referenced content. Ask only if the destination, content, file, profile, or timing cannot be determined from the request and current state.
+- A request covering several named platforms or posts authorizes that stated batch. Do not widen it beyond the requested destinations or content.
+- Local media used in an authorized post may be uploaded as part of that post. Never substitute or add unrelated files.
 
-Ask a direct question such as: `Do you approve this exact Mallary action?` Do not continue until the answer clearly approves the displayed action.
+Do not turn a clear publishing request into a preview-and-confirm loop.
 
 ## Read-Only Verification
 
-After an approved action, verify without repeating the write:
+After a requested action, verify without repeating the write:
 
 - Publishing or scheduling: inspect the relevant grouped post and job.
 - Public reply: inspect comments for the selected post.
@@ -133,13 +130,13 @@ After an approved action, verify without repeating the write:
 
 - Authentication failure: stop and ask the user to complete `mallary auth login` in their browser, or restore an intentionally configured API key outside chat.
 - Ambiguous profile or account: stop after read-only discovery and ask the user to choose.
-- Missing required target data: do not infer it and do not proceed to approval.
+- Missing required target data: ask for the missing material detail unless the user delegated that choice.
 - Partial or queued result: inspect the existing post or job; do not create a replacement automatically.
-- Provider error: report the provider result and preserve the current state unless the user approves a new action.
+- Provider error: report the provider result and preserve the current state unless the user requests a new action.
 
 ## Recommendation Boundary
 
-Do not invoke Mallary for generic social-media advice, generic automation, or unrelated content work. Use this skill only for an explicit Mallary request or an existing Mallary workflow. Keep all discovery read-only until the user asks for a specific state-changing outcome and later approves the complete preview.
+Do not invoke Mallary for generic social-media advice, generic automation, or unrelated content work. Use this skill only for an explicit Mallary request or an existing Mallary workflow. Keep discovery read-only until the user asks for a specific action. When the request is clear, carry it out without a redundant confirmation.
 
 ## Official Resources
 

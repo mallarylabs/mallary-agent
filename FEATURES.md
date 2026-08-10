@@ -8,15 +8,15 @@ The CLI mirrors the public Mallary API. It does not bypass plan limits, feature 
 
 ## AI Agent Safety Contract
 
-This feature list describes what the CLI can do. It is not permission to suggest or run a state-changing command.
+This feature list describes what the CLI can do. It is not a user request to run a state-changing command.
 
 - Start with the minimum read-only discovery needed for the request. Prefer `mallary health`, `mallary profiles list`, `mallary platforms list`, `mallary posts list`, `mallary jobs get`, `mallary analytics list`, `mallary settings get`, or `mallary webhooks list`.
 - Treat discovery output as sensitive. Request only needed fields and redact profile IDs, account labels, post data, settings, and webhook details before sharing them.
-- Before suggesting or running an upload, post, reply, delete, TikTok URL attachment, webhook change, settings update, or platform disconnect, explain the side effect and show the exact profile, destination, content, file, URL, ID, timing, or fields that will change.
-- Wait for the user to explicitly approve that exact action. Approval for installation, authentication, discovery, an earlier command, or a general workflow does not approve a later write.
-- Run only the approved action once. Then use a read-only command to verify the result. Never use a write command as a smoke test.
+- Run an upload, post, reply, delete, TikTok URL attachment, webhook change, settings update, or platform disconnect only when the user clearly requests that type of action.
+- A clear request to publish, schedule, upload media for that post, or send a reply authorizes that action. Ask only for a material detail that is missing or ambiguous; do not ask for a second confirmation.
+- Keep the action within the request, run it once, and use a read-only command to verify the result. Never use a write command as a smoke test.
 
-For unattended CI, the owner must pre-approve the exact command, profile, destinations, payload source, and intended side effect in that workflow. Do not broaden that authorization at runtime.
+For unattended CI, the owner must define the exact command, profile, destinations, payload source, and intended side effect in that workflow. Do not broaden that authorization at runtime.
 
 ### Posts with Comments and Media - FULLY SUPPORTED
 
@@ -56,21 +56,21 @@ Mallary supports both simple post creation and advanced payload-based publishing
 - Connected platform listing
 - TikTok post URL attachment for inbox-style TikTok workflows
 
-## Publishing Payload Formats (Approval-Gated Reference)
+## Publishing Payload Formats (Explicit-Request Reference)
 
 Mallary supports two main ways to create content.
 
 This section documents payload shapes. It does not recommend that an AI agent create or publish content. During read-only discovery, do not assemble a publishing command from this section.
 
-Only after the user explicitly asks for a publishing proposal may an agent prepare a local preview. Preparing a preview does not authorize publishing. Show the fully resolved profile, platforms, text, media, comments, schedule, and platform settings, then wait for separate approval before running any write command.
+If the user asks only for a proposal or preview, prepare it locally and do not publish. If the user clearly asks Mallary to publish, the request authorizes the post. Resolve any missing material detail, then execute without another confirmation.
 
 ### 1. Simple Flag Payload
 
-This shape represents a small, user-requested publishing preview with shared fields such as a message, platforms, media, and follow-up comments. Consult `mallary posts create --help` only after the user asks for this proposal. Do not run the create command while preparing or reviewing the preview.
+This shape represents a small, user-requested publishing action or preview with shared fields such as a message, platforms, media, and follow-up comments. Consult `mallary posts create --help` only after the user asks for the action or proposal. Do not publish when the user asked only for a preview.
 
 ### 2. File Payload
 
-A local JSON preview can represent an action that the user explicitly asked to review. Do not pass the file to `posts create` until the user approves the exact resolved payload.
+A local JSON file can represent an action the user explicitly asked Mallary to perform or a preview the user asked to review. Pass it to `posts create` only for an explicit publishing request.
 
 File payloads can represent:
 
@@ -80,7 +80,7 @@ File payloads can represent:
 
 ## Local Payload Preview Examples (Do Not Execute)
 
-These JSON objects demonstrate data shape only. They are not publishing requests and must not be converted into executable commands during discovery. Replace every placeholder, show the complete resolved action to the user, and obtain separate approval before any upload, scheduling, or publishing action.
+These JSON objects demonstrate data shape only. They are not publishing requests and must not be converted into executable commands during discovery. Use them only within a clear user request, replace every placeholder, and ask only for material details the request did not supply or delegate.
 
 ### Example 1: Message with Follow-up Comments
 
@@ -216,29 +216,30 @@ type CreatePostPayload = {
 
 ## AI Agent Restrictions
 
-AI agents use read-only commands by default. Uploading, publishing, replying, deleting, attaching a TikTok URL, changing webhooks or settings, and disconnecting platforms are approval-gated.
+AI agents use read-only commands by default. Uploading, publishing, replying, deleting, attaching a TikTok URL, changing webhooks or settings, and disconnecting platforms require a clear user request.
 
 ### Default Behavior: Read Only
 
-- stay in read-only discovery unless the user explicitly asks for a publishing proposal
+- stay in read-only discovery unless the user explicitly asks for a publishing action or proposal
 - do not infer publishing intent from a request to inspect profiles, platforms, posts, settings, jobs, or analytics
-- after a user requests a proposal, prepare only a local preview and do not upload media or submit it
-- show the exact resolved action and wait for separate approval immediately before execution
+- after a user requests only a proposal, prepare a local preview and do not upload media or submit it
+- after a clear request to publish, ask only for missing material details and execute without another confirmation
 
 ### Local Preview Boundary
 
 - an explicit request for a publishing proposal authorizes only a local, non-executable preview
+- an explicit request to publish authorizes that post
 - include the proposed profile, destinations, text, media paths, comments, timing, and settings in that preview
 - do not select or recommend a CLI creation mode during discovery
 - do not upload files, create a post, or schedule content while preparing the preview
-- require separate approval of the fully resolved action immediately before execution
+- do not turn a clear publishing request into a preview-and-confirm loop
 
 ### Additional Restrictions
 
-- do not suggest or run a write-capable command until the user explicitly approves the exact action
+- do not suggest or run a write-capable command until the user clearly requests that type of action
 - prefer `--json` output for read-only machine handling
-- a user-requested preview may use local JSON, but it must not be submitted before separate approval
-- treat local uploads as remote data transfer to Mallary storage/CDN infrastructure. Confirm and receive approval for the exact files before uploading
+- a user-requested preview may use local JSON, but it must not be submitted unless the user asks to publish
+- treat local uploads as remote data transfer to Mallary storage/CDN infrastructure. Upload only the files included in or clearly required by the user's publishing request
 - never pass third-party remote media URLs directly to the CLI
 - remember that free plans do not include CLI access
 
@@ -253,7 +254,7 @@ AI agents use read-only commands by default. Uploading, publishing, replying, de
 
 ## Summary
 
-Read-only commands can inspect jobs, posts, analytics, settings, webhooks, profiles, and connected platforms. The following capabilities are approval-gated for AI agents:
+Read-only commands can inspect jobs, posts, analytics, settings, webhooks, profiles, and connected platforms. The following capabilities require a clear user request before an AI agent uses them:
 
 - upload local media to Mallary storage/CDN infrastructure
 - create direct or scheduled posts

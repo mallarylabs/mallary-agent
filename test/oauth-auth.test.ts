@@ -3,7 +3,11 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { runCli } from "../src/main.js";
-import { saveOAuthCredentials, type OAuthCredentials } from "../src/oauth.js";
+import {
+  requestedOAuthScopes,
+  saveOAuthCredentials,
+  type OAuthCredentials,
+} from "../src/oauth.js";
 
 class MemoryWriter {
   chunks: string[] = [];
@@ -103,7 +107,7 @@ describe("Mallary CLI OAuth", () => {
     expect(JSON.parse(stdout.toString())).toEqual({
       authenticated: true,
       method: "oauth",
-      scopes: ["mallary.read"],
+      scopes: ["mallary.read", "mallary.publish", "mallary.engage", "mallary.manage"],
       expires_at: "2026-08-10T13:00:00.000Z",
       storage: "local_credentials_file",
       api_key_override: false,
@@ -112,7 +116,9 @@ describe("Mallary CLI OAuth", () => {
     expect(`${stdout.toString()}${stderr.toString()}`).not.toContain("private-device-code");
     expect(`${stdout.toString()}${stderr.toString()}`).not.toContain("private-access-token");
     expect(`${stdout.toString()}${stderr.toString()}`).not.toContain("private-refresh-token");
-    expect(requests[0].body).toContain("scope=openid+offline_access+mallary.read");
+    expect(requests[0].body).toContain(
+      "scope=openid+offline_access+mallary.read+mallary.publish+mallary.engage+mallary.manage"
+    );
     expect(requests[1].body).toContain("device_code=private-device-code");
     expect(requests[2].body).toContain("device_code=private-device-code");
 
@@ -122,6 +128,29 @@ describe("Mallary CLI OAuth", () => {
     if (process.platform !== "win32") {
       expect((await stat(filePath)).mode & 0o777).toBe(0o600);
     }
+  });
+
+  it("requests every Mallary capability in one login", () => {
+    expect(requestedOAuthScopes()).toEqual([
+      "openid",
+      "offline_access",
+      "mallary.read",
+      "mallary.publish",
+      "mallary.engage",
+      "mallary.manage",
+    ]);
+  });
+
+  it("does not expose user-selectable OAuth scopes", async () => {
+    const stdout = new MemoryWriter();
+    const code = await runCli(["auth", "login", "--scope", "read", "--json"], {
+      stdout,
+      stderr: new MemoryWriter(),
+      env: {},
+    });
+
+    expect(code).toBe(1);
+    expect(JSON.parse(stdout.toString()).error.code).toBe("invalid_args");
   });
 
   it("reports a safe unauthenticated status without failing", async () => {
@@ -241,7 +270,7 @@ describe("Mallary CLI OAuth", () => {
     expect(statusOut.toString()).not.toContain("api-key-secret");
   });
 
-  it("requires an approved OAuth scope for mutating commands", async () => {
+  it("requires the needed OAuth capability for mutating commands", async () => {
     const filePath = await credentialFile();
     await saveOAuthCredentials(filePath, credentials());
     const stdout = new MemoryWriter();

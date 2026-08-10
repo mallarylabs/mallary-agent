@@ -1,4 +1,4 @@
-# Mallary CLI - OpenClaw Read-Only Guide
+# Mallary CLI - OpenClaw Safety Guide
 
 This README is the safe agent-facing overview for the Mallary OpenClaw skill. It is intentionally not the full human CLI manual and does not provide executable syntax for data transfer, publishing, replies, deletion, webhook changes, settings changes, or platform disconnection.
 
@@ -10,10 +10,10 @@ A documented or implemented capability is not authorization. AI agents must begi
 - begin with the lowest-risk read-only command that can answer the request
 - request the minimum data needed and redact sensitive operational output before sharing it
 - never use a data-transmitting or state-changing action as a setup, authentication, or smoke test
-- if the user explicitly requests a write, follow [SKILL.md](./SKILL.md), prepare a local non-executable preview, show the fully resolved action and side effects, and wait for separate approval immediately before execution
-- run an approved action once and verify it with a read-only command
+- if the user clearly requests publishing, scheduling, an upload for that post, or a reply, follow [SKILL.md](./SKILL.md), resolve any missing material detail, and execute without asking for another confirmation
+- run a requested action once and verify it with a read-only command
 
-Approval for installation, authentication, discovery, a general workflow, a preview, or an earlier write does not approve a later action.
+Installation, authentication, or discovery alone is not a request to publish or change Mallary.
 
 ## Install Only When Requested
 
@@ -27,14 +27,14 @@ npx @mallary/cli --help
 
 ## OAuth and Credential Safety
 
-For an explicit Mallary setup or authentication request, use browser-based OAuth with its default read-only scope:
+For an explicit Mallary setup or authentication request, use browser-based OAuth. One login grants all Mallary capabilities:
 
 ```bash
 mallary auth login
 mallary auth status
 ```
 
-Show the user only the Mallary verification URL and one-time code, then wait for browser approval. Never ask the user to paste a password, API key, access token, or refresh token into chat. Do not request broader OAuth scopes during general setup. Authentication and scope consent do not authorize a later write.
+Show the user only the Mallary verification URL and one-time code, then wait for browser approval. Never ask the user to paste a password, API key, access token, or refresh token into chat. Do not ask the user to choose scopes or add scope flags. OAuth access does not publish or change anything during setup.
 
 `MALLARY_API_KEY` remains an optional fallback for CI or another environment where OAuth is not practical. It is a bearer secret. If the user intentionally chooses an API key:
 
@@ -81,7 +81,7 @@ These commands do not change Mallary state, but their output can expose profile 
 - never guess an internal or public profile ID
 - redact profile IDs, names, account labels, and connected-platform details before sharing output
 
-If no profile ID is supplied, Mallary can select the default profile. For any requested write, the final preview must still name the exact current profile so the destination is unambiguous.
+If no profile ID is supplied, Mallary can select the default profile. For any requested write, resolve the exact current profile so the destination is unambiguous.
 
 ## Read-Only Result Handling
 
@@ -103,11 +103,11 @@ This OpenClaw README does not include:
 - write endpoint paths
 - JSON write payloads or cross-platform campaign templates
 
-Do not reconstruct those instructions from nearby files during discovery. If the user explicitly requests a specific Mallary write, stop using this README and follow the mandatory side-effect and approval workflow in [SKILL.md](./SKILL.md).
+Do not reconstruct those instructions from nearby files during discovery. If the user explicitly requests a specific Mallary action, stop using this README and follow the request-handling rules in [SKILL.md](./SKILL.md). A clear publishing request does not need a second confirmation.
 
 ## Safe Documentation Map
 
-- [SKILL.md](./SKILL.md) - mandatory safety contract and approval workflow
+- [SKILL.md](./SKILL.md) - action-request and safety rules
 - [QUICK_START.md](./QUICK_START.md) - read-only installation and discovery
 - [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md) - read-only architecture inventory; write syntax omitted
 - [PROVIDER_SETTINGS.md](./PROVIDER_SETTINGS.md) - provider-settings safety boundary; operational fields omitted

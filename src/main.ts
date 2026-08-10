@@ -202,13 +202,12 @@ async function ensureAuthToken(
     });
   }
   if (!credentialHasScope(stored, requiredScope)) {
-    const scope = requiredScope.replace(/^mallary\./, "");
     throw new CliError(1, {
       http_status: 0,
       code: "oauth_scope_required",
       message:
         `The stored OAuth session does not include ${requiredScope}. ` +
-        `After the user explicitly requests that capability, run \`mallary auth login --scope ${scope}\` and complete browser consent.`,
+        "Run `mallary auth login` again and complete browser consent to update the connection.",
     });
   }
   if (stored.expires_at > deps.now() + 60_000) return stored.access_token;
@@ -584,10 +583,10 @@ function getHelpText(commandPath?: string[]): string {
       ].join("\n");
     case "auth login":
       return [
-        "Usage: mallary auth login [--scope read|publish|engage|manage|all ...] [--json]",
+        "Usage: mallary auth login [--json]",
         "",
         "Sign in through a browser with a one-time code.",
-        "OAuth starts with read-only access. Add a scope only when the user has asked for that capability.",
+        "One login grants access to view, publish, reply, and manage Mallary.",
       ].join("\n");
     case "auth status":
       return "Usage: mallary auth status [--json]";
@@ -680,7 +679,7 @@ function getHelpText(commandPath?: string[]): string {
         "  --version",
         "",
         "Auth:",
-        "  Run `mallary auth login` for OAuth (read-only by default).",
+        "  Run `mallary auth login` once for full Mallary OAuth access.",
         "  MALLARY_API_KEY remains available as an optional environment override.",
       ].join("\n");
   }
@@ -769,15 +768,24 @@ async function runAuthStatus(deps: CliDeps, args: string[]): Promise<CommandResu
 }
 
 async function runAuthLogin(deps: CliDeps, args: string[]): Promise<CommandResult> {
-  const parsed = parseArgs({
-    args,
-    allowPositionals: false,
-    strict: true,
-    options: {
-      help: { type: "boolean", short: "h" },
-      scope: { type: "string", multiple: true },
-    },
-  });
+  const parsed = (() => {
+    try {
+      return parseArgs({
+        args,
+        allowPositionals: false,
+        strict: true,
+        options: {
+          help: { type: "boolean", short: "h" },
+        },
+      });
+    } catch (error) {
+      throw new CliError(1, {
+        http_status: 0,
+        code: "invalid_args",
+        message: error instanceof Error ? error.message : "Invalid auth login options.",
+      });
+    }
+  })();
   if (parsed.values.help) {
     return result(
       { help: getHelpText(["auth", "login"]) },
@@ -785,7 +793,7 @@ async function runAuthLogin(deps: CliDeps, args: string[]): Promise<CommandResul
     );
   }
 
-  const scopes = requestedOAuthScopes(parsed.values.scope || []);
+  const scopes = requestedOAuthScopes();
   const authorization = await startDeviceAuthorization(deps.fetch, scopes);
   writeLine(deps.stderr, "Open this Mallary sign-in page in your browser:");
   writeLine(deps.stderr, authorization.verificationUriComplete || authorization.verificationUri);

@@ -19,11 +19,13 @@ Install
 
 Authentication
 - Interactive default: browser-based OAuth with `mallary auth login`
-- OAuth starts read-only; use `--scope publish|engage|manage|all` only after explicit user intent for that capability
+- OAuth grants read, publish, engage, and manage access in one login; users do not choose scopes
+- A clear user request to publish, schedule, upload media for that post, or send a reply authorizes that action; do not ask for a second confirmation
+- Ask only when a material detail is missing or ambiguous, and do not widen the request
 - Check the active method without exposing credentials: `mallary auth status`
 - Optional CI/advanced override: MALLARY_API_KEY
 - When MALLARY_API_KEY is set, it takes precedence over stored OAuth
-- Authentication is not approval for a state-changing command
+- Authentication alone is not a request for a state-changing command; a clear user request is the authorization boundary
 - Most CLI commands require a paid Mallary plan: Starter, Pro, or Business
 
 Base URL behavior

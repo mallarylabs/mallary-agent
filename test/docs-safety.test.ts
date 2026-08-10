@@ -35,10 +35,12 @@ describe("CLI agent documentation safety", () => {
   for (const relativePath of agentReadmeDocs) {
     it(`${relativePath} advertises read-only discovery rather than write capabilities`, () => {
       const source = readCliDoc(relativePath);
-      expect(source).toContain("# Mallary CLI - OpenClaw Read-Only Guide");
+      expect(source).toContain("# Mallary CLI - OpenClaw Safety Guide");
       expect(source).toContain("## Read-Only Discovery Commands");
       expect(source).toContain("## State-Changing Guidance Is Intentionally Omitted");
-      expect(source).toContain("wait for separate approval immediately before execution");
+      expect(source).toContain("execute without asking for another confirmation");
+      expect(source).toContain("Do not ask the user to choose scopes or add scope flags.");
+      expect(source).not.toContain("--scope");
       expect(source).not.toContain("With the CLI you can:");
       expect(source).not.toContain("## AI Agent Notes");
       expect(source).not.toContain(
@@ -70,11 +72,12 @@ describe("CLI agent documentation safety", () => {
     it(`${relativePath} distinguishes capabilities from authorization`, () => {
       const source = readCliDoc(relativePath);
       expect(source).toContain("## AI Agent Safety Contract");
-      expect(source).toContain("It is not permission to suggest or run a state-changing command.");
-      expect(source).toContain("Wait for the user to explicitly approve that exact action.");
+      expect(source).toContain("It is not a user request to run a state-changing command.");
+      expect(source).toContain("A clear request to publish, schedule, upload media for that post, or send a reply authorizes that action.");
+      expect(source).toContain("do not ask for a second confirmation");
       expect(source).toContain("Never use a write command as a smoke test.");
-      expect(source).toContain("## Publishing Payload Formats (Approval-Gated Reference)");
-      expect(source).toContain("Preparing a preview does not authorize publishing.");
+      expect(source).toContain("## Publishing Payload Formats (Explicit-Request Reference)");
+      expect(source).toContain("If the user asks only for a proposal or preview, prepare it locally and do not publish.");
       expect(source).toContain("## Local Payload Preview Examples (Do Not Execute)");
       expect(source).toContain("## AI Agent Restrictions");
       expect(source).toContain("### Default Behavior: Read Only");
@@ -113,7 +116,7 @@ describe("CLI agent documentation safety", () => {
       const source = readCliDoc(relativePath);
       expect(source).toContain("Operational provider schemas and publishing syntax are intentionally omitted");
       expect(source).toContain("read-only discovery");
-      expect(source).toContain("separate explicit approval");
+      expect(source).toContain("A clear request to publish authorizes that post without a second confirmation.");
       expect(source).toContain("mallary profiles list");
       expect(source).toContain("mallary platforms list");
       expect(source).not.toContain("mallary posts create");
@@ -140,14 +143,15 @@ describe("CLI agent documentation safety", () => {
   for (const relativePath of quickStartDocs) {
     it(`${relativePath} remains read-only and omits executable write syntax`, () => {
       const source = readCliDoc(relativePath);
-      expect(source).toContain("# Mallary CLI - Read-Only Quick Start");
+      expect(source).toContain("# Mallary CLI - Safe Setup Quick Start");
       expect(source).toContain("This guide is the safe default for humans, CI jobs, and AI agents.");
       expect(source).toContain("## 4. Use Only the Minimum Read-Only Discovery Needed");
       expect(source).toContain("## 5. Stop Before Data Transfer or State Changes");
       expect(source).toContain("This guide intentionally omits executable syntax");
-      expect(source).toContain("wait for explicit approval of that fully resolved action");
+      expect(source).toContain("execute the requested action once without asking for another confirmation");
       expect(source).toContain("## Next Step");
       expect(source).toContain("Remain in read-only mode unless the user explicitly requests");
+      expect(source).not.toContain("--scope");
       expect(source).not.toContain("shortest path from install to first post");
       expect(source).not.toContain("## Next Steps");
       expect(source).not.toContain(
@@ -198,12 +202,12 @@ describe("CLI agent documentation safety", () => {
       expect(source).toContain(
         "Executable upload and publishing syntax is intentionally omitted"
       );
-      expect(source).toContain("Wait for separate explicit approval");
+      expect(source).toContain("Ask only when one of those material details is missing or ambiguous. Do not ask for a second confirmation");
       expect(source).toContain("## Supported Image Formats");
       expect(source).toContain("## Supported Video Formats");
       expect(source).toContain("## Platform-Specific Media Notes");
       expect(source).toContain("## Read-Only Troubleshooting");
-      expect(source).toContain("## Approval Handoff");
+      expect(source).toContain("## Explicit Request Handoff");
       expect(source).not.toContain("# Supported File Types for Upload");
       expect(source).not.toContain(
         "Mallary CLI reads the upload MIME type from the file extension"
@@ -241,16 +245,17 @@ describe("CLI agent documentation safety", () => {
       expect(source).toContain("an implemented code path is not authorization to suggest or use it");
       expect(source).toContain("This file is an architecture inventory, not a workflow recommendation.");
       expect(source).toContain("never treat a listed command, endpoint, or code path as permission");
-      expect(source).toContain("wait for explicit approval of that fully resolved action");
+      expect(source).toContain("treat a clear request to publish, schedule, upload media for that post, or send a reply as authorization for that action");
       expect(source).toContain("### Read-Only Discovery Commands");
-      expect(source).toContain("### Approval-Gated Code Paths (Syntax Intentionally Omitted)");
+      expect(source).toContain("### Explicit-Request Code Paths (Syntax Intentionally Omitted)");
       expect(source).toContain("Their executable CLI syntax is intentionally omitted");
-      expect(source).toContain("Approval-gated write endpoint paths are intentionally omitted");
+      expect(source).toContain("Explicit-request write endpoint paths are intentionally omitted");
+      expect(source).not.toContain("--scope");
 
       const readOnlyInventory = commentSection(
         source,
         "### Read-Only Discovery Commands",
-        "### Approval-Gated Code Paths"
+        "### Explicit-Request Code Paths"
       );
       expect(readOnlyInventory).toContain("`posts list`");
       expect(readOnlyInventory).toContain("`webhooks list`");
@@ -281,17 +286,18 @@ describe("CLI agent documentation safety", () => {
   for (const relativePath of skillDocs) {
     it(`${relativePath} exposes only read-only executable syntax`, () => {
       const source = readCliDoc(relativePath);
-      expect(source).toContain("version: 1.0.14");
-      expect(source).toContain("read-only OAuth setup for an explicit authentication request");
+      expect(source).toContain("version: 1.0.16");
+      expect(source).toContain("one-step OAuth setup with full Mallary access");
       expect(source).toContain("mallary auth login");
-      expect(source).toContain("Do not request `publish`, `engage`, `manage`, or `all` during general setup.");
+      expect(source).toContain("Do not ask the user to choose OAuth scopes or add scope flags.");
+      expect(source).toContain("## Explicit Action Requests");
+      expect(source).toContain("## Publishing Request Boundary");
+      expect(source).toContain("Do not turn a clear publishing request into a preview-and-confirm loop.");
+      expect(source).not.toContain("--scope");
       expect(source).not.toContain("env:\n        - MALLARY_API_KEY");
       expect(source).toContain("## Read-Only Discovery Commands");
-      expect(source).toContain("## State-Changing Request Handoff");
       expect(source).toContain("Executable syntax for these actions is intentionally omitted");
-      expect(source).toContain("Approval must come after the complete preview.");
       expect(source).toContain("Never automatically retry a state-changing command");
-      expect(source).toContain("## Exact Approval Checklist");
       expect(source).toContain("mallary profiles list");
       expect(source).toContain("mallary platforms list");
       expect(source).toContain("mallary posts list");
@@ -301,13 +307,13 @@ describe("CLI agent documentation safety", () => {
       expect(source).toContain("mallary settings get");
       expect(source).toContain("mallary webhooks list");
 
-      const previewIndex = source.indexOf("3. Show the exact profile");
-      const approvalIndex = source.indexOf("4. Ask for approval");
-      const executeIndex = source.indexOf("5. After approval");
+      const discoveryIndex = source.indexOf("1. Use read-only discovery");
+      const clarifyIndex = source.indexOf("3. If a material detail");
+      const executeIndex = source.indexOf("4. For publishing");
       const verifyIndex = source.indexOf("6. Verify the result");
-      expect(previewIndex).toBeGreaterThan(-1);
-      expect(approvalIndex).toBeGreaterThan(previewIndex);
-      expect(executeIndex).toBeGreaterThan(approvalIndex);
+      expect(discoveryIndex).toBeGreaterThan(-1);
+      expect(clarifyIndex).toBeGreaterThan(discoveryIndex);
+      expect(executeIndex).toBeGreaterThan(clarifyIndex);
       expect(verifyIndex).toBeGreaterThan(executeIndex);
 
       expect(source).not.toContain("version: 1.0.2");

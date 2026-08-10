@@ -228,28 +228,8 @@ export async function removeOAuthCredentials(filePath: string): Promise<boolean>
   }
 }
 
-export function requestedOAuthScopes(values: string[]): string[] {
-  const requested = new Set<MallaryCliOAuthScope>(["mallary.read"]);
-  for (const raw of values) {
-    const value = String(raw || "").trim().toLowerCase();
-    if (!value || value === "read" || value === "mallary.read") {
-      requested.add("mallary.read");
-      continue;
-    }
-    if (value === "all") {
-      ALL_MALLARY_SCOPES.forEach((scope) => requested.add(scope));
-      continue;
-    }
-    const mapped = value.startsWith("mallary.") ? value : `mallary.${value}`;
-    if (!ALL_MALLARY_SCOPES.includes(mapped as MallaryCliOAuthScope)) {
-      throw new OAuthClientError(
-        "invalid_oauth_scope",
-        `Unknown Mallary OAuth scope: ${raw}. Use read, publish, engage, manage, or all.`
-      );
-    }
-    requested.add(mapped as MallaryCliOAuthScope);
-  }
-  return ["openid", "offline_access", ...ALL_MALLARY_SCOPES.filter((scope) => requested.has(scope))];
+export function requestedOAuthScopes(): string[] {
+  return ["openid", "offline_access", ...ALL_MALLARY_SCOPES];
 }
 
 export async function startDeviceAuthorization(

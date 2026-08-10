@@ -84,7 +84,7 @@ mallary auth login
 mallary auth status
 ```
 
-OAuth starts with read-only access. `MALLARY_API_KEY` remains an optional fallback for CI and other non-interactive environments. When set, it takes precedence over OAuth.
+OAuth grants read, publish, engage, and manage access in one sign-in. Users do not choose scopes or sign in again for another Mallary feature. `MALLARY_API_KEY` remains an optional fallback for CI and other non-interactive environments. When set, it takes precedence over OAuth.
 
 ### Step 3: Choose Your Method
 
@@ -175,7 +175,7 @@ mallary platforms list
 
 ### Optional Real Publish Check
 
-Warning: `mallary posts create` publishes or schedules content through Mallary to the selected connected social-media account. Do not run this as a harmless test. Only use it after confirming the profile, platform, message/media, and intent to create a real public or scheduled post.
+Warning: `mallary posts create` publishes or schedules content through Mallary to the selected connected social-media account. Do not run this as a harmless test. Use it only when the current task clearly calls for a real public or scheduled post and the profile, platform, and message/media are known.
 
 ```bash
 # Publishes a real Facebook post to the selected profile
@@ -285,7 +285,7 @@ cd cli && npm install && npm run build
 # 2. Link globally
 npm link
 
-# 3. Sign in with read-only OAuth
+# 3. Sign in with OAuth
 mallary auth login
 mallary auth status
 
@@ -297,4 +297,4 @@ mallary profiles list
 mallary posts list
 ```
 
-Do not include `mallary posts create` in setup smoke tests. It performs an external publish or schedule action on a connected social-media account. Use the optional real publish check above only after confirming the target profile, platform, message/media, and intent to create a public or scheduled post.
+Do not include `mallary posts create` in setup smoke tests. It performs an external publish or schedule action on a connected social-media account. Use the optional real publish check above only when the current task clearly calls for a public or scheduled post and the target profile, platform, and message/media are known.

@@ -1,8 +1,8 @@
-# Mallary CLI - Read-Only Quick Start
+# Mallary CLI - Safe Setup Quick Start
 
 This guide is the safe default for humans, CI jobs, and AI agents. It intentionally stops before uploads, publishing, replies, deletion, webhook changes, settings updates, or platform disconnection. A documented capability is not permission to use it.
 
-If the user explicitly requests a state-changing Mallary action, stop using this quick start and follow the mandatory approval workflow in [SKILL.md](./SKILL.md).
+If the user explicitly requests a state-changing Mallary action, stop using this setup guide and follow the request-handling rules in [SKILL.md](./SKILL.md).
 
 ## 1. Install Only When Requested
 
@@ -14,16 +14,16 @@ npm install -g @mallary/cli
 npx @mallary/cli --help
 ```
 
-## 2. Sign In with Read-Only OAuth
+## 2. Sign In Once with OAuth
 
-If the user explicitly asked for Mallary setup or authentication, start browser-based OAuth with the default read-only scope:
+If the user explicitly asked for Mallary setup or authentication, start browser-based OAuth. One login grants read, publish, engage, and manage access:
 
 ```bash
 mallary auth login
 mallary auth status
 ```
 
-Show the Mallary verification URL and one-time code, then wait for the user to approve access in their browser. Never ask them to paste a password, OAuth token, or API key into chat. Do not request a broader OAuth scope during general setup. Authentication does not authorize uploads or account changes.
+Show the Mallary verification URL and one-time code, then wait for the user to approve access in their browser. Never ask them to paste a password, OAuth token, or API key into chat. Do not ask the user to choose scopes or add scope flags. OAuth access does not publish or change anything during setup.
 
 `MALLARY_API_KEY` remains an optional fallback for CI or another environment where OAuth is not practical. If the user chooses it, load it from a masked secret store, never print it, and never paste it into a prompt. When set, it takes precedence over stored OAuth.
 
@@ -58,16 +58,14 @@ For a non-default profile, first obtain its current public ID with `mallary prof
 
 This guide intentionally omits executable syntax for data-transmitting, publishing, destructive, and account-impacting commands. Do not infer or construct that syntax from other documentation during read-only discovery.
 
-If the user explicitly asks for one of those actions:
+If the user clearly asks to publish, schedule, upload media for that post, or send a reply:
 
 1. use minimum read-only discovery to resolve the current profile and destination
-2. prepare a local, non-executable preview without uploading files or changing Mallary
-3. show the exact profile, destinations, content, local files, timing, URL, IDs, fields, and side effects
-4. wait for explicit approval of that fully resolved action immediately before execution
-5. run the approved action once
-6. verify the result with a read-only command
+2. ask only for a material detail that is missing or ambiguous
+3. execute the requested action once without asking for another confirmation
+4. verify the result with a read-only command
 
-Approval for installation, authentication, discovery, a general workflow, or an earlier write does not approve a later action.
+An OAuth setup or discovery request is not a request to post. For deletion, disconnection, or another destructive account action, follow the stronger safeguards in [SKILL.md](./SKILL.md).
 
 ## Troubleshooting
 
@@ -98,7 +96,7 @@ Do not test an error by uploading a file, creating content, or changing account 
 
 ## Next Step
 
-Remain in read-only mode unless the user explicitly requests a specific Mallary write. For any requested write, read and follow [SKILL.md](./SKILL.md), especially the command side-effect classification and mandatory approval workflow.
+Remain in read-only mode unless the user explicitly requests a specific Mallary action. A clear publishing request authorizes that action; do not add a second confirmation. For destructive or account-access actions, follow [SKILL.md](./SKILL.md).
 
 ## Links
 

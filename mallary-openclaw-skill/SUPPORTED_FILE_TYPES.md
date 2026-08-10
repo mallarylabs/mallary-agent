@@ -10,9 +10,9 @@ Selecting local media for a later Mallary action can send the file bytes outside
 - Do not use an upload as a format test or smoke test.
 - Do not inspect or transmit more local file data than the user requested.
 - Never transmit sensitive, regulated, customer, private, secret-bearing, or unrelated files.
-- Before any transfer, show the exact local paths, target Dashboard profile, connected account, platform, message, timing, and expected result.
-- Wait for separate explicit approval after showing that complete preview.
-- Execute an approved transfer once and never retry it automatically when the result is uncertain.
+- Before any transfer, make sure the local paths, target Dashboard profile, connected account, platform, message, timing, and expected result belong to a clear user request.
+- Ask only when one of those material details is missing or ambiguous. Do not ask for a second confirmation after a clear publishing request.
+- Execute the requested transfer once and never retry it automatically when the result is uncertain.
 
 Executable upload and publishing syntax is intentionally omitted from this agent-facing reference.
 
@@ -30,7 +30,7 @@ Mallary infers the media type from the local filename extension. Renaming a file
 | `.gif`          | `image/gif`  | Supported         |
 | `.bmp`          | `image/bmp`  | Supported         |
 
-Platform rules can be narrower than Mallary's accepted input formats. Confirm the selected destination's current limits before asking for transfer approval.
+Platform rules can be narrower than Mallary's accepted input formats. Check the selected destination's current limits before uploading media for the requested post.
 
 ## Supported Video Formats
 
@@ -66,7 +66,7 @@ Unknown extensions also fall back to `application/octet-stream` and are not norm
 
 ## Platform-Specific Media Notes
 
-These are compatibility notes, not posting instructions or approval.
+These are compatibility notes, not a user request to post.
 
 ### TikTok
 
@@ -113,6 +113,6 @@ Mallary's media path accepts files up to 5 GB. Each social platform applies sepa
 - **Authentication error:** ask the user to restore the API key outside chat; never request or print the key.
 - **Uncertain remote result:** inspect existing Mallary state and do not repeat the transfer automatically.
 
-## Approval Handoff
+## Explicit Request Handoff
 
-When the user explicitly requests a media transfer or publish action, follow the exact-preview and separate-approval workflow in `SKILL.md`. Use current authoritative documentation or non-mutating local help only to prepare the preview. This file does not authorize or supply an executable state-changing workflow.
+When the user clearly requests a media transfer or publish action, follow the request-handling rules in `SKILL.md`. Ask only for missing material details and do not require another confirmation. This file does not authorize or supply an executable state-changing workflow.

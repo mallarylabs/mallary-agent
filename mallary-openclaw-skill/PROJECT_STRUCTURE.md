@@ -2,7 +2,7 @@
 
 ## Overview
 
-Mallary CLI is the official command-line interface for the public Mallary API. This architecture guide starts with read-only inspection paths. It also inventories approval-gated, state-changing code paths later in the document. For an AI agent, an implemented code path is not authorization to suggest or use it.
+Mallary CLI is the official command-line interface for the public Mallary API. This architecture guide starts with read-only inspection paths. It also inventories explicit-request, state-changing code paths later in the document. For an AI agent, an implemented code path is not authorization to suggest or use it.
 
 ## Agent Safety Boundary
 
@@ -11,8 +11,8 @@ This file is an architecture inventory, not a workflow recommendation. An AI age
 - start with the minimum read-only discovery needed for the user's request
 - never treat a listed command, endpoint, or code path as permission to invoke it
 - avoid suggesting an upload or state-changing command unless the user explicitly asks for that type of action
-- before execution, show the exact profile, destinations, content, local files, timing, URL, IDs, and fields that apply, explain the side effect, and wait for explicit approval of that fully resolved action
-- treat each approval as applying only to that one action, run it once, and verify it with a read-only command
+- treat a clear request to publish, schedule, upload media for that post, or send a reply as authorization for that action; do not ask for a second confirmation
+- ask only for missing material details, keep the action within the request, run it once, and verify it with a read-only command
 
 ## Directory Structure
 
@@ -71,7 +71,7 @@ cli/
 
 #### `src/oauth.ts`
 
-- starts OAuth device authorization with read-only access by default
+- starts OAuth device authorization with read, publish, engage, and manage access in one login
 - exchanges and refreshes tokens without printing them
 - revokes OAuth access on logout
 - stores credentials outside the project with restrictive local permissions
@@ -107,7 +107,7 @@ cli/
 
 #### `QUICK_START.md`
 
-- read-only installation, authentication, and discovery guide that routes any requested write to the approval workflow in `SKILL.md`
+- read-only installation, authentication, and discovery guide that routes any requested write to the request-handling rules in `SKILL.md`
 
 #### `PROFILES.md`
 
@@ -163,7 +163,7 @@ Build characteristics:
 ### Command Flow
 
 ```text
-Read-only or explicitly approved input
+Read-only or explicitly requested input
     ↓
 src/index.ts
     ↓
@@ -171,7 +171,7 @@ runCli() in src/main.ts
     ↓
 Argument parsing / validation
     ↓
-Optional local file upload handling (approval-gated)
+Optional local file upload handling (user-requested)
     ↓
 Authenticated request to Mallary API
     ↓
@@ -191,11 +191,11 @@ This is the only command inventory intended for agent discovery. Request the min
 7. `settings get` - inspect saved brand configuration
 8. `webhooks list` - inspect configured webhook destinations
 
-### Approval-Gated Code Paths (Syntax Intentionally Omitted)
+### Explicit-Request Code Paths (Syntax Intentionally Omitted)
 
 The implementation also contains data-transmitting and state-changing handlers. Their executable CLI syntax is intentionally omitted from this agent-facing architecture guide. Their presence in `src/main.ts` is not permission to suggest or invoke them.
 
-If the user explicitly asks for a state-changing Mallary action, follow the Agent Safety Boundary and `SKILL.md`: use read-only discovery, show the fully resolved action and side effect, wait for exact approval immediately before execution, run it once, and verify it with a read-only command.
+If the user explicitly asks for a state-changing Mallary action, follow the Agent Safety Boundary and `SKILL.md`: use read-only discovery only as needed, ask for missing material details, carry out a clear publishing request without another confirmation, run it once, and verify it with a read-only command.
 
 ## Environment Variables
 
@@ -205,7 +205,7 @@ If the user explicitly asks for a state-changing Mallary action, follow the Agen
 
 ### Credential Handling
 
-OAuth is the interactive default. It starts with read-only access, refreshes automatically, and stores credentials outside the project. When `MALLARY_API_KEY` is set, it takes precedence over stored OAuth.
+OAuth is the interactive default. It grants read, publish, engage, and manage access in one login, refreshes automatically, and stores credentials outside the project. Users do not choose scopes. When `MALLARY_API_KEY` is set, it takes precedence over stored OAuth.
 
 `MALLARY_API_KEY` is a bearer credential. It can authorize posts, uploads, webhook changes, settings updates, and account-management actions. Treat it as a secret.
 
@@ -250,7 +250,7 @@ Read-only integration endpoints used during discovery:
 7. `GET /api/v1/settings`
 8. `GET /api/v1/webhooks`
 
-Approval-gated write endpoint paths are intentionally omitted from this agent-facing architecture guide. An endpoint implemented by the API is not authorization to call it.
+Explicit-request write endpoint paths are intentionally omitted from this agent-facing architecture guide. An endpoint implemented by the API is not authorization to call it.
 
 Profile-aware endpoints accept a public `profile_id`. If you omit it, Mallary selects the default Dashboard profile.
 

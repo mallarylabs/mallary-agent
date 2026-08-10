@@ -53,18 +53,11 @@ mallary auth status
 
 The CLI prints a Mallary sign-in URL and a one-time code. Open the URL, sign in to Mallary, check the requested access, and approve it. The agent never needs your Mallary password, API key, access token, or refresh token.
 
-OAuth starts with `mallary.read` only. Request broader access only when you intend to use that capability:
-
-```bash
-mallary auth login --scope publish
-mallary auth login --scope engage
-mallary auth login --scope manage
-mallary auth login --scope all
-```
+One OAuth login grants read, publish, engage, and manage access. Users do not choose scopes or sign in again when they use another Mallary feature. OAuth login does not publish or change anything by itself.
 
 By default, the CLI stores OAuth credentials outside the current project in the operating system's per-user application configuration directory. On macOS and Linux, the credentials file is restricted to the current user. Access tokens refresh automatically. Remove and revoke the stored OAuth connection with `mallary auth logout`.
 
-OAuth scopes authorize CLI capabilities; they do not approve a particular post, upload, reply, deletion, setting change, webhook change, or account disconnection. An AI agent must still show the exact action and get separate approval immediately before a state-changing command.
+For an AI agent, a clear request to publish, schedule, upload media for that post, or send a reply authorizes that action. The agent should ask only when a material detail is missing or ambiguous, not request a second confirmation. Destructive or account-access actions should still identify their target and effect clearly.
 
 ### API key alternative
 
@@ -155,7 +148,7 @@ mallary health --json
 
 ### Upload
 
-> Privacy warning: `mallary upload` transmits the selected local file contents to Mallary storage/CDN infrastructure, including third-party hosting/CDN providers. Do not pass local paths that contain sensitive, regulated, customer, or private data unless that remote upload is intended and approved.
+> Privacy warning: `mallary upload` transmits the selected local file contents to Mallary storage/CDN infrastructure, including third-party hosting/CDN providers. Do not pass local paths that contain sensitive, regulated, customer, or private data unless the user clearly requested that remote upload.
 
 ```bash
 mallary upload ./image.png
@@ -788,7 +781,7 @@ mallary upload ./launch.png --json
 
 ## Automation and CI
 
-> Warning: automation examples can upload local media and publish real posts to connected social-media accounts. Require explicit approval for the target profile, platforms, message/media, and timing before you run them.
+> Warning: automation examples can upload local media and publish real posts to connected social-media accounts. Run them only in a workflow whose target profile, platforms, message/media, and timing are clearly defined.
 
 Keep `MALLARY_API_KEY` in masked CI secrets and pass it through `env`. Do not enable `set -x` or otherwise print request headers, environment variables, or command output that can leak the key.
 
