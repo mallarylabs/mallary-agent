@@ -18,8 +18,12 @@ Install
 - npx @mallary/cli --help
 
 Authentication
-- Uses environment-variable auth only
-- Required for authenticated commands: MALLARY_API_KEY
+- Interactive default: browser-based OAuth with `mallary auth login`
+- OAuth starts read-only; use `--scope publish|engage|manage|all` only after explicit user intent for that capability
+- Check the active method without exposing credentials: `mallary auth status`
+- Optional CI/advanced override: MALLARY_API_KEY
+- When MALLARY_API_KEY is set, it takes precedence over stored OAuth
+- Authentication is not approval for a state-changing command
 - Most CLI commands require a paid Mallary plan: Starter, Pro, or Business
 
 Base URL behavior

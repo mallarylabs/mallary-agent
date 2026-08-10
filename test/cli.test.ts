@@ -121,7 +121,7 @@ describe("mallary cli", () => {
     );
   });
 
-  it("requires MALLARY_API_KEY for authenticated commands", async () => {
+  it("requires OAuth or MALLARY_API_KEY for authenticated commands", async () => {
     const stdout = new MemoryWriter();
     const stderr = new MemoryWriter();
     const code = await runCli(["posts", "list", "--json"], {
@@ -134,8 +134,9 @@ describe("mallary cli", () => {
       ok: false,
       error: {
         http_status: 0,
-        code: "missing_api_key",
-        message: "MALLARY_API_KEY is required for this command.",
+        code: "authentication_required",
+        message:
+          "Authenticate with `mallary auth login`, or set MALLARY_API_KEY through a secure environment or secret manager.",
       },
     });
   });

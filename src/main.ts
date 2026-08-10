@@ -1,6 +1,20 @@
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { parseArgs } from "node:util";
+import {
+  OAuthClientError,
+  credentialHasScope,
+  defaultOAuthCredentialPath,
+  loadOAuthCredentials,
+  pollForDeviceToken,
+  refreshOAuthCredentials,
+  removeOAuthCredentials,
+  requestedOAuthScopes,
+  revokeOAuthCredentials,
+  saveOAuthCredentials,
+  startDeviceAuthorization,
+  type MallaryCliOAuthScope,
+} from "./oauth.js";
 import { CLI_VERSION } from "./version.js";
 
 const DEFAULT_BASE_URL = "https://mallary.ai";
@@ -21,6 +35,9 @@ export interface CliDeps {
   readFile: typeof readFile;
   stat: typeof stat;
   cwd: () => string;
+  now: () => number;
+  sleep: (milliseconds: number) => Promise<void>;
+  oauthCredentialPath: (env: NodeJS.ProcessEnv) => string;
 }
 
 interface GlobalOptions {
@@ -69,6 +86,9 @@ function defaultDeps(): CliDeps {
     readFile,
     stat,
     cwd: () => process.cwd(),
+    now: () => Date.now(),
+    sleep: (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
+    oauthCredentialPath: (env) => defaultOAuthCredentialPath(env),
   };
 }
 
@@ -160,16 +180,49 @@ function getApiKey(env: NodeJS.ProcessEnv): string {
   return String(env.MALLARY_API_KEY || "").trim();
 }
 
-function ensureApiKey(env: NodeJS.ProcessEnv): string {
-  const apiKey = getApiKey(env);
-  if (!apiKey) {
+function oauthCredentialPath(deps: CliDeps): string {
+  return deps.oauthCredentialPath(deps.env);
+}
+
+async function ensureAuthToken(
+  deps: CliDeps,
+  requiredScope: MallaryCliOAuthScope
+): Promise<string> {
+  const apiKey = getApiKey(deps.env);
+  if (apiKey) return apiKey;
+
+  const credentialPath = oauthCredentialPath(deps);
+  const stored = await loadOAuthCredentials(credentialPath);
+  if (!stored) {
     throw new CliError(1, {
       http_status: 0,
-      code: "missing_api_key",
-      message: "MALLARY_API_KEY is required for this command.",
+      code: "authentication_required",
+      message:
+        "Authenticate with `mallary auth login`, or set MALLARY_API_KEY through a secure environment or secret manager.",
     });
   }
-  return apiKey;
+  if (!credentialHasScope(stored, requiredScope)) {
+    const scope = requiredScope.replace(/^mallary\./, "");
+    throw new CliError(1, {
+      http_status: 0,
+      code: "oauth_scope_required",
+      message:
+        `The stored OAuth session does not include ${requiredScope}. ` +
+        `After the user explicitly requests that capability, run \`mallary auth login --scope ${scope}\` and complete browser consent.`,
+    });
+  }
+  if (stored.expires_at > deps.now() + 60_000) return stored.access_token;
+
+  try {
+    const refreshed = await refreshOAuthCredentials(deps.fetch, stored, deps.now());
+    await saveOAuthCredentials(credentialPath, refreshed);
+    return refreshed.access_token;
+  } catch (error) {
+    if (error instanceof OAuthClientError && error.code === "oauth_reauthentication_required") {
+      await removeOAuthCredentials(credentialPath).catch(() => undefined);
+    }
+    throw error;
+  }
 }
 
 function extractGlobalOptions(argv: string[]): GlobalOptions {
@@ -523,6 +576,27 @@ function printHeading(stdout: WriteLike, text: string) {
 function getHelpText(commandPath?: string[]): string {
   const pathKey = (commandPath || []).join(" ").trim();
   switch (pathKey) {
+    case "auth":
+      return [
+        "Usage: mallary auth login|status|logout [options]",
+        "",
+        "Sign in with Mallary OAuth, inspect the active authentication method, or remove stored OAuth access.",
+      ].join("\n");
+    case "auth login":
+      return [
+        "Usage: mallary auth login [--scope read|publish|engage|manage|all ...] [--json]",
+        "",
+        "Sign in through a browser with a one-time code.",
+        "OAuth starts with read-only access. Add a scope only when the user has asked for that capability.",
+      ].join("\n");
+    case "auth status":
+      return "Usage: mallary auth status [--json]";
+    case "auth logout":
+      return [
+        "Usage: mallary auth logout [--local-only] [--json]",
+        "",
+        "Revoke and remove stored OAuth access. --local-only removes the local credentials without revoking them remotely.",
+      ].join("\n");
     case "health":
       return [
         "Usage: mallary health [--json]",
@@ -588,6 +662,7 @@ function getHelpText(commandPath?: string[]): string {
         "  mallary <command> [subcommand] [options]",
         "",
         "Commands:",
+        "  auth login|status|logout",
         "  health",
         "  upload <file...>",
         "  posts create|list|delete",
@@ -605,7 +680,8 @@ function getHelpText(commandPath?: string[]): string {
         "  --version",
         "",
         "Auth:",
-        "  Set MALLARY_API_KEY for all authenticated commands.",
+        "  Run `mallary auth login` for OAuth (read-only by default).",
+        "  MALLARY_API_KEY remains available as an optional environment override.",
       ].join("\n");
   }
 }
@@ -636,6 +712,157 @@ async function runHealth(deps: CliDeps, baseUrl: string): Promise<CommandResult>
   });
 }
 
+async function runAuthStatus(deps: CliDeps, args: string[]): Promise<CommandResult> {
+  const parsed = parseArgs({
+    args,
+    allowPositionals: false,
+    strict: true,
+    options: {
+      help: { type: "boolean", short: "h" },
+    },
+  });
+  if (parsed.values.help) {
+    return result(
+      { help: getHelpText(["auth", "status"]) },
+      (stdout) => writeLine(stdout, getHelpText(["auth", "status"]))
+    );
+  }
+
+  const apiKeyActive = Boolean(getApiKey(deps.env));
+  const stored = await loadOAuthCredentials(oauthCredentialPath(deps));
+  if (apiKeyActive) {
+    const payload = {
+      authenticated: true,
+      method: "api_key",
+      source: "MALLARY_API_KEY",
+      oauth_credentials_stored: Boolean(stored),
+    };
+    return result(payload, (stdout) => {
+      writeLine(stdout, "Authenticated with MALLARY_API_KEY.");
+      if (stored) writeLine(stdout, "Stored OAuth access is present but the API key takes precedence.");
+    });
+  }
+
+  if (!stored) {
+    const payload = { authenticated: false, method: null };
+    return result(payload, (stdout) => {
+      writeLine(stdout, "Not authenticated. Run `mallary auth login` to sign in with OAuth.");
+    });
+  }
+
+  const payload = {
+    authenticated: true,
+    method: "oauth",
+    scopes: stored.scopes.filter((scope) => scope.startsWith("mallary.")),
+    expires_at: new Date(stored.expires_at).toISOString(),
+    access_token_expired: stored.expires_at <= deps.now(),
+    can_refresh: Boolean(stored.refresh_token),
+  };
+  return result(payload, (stdout) => {
+    writeLine(stdout, "Authenticated with Mallary OAuth.");
+    writeLine(stdout, `Scopes: ${payload.scopes.join(", ") || "none"}`);
+    writeLine(stdout, `Access token expires: ${payload.expires_at}`);
+    if (payload.access_token_expired) {
+      writeLine(stdout, "The access token is expired and will be refreshed on the next command.");
+    }
+  });
+}
+
+async function runAuthLogin(deps: CliDeps, args: string[]): Promise<CommandResult> {
+  const parsed = parseArgs({
+    args,
+    allowPositionals: false,
+    strict: true,
+    options: {
+      help: { type: "boolean", short: "h" },
+      scope: { type: "string", multiple: true },
+    },
+  });
+  if (parsed.values.help) {
+    return result(
+      { help: getHelpText(["auth", "login"]) },
+      (stdout) => writeLine(stdout, getHelpText(["auth", "login"]))
+    );
+  }
+
+  const scopes = requestedOAuthScopes(parsed.values.scope || []);
+  const authorization = await startDeviceAuthorization(deps.fetch, scopes);
+  writeLine(deps.stderr, "Open this Mallary sign-in page in your browser:");
+  writeLine(deps.stderr, authorization.verificationUriComplete || authorization.verificationUri);
+  writeLine(deps.stderr, `One-time code: ${authorization.userCode}`);
+  writeLine(deps.stderr, "Waiting for browser approval...");
+
+  const credentials = await pollForDeviceToken({
+    fetchImpl: deps.fetch,
+    authorization,
+    now: deps.now,
+    sleep: deps.sleep,
+  });
+  await saveOAuthCredentials(oauthCredentialPath(deps), credentials);
+
+  const apiKeyOverride = Boolean(getApiKey(deps.env));
+  const payload = {
+    authenticated: true,
+    method: "oauth",
+    scopes: credentials.scopes.filter((scope) => scope.startsWith("mallary.")),
+    expires_at: new Date(credentials.expires_at).toISOString(),
+    storage: "local_credentials_file",
+    api_key_override: apiKeyOverride,
+  };
+  return result(payload, (stdout) => {
+    writeLine(stdout, "Mallary OAuth login complete.");
+    writeLine(stdout, `Scopes: ${payload.scopes.join(", ") || "none"}`);
+    if (apiKeyOverride) {
+      writeLine(stdout, "MALLARY_API_KEY is set and will continue to take precedence over OAuth.");
+    }
+  });
+}
+
+async function runAuthLogout(deps: CliDeps, args: string[]): Promise<CommandResult> {
+  const parsed = parseArgs({
+    args,
+    allowPositionals: false,
+    strict: true,
+    options: {
+      help: { type: "boolean", short: "h" },
+      "local-only": { type: "boolean" },
+    },
+  });
+  if (parsed.values.help) {
+    return result(
+      { help: getHelpText(["auth", "logout"]) },
+      (stdout) => writeLine(stdout, getHelpText(["auth", "logout"]))
+    );
+  }
+
+  const credentialPath = oauthCredentialPath(deps);
+  const stored = await loadOAuthCredentials(credentialPath);
+  const localOnly = parsed.values["local-only"] === true;
+  let revoked = false;
+  if (stored && !localOnly) {
+    await revokeOAuthCredentials(deps.fetch, stored);
+    revoked = true;
+  }
+  const removed = await removeOAuthCredentials(credentialPath);
+  const apiKeyActive = Boolean(getApiKey(deps.env));
+  const payload = {
+    authenticated: apiKeyActive,
+    oauth_removed: removed,
+    oauth_revoked: revoked,
+    api_key_active: apiKeyActive,
+  };
+  return result(payload, (stdout) => {
+    if (removed) {
+      writeLine(stdout, revoked ? "Mallary OAuth access was revoked and removed." : "Stored Mallary OAuth access was removed.");
+    } else {
+      writeLine(stdout, "No stored Mallary OAuth access was found.");
+    }
+    if (apiKeyActive) {
+      writeLine(stdout, "MALLARY_API_KEY is still set. Remove it from the environment or secret manager separately.");
+    }
+  });
+}
+
 async function runUpload(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
   const parsed = parseArgs({
     args,
@@ -657,7 +884,7 @@ async function runUpload(deps: CliDeps, baseUrl: string, args: string[]): Promis
     });
   }
 
-  const apiKey = ensureApiKey(deps.env);
+  const apiKey = await ensureAuthToken(deps, "mallary.publish");
   const uploads: UploadedFile[] = [];
   for (const file of files) {
     uploads.push(await uploadLocalFile(deps, baseUrl, apiKey, file));
@@ -830,7 +1057,7 @@ async function buildPostPayload(
 }
 
 async function runPostsCreate(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
-  const apiKey = ensureApiKey(deps.env);
+  const apiKey = await ensureAuthToken(deps, "mallary.publish");
   const { payload, uploads, idempotencyKey } = await buildPostPayload(deps, baseUrl, apiKey, args);
   const response = await apiRequest(deps, {
     method: "POST",
@@ -863,7 +1090,7 @@ async function runPostsCreate(deps: CliDeps, baseUrl: string, args: string[]): P
 }
 
 async function runPostsList(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
-  const apiKey = ensureApiKey(deps.env);
+  const apiKey = await ensureAuthToken(deps, "mallary.read");
   const parsed = parseArgs({
     args,
     allowPositionals: true,
@@ -926,7 +1153,7 @@ async function runPostsList(deps: CliDeps, baseUrl: string, args: string[]): Pro
 }
 
 async function runPostsDelete(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
-  const apiKey = ensureApiKey(deps.env);
+  const apiKey = await ensureAuthToken(deps, "mallary.manage");
   const parsed = parseArgs({
     args,
     allowPositionals: true,
@@ -951,7 +1178,7 @@ async function runPostsDelete(deps: CliDeps, baseUrl: string, args: string[]): P
 }
 
 async function runCommentsList(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
-  const apiKey = ensureApiKey(deps.env);
+  const apiKey = await ensureAuthToken(deps, "mallary.read");
   const parsed = parseArgs({
     args,
     allowPositionals: true,
@@ -1005,7 +1232,7 @@ async function runCommentsList(deps: CliDeps, baseUrl: string, args: string[]): 
 }
 
 async function runCommentsReply(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
-  const apiKey = ensureApiKey(deps.env);
+  const apiKey = await ensureAuthToken(deps, "mallary.engage");
   const parsed = parseArgs({
     args,
     allowPositionals: true,
@@ -1051,7 +1278,7 @@ async function runCommentsReply(deps: CliDeps, baseUrl: string, args: string[]):
 }
 
 async function runJobGet(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
-  const apiKey = ensureApiKey(deps.env);
+  const apiKey = await ensureAuthToken(deps, "mallary.read");
   const parsed = parseArgs({
     args,
     allowPositionals: true,
@@ -1105,7 +1332,7 @@ async function runJobAttachTikTokUrl(
   baseUrl: string,
   args: string[]
 ): Promise<CommandResult> {
-  const apiKey = ensureApiKey(deps.env);
+  const apiKey = await ensureAuthToken(deps, "mallary.publish");
   const parsed = parseArgs({
     args,
     allowPositionals: true,
@@ -1156,7 +1383,7 @@ async function runJobAttachTikTokUrl(
 }
 
 async function runAnalyticsList(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
-  const apiKey = ensureApiKey(deps.env);
+  const apiKey = await ensureAuthToken(deps, "mallary.read");
   const parsed = parseArgs({
     args,
     allowPositionals: true,
@@ -1197,7 +1424,7 @@ async function runAnalyticsList(deps: CliDeps, baseUrl: string, args: string[]):
 }
 
 async function runProfilesList(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
-  const apiKey = ensureApiKey(deps.env);
+  const apiKey = await ensureAuthToken(deps, "mallary.read");
   const parsed = parseArgs({
     args,
     allowPositionals: true,
@@ -1229,7 +1456,7 @@ async function runProfilesList(deps: CliDeps, baseUrl: string, args: string[]): 
 }
 
 async function runWebhooksList(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
-  const apiKey = ensureApiKey(deps.env);
+  const apiKey = await ensureAuthToken(deps, "mallary.read");
   const parsed = parseArgs({
     args,
     allowPositionals: true,
@@ -1256,7 +1483,7 @@ async function runWebhooksList(deps: CliDeps, baseUrl: string, args: string[]): 
 }
 
 async function runWebhooksCreate(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
-  const apiKey = ensureApiKey(deps.env);
+  const apiKey = await ensureAuthToken(deps, "mallary.manage");
   const parsed = parseArgs({
     args,
     allowPositionals: true,
@@ -1296,7 +1523,7 @@ async function runWebhooksCreate(deps: CliDeps, baseUrl: string, args: string[])
 }
 
 async function runWebhooksDelete(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
-  const apiKey = ensureApiKey(deps.env);
+  const apiKey = await ensureAuthToken(deps, "mallary.manage");
   const parsed = parseArgs({
     args,
     allowPositionals: true,
@@ -1319,7 +1546,7 @@ async function runWebhooksDelete(deps: CliDeps, baseUrl: string, args: string[])
 }
 
 async function runSettingsGet(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
-  const apiKey = ensureApiKey(deps.env);
+  const apiKey = await ensureAuthToken(deps, "mallary.read");
   const parsed = parseArgs({
     args,
     allowPositionals: true,
@@ -1344,7 +1571,7 @@ async function runSettingsGet(deps: CliDeps, baseUrl: string, args: string[]): P
 }
 
 async function runSettingsUpdate(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
-  const apiKey = ensureApiKey(deps.env);
+  const apiKey = await ensureAuthToken(deps, "mallary.manage");
   const parsed = parseArgs({
     args,
     allowPositionals: true,
@@ -1389,7 +1616,7 @@ async function runSettingsUpdate(deps: CliDeps, baseUrl: string, args: string[])
 }
 
 async function runPlatformsDisconnect(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
-  const apiKey = ensureApiKey(deps.env);
+  const apiKey = await ensureAuthToken(deps, "mallary.manage");
   const parsed = parseArgs({
     args,
     allowPositionals: true,
@@ -1417,7 +1644,7 @@ async function runPlatformsDisconnect(deps: CliDeps, baseUrl: string, args: stri
 }
 
 async function runPlatformsList(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
-  const apiKey = ensureApiKey(deps.env);
+  const apiKey = await ensureAuthToken(deps, "mallary.read");
   const parsed = parseArgs({
     args,
     allowPositionals: true,
@@ -1482,6 +1709,21 @@ async function dispatchCommand(deps: CliDeps, globals: GlobalOptions): Promise<C
   }
 
   switch (command) {
+    case "auth":
+      switch (subcommand) {
+        case "login":
+          return runAuthLogin(deps, rest);
+        case "status":
+          return runAuthStatus(deps, rest);
+        case "logout":
+          return runAuthLogout(deps, rest);
+        default:
+          throw new CliError(1, {
+            http_status: 0,
+            code: "invalid_command",
+            message: "Unknown auth subcommand. Use login, status, or logout.",
+          });
+      }
     case "health":
       return runHealth(deps, baseUrl);
     case "upload":
@@ -1585,6 +1827,14 @@ function emitError(deps: CliDeps, jsonMode: boolean, error: unknown): number {
   const cliError =
     error instanceof CliError
       ? error
+      : error instanceof OAuthClientError
+        ? new CliError(1, {
+            http_status:
+              typeof error.details?.http_status === "number" ? error.details.http_status : 0,
+            code: error.code,
+            message: error.message,
+            ...(error.details ? { details: error.details } : {}),
+          })
       : new CliError(1, {
           http_status: 0,
           code: "unexpected_error",

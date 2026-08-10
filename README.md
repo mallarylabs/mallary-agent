@@ -44,13 +44,39 @@ npm uninstall -g @mallary/cli
 
 ## Authentication
 
-Mallary CLI uses environment-variable auth only. Get your API key at https://mallary.ai now.
+OAuth is the default for interactive use, including OpenClaw, Hermes, and other AI agent harnesses. Start a browser-based login:
+
+```bash
+mallary auth login
+mallary auth status
+```
+
+The CLI prints a Mallary sign-in URL and a one-time code. Open the URL, sign in to Mallary, check the requested access, and approve it. The agent never needs your Mallary password, API key, access token, or refresh token.
+
+OAuth starts with `mallary.read` only. Request broader access only when you intend to use that capability:
+
+```bash
+mallary auth login --scope publish
+mallary auth login --scope engage
+mallary auth login --scope manage
+mallary auth login --scope all
+```
+
+By default, the CLI stores OAuth credentials outside the current project in the operating system's per-user application configuration directory. On macOS and Linux, the credentials file is restricted to the current user. Access tokens refresh automatically. Remove and revoke the stored OAuth connection with `mallary auth logout`.
+
+OAuth scopes authorize CLI capabilities; they do not approve a particular post, upload, reply, deletion, setting change, webhook change, or account disconnection. An AI agent must still show the exact action and get separate approval immediately before a state-changing command.
+
+### API key alternative
+
+API-key authentication remains supported for CI and other environments where OAuth is not practical:
 
 ```bash
 read -rsp "Mallary API key: " MALLARY_API_KEY; echo; export MALLARY_API_KEY
 ```
 
-Credential safety:
+When `MALLARY_API_KEY` is set, it takes precedence over stored OAuth credentials. `mallary auth status` reports the active method without printing any credential.
+
+API-key safety:
 
 - Treat `MALLARY_API_KEY` as a bearer secret that can authorize posting and account-management actions.
 - Store it in a password manager, locked-down untracked env file, or masked CI secret. Never commit it.

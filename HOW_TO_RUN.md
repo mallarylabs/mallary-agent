@@ -13,8 +13,8 @@ node cli/dist/index.js --help
 # Or run it directly (it has a shebang)
 ./cli/dist/index.js --help
 
-# Example authenticated command; set MALLARY_API_KEY from a secret store first
-test -n "${MALLARY_API_KEY:-}" && echo "MALLARY_API_KEY is set"
+# Example authenticated command; complete OAuth login first
+node cli/dist/index.js auth login
 node cli/dist/index.js posts list
 ```
 
@@ -75,13 +75,16 @@ npm install
 npm run build
 ```
 
-### Step 2: Set Your API Key
+### Step 2: Sign In with OAuth
 
-Security: `MALLARY_API_KEY` is a bearer secret. Do not commit it, paste it into prompts or tickets, print it in logs, or expose it in shell history. Use your password manager, a locked-down untracked env file, or a CI secret store for persistent use.
+OAuth is the default for interactive use. It opens a browser-based one-time-code flow and stores the resulting credentials outside the project directory.
 
 ```bash
-read -rsp "Mallary API key: " MALLARY_API_KEY; echo; export MALLARY_API_KEY
+mallary auth login
+mallary auth status
 ```
+
+OAuth starts with read-only access. `MALLARY_API_KEY` remains an optional fallback for CI and other non-interactive environments. When set, it takes precedence over OAuth.
 
 ### Step 3: Choose Your Method
 
@@ -117,14 +120,14 @@ npm link
 echo $PATH
 ```
 
-### "MALLARY_API_KEY is not set"
+### "Authentication required"
 
 ```bash
-read -rsp "Mallary API key: " MALLARY_API_KEY; echo; export MALLARY_API_KEY
-
-# Verify it is set without printing the key
-test -n "${MALLARY_API_KEY:-}" && echo "MALLARY_API_KEY is set"
+mallary auth status
+mallary auth login
 ```
+
+If you intentionally use an API key instead, restore it through a secret manager or masked environment without printing it.
 
 ### Permission Denied
 
@@ -158,10 +161,10 @@ mallary --help
 node cli/dist/index.js help posts create
 ```
 
-### Test with Safe Read-Only Commands (requires API key)
+### Test with Safe Read-Only Commands (requires OAuth or an API key)
 
 ```bash
-test -n "${MALLARY_API_KEY:-}" && echo "MALLARY_API_KEY is set"
+mallary auth status
 
 # Health check
 mallary health
@@ -213,13 +216,13 @@ npm test
 
 ## Environment Variables
 
-### Required
+### Optional
 
-- `MALLARY_API_KEY` - your Mallary API key
+- `MALLARY_API_KEY` - an API-key override for CI or another environment where OAuth is not practical
 
 Treat `MALLARY_API_KEY` as a bearer credential. Store it in a secret manager, a locked-down untracked env file, or a masked CI secret. Do not commit it, paste it into prompts or tickets, print it with `echo`/`printenv`, enable shell tracing around it, or share logs that contain it. If the key is exposed, rotate or revoke it.
 
-### Setting Environment Variables
+### Setting the Optional API Key
 
 Temporary:
 
@@ -282,8 +285,9 @@ cd cli && npm install && npm run build
 # 2. Link globally
 npm link
 
-# 3. Confirm API key is available without printing it
-test -n "${MALLARY_API_KEY:-}" && echo "MALLARY_API_KEY is set"
+# 3. Sign in with read-only OAuth
+mallary auth login
+mallary auth status
 
 # 4. Test
 mallary health
