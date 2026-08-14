@@ -16,6 +16,7 @@ import {
   type MallaryCliOAuthScope,
 } from "./oauth.js";
 import { CLI_VERSION } from "./version.js";
+import { detectAgentHarness } from "./harness.js";
 
 const DEFAULT_BASE_URL = "https://mallary.ai";
 const MALLARY_MEDIA_HOST = "files.mallary.ai";
@@ -330,7 +331,14 @@ async function performRequest(
   const requestHeaders = new Headers();
   requestHeaders.set("accept", "application/json");
   requestHeaders.set("x-mallary-client", "cli");
+  requestHeaders.set("x-mallary-client-name", "Mallary CLI");
+  requestHeaders.set("x-mallary-client-version", CLI_VERSION);
   requestHeaders.set("user-agent", `mallary-cli/${CLI_VERSION}`);
+  const harness = detectAgentHarness(deps.env);
+  if (harness) {
+    requestHeaders.set("x-mallary-harness", harness.name);
+    if (harness.version) requestHeaders.set("x-mallary-harness-version", harness.version);
+  }
   if (apiKey) {
     requestHeaders.set("authorization", `Bearer ${apiKey}`);
   }
@@ -637,6 +645,8 @@ function getHelpText(commandPath?: string[]): string {
       return "Usage: mallary jobs attach-tiktok-url <id> --url <tiktok_video_url> [--json]";
     case "analytics list":
       return "Usage: mallary analytics list [--profile-id <id>] [--post-id <id>] [--json]";
+    case "audience list":
+      return "Usage: mallary audience list [--profile-id <id>] [--json]";
     case "profiles list":
       return "Usage: mallary profiles list [--json]";
     case "webhooks list":
@@ -669,6 +679,7 @@ function getHelpText(commandPath?: string[]): string {
         "  jobs get <id>",
         "  jobs attach-tiktok-url <id> --url <tiktok_video_url>",
         "  analytics list",
+        "  audience list",
         "  profiles list",
         "  webhooks list|create|delete",
         "  settings get|update",
@@ -1431,6 +1442,58 @@ async function runAnalyticsList(deps: CliDeps, baseUrl: string, args: string[]):
   });
 }
 
+async function runAudienceList(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
+  const apiKey = await ensureAuthToken(deps, "mallary.read");
+  const parsed = parseArgs({
+    args,
+    allowPositionals: false,
+    strict: true,
+    options: {
+      help: { type: "boolean", short: "h" },
+      "profile-id": { type: "string" },
+    },
+  });
+  if (parsed.values.help) {
+    return result(
+      { help: getHelpText(["audience", "list"]) },
+      (stdout) => writeLine(stdout, getHelpText(["audience", "list"]))
+    );
+  }
+  const params = new URLSearchParams();
+  if (typeof parsed.values["profile-id"] === "string") {
+    params.set("profile_id", parsed.values["profile-id"]);
+  }
+  const suffix = params.toString() ? `?${params.toString()}` : "";
+  const response = await apiRequest(deps, {
+    method: "GET",
+    baseUrl,
+    requestPath: `/api/v1/audience${suffix}`,
+    apiKey,
+  });
+  return result(response, (stdout) => {
+    const audience =
+      isObject(response) && isObject(response.data) && Array.isArray((response.data as JsonRecord).audience)
+        ? ((response.data as JsonRecord).audience as unknown[])
+        : [];
+    writeLine(stdout, `Found ${audience.length} connected account(s).`);
+    audience.forEach((row) => {
+      if (!isObject(row)) return;
+      const label = formatValue(row.label || row.platform);
+      const username = row.account && isObject(row.account) && row.account.username
+        ? ` @${String(row.account.username).replace(/^@/, "")}`
+        : "";
+      if (row.count !== null && row.count !== undefined) {
+        writeLine(
+          stdout,
+          `- ${label}${username}: ${Number(row.count).toLocaleString("en-US")} ${formatValue(row.metric)}`
+        );
+        return;
+      }
+      writeLine(stdout, `- ${label}${username}: ${formatValue(row.status)}`);
+    });
+  });
+}
+
 async function runProfilesList(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
   const apiKey = await ensureAuthToken(deps, "mallary.read");
   const parsed = parseArgs({
@@ -1777,7 +1840,14 @@ async function dispatchCommand(deps: CliDeps, globals: GlobalOptions): Promise<C
       throw new CliError(1, {
         http_status: 0,
         code: "invalid_command",
-        message: "Unknown analytics subcommand. Use list.",
+          message: "Unknown analytics subcommand. Use list.",
+        });
+    case "audience":
+      if (subcommand === "list") return runAudienceList(deps, baseUrl, rest);
+      throw new CliError(1, {
+        http_status: 0,
+        code: "invalid_command",
+        message: "Unknown audience subcommand. Use list.",
       });
     case "profiles":
       if (subcommand === "list") return runProfilesList(deps, baseUrl, rest);

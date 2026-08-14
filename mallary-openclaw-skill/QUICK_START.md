@@ -48,6 +48,7 @@ mallary platforms list
 mallary posts list
 mallary jobs get <job-id>
 mallary analytics list
+mallary audience list
 mallary settings get
 mallary webhooks list
 ```

@@ -286,7 +286,7 @@ describe("CLI agent documentation safety", () => {
   for (const relativePath of skillDocs) {
     it(`${relativePath} exposes only read-only executable syntax`, () => {
       const source = readCliDoc(relativePath);
-      expect(source).toContain("version: 1.0.16");
+      expect(source).toContain("version: 1.0.17");
       expect(source).toContain("one-step OAuth setup with full Mallary access");
       expect(source).toContain("mallary auth login");
       expect(source).toContain("Do not ask the user to choose OAuth scopes or add scope flags.");

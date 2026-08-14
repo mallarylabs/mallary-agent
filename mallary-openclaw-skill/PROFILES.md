@@ -36,6 +36,7 @@ mallary profiles list
 mallary posts create --message "Launch update" --platform linkedin --profile-id AbC123xYz90
 mallary posts list --profile-id AbC123xYz90
 mallary analytics list --profile-id AbC123xYz90
+mallary audience list --profile-id AbC123xYz90
 mallary settings get --profile-id AbC123xYz90
 mallary settings update --file settings.partial.json --profile-id AbC123xYz90
 mallary platforms list --profile-id AbC123xYz90
@@ -68,7 +69,7 @@ Profile-aware API behavior:
 
 - Platform connections are profile-scoped. Connect accounts in the dashboard after selecting the intended Dashboard profile.
 - Posts and grouped post history are profile-scoped.
-- Analytics queries are profile-scoped.
+- Post analytics and audience queries are profile-scoped.
 - Settings are profile-scoped. They include `auto_reply_enabled`, the business fields, the brand profile text, and the AI auto-reply context.
 - `--auto-reply-enabled` on a post also depends on the saved settings of the selected profile and on the plan access.
 

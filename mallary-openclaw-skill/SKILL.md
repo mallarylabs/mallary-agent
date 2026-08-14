@@ -1,7 +1,7 @@
 ---
 name: mallary
 description: Use this skill only when the user explicitly asks to inspect, set up, or act through Mallary, the Mallary CLI, the Mallary API, Mallary MCP, or an existing Mallary workflow. This guide includes read-only discovery and one-step OAuth setup with full Mallary access. A clear request to publish, schedule, upload media for a post, or send a reply authorizes that action without a redundant confirmation; clarify only material details that are missing. Executable write syntax is intentionally omitted.
-version: 1.0.16
+version: 1.0.17
 homepage: https://mallary.ai/
 metadata:
   openclaw:
@@ -67,6 +67,10 @@ mallary jobs get <job_id>
 mallary analytics list
 mallary analytics list --post-id <post_id>
 mallary analytics list --profile-id <profile_public_id>
+
+# Account follower and subscriber counts
+mallary audience list
+mallary audience list --profile-id <profile_public_id>
 
 # Current settings and webhooks
 mallary settings get

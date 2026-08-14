@@ -8,7 +8,7 @@ With the CLI you can:
 - create and schedule posts to your social media accounts
 - inspect jobs and grouped posts
 - list comments and reply to comments on published posts
-- fetch post analytics
+- fetch post analytics and connected-account audience counts
 - manage webhooks
 - manage your brand settings
 - list connected platforms
@@ -622,6 +622,18 @@ mallary analytics list
 mallary analytics list --profile-id AbC123xYz90
 mallary analytics list --post-id 123
 ```
+
+### Audience
+
+Get the latest follower or subscriber count for every connected account in a profile:
+
+```bash
+mallary audience list
+mallary audience list --profile-id AbC123xYz90
+mallary audience list --json
+```
+
+Mallary updates supported audience counts once every 24 hours. TikTok and LinkedIn show `permission_required` until Mallary adds the permissions those platforms need.
 
 ### Profiles
 

@@ -121,6 +121,31 @@ describe("mallary cli", () => {
     );
   });
 
+  it("adds normalized CLI and OpenClaw attribution headers", async () => {
+    let requestHeaders = new Headers();
+    const stdout = new MemoryWriter();
+    const stderr = new MemoryWriter();
+    const code = await runCli(["health", "--json"], {
+      stdout,
+      stderr,
+      env: { OPENCLAW_SHELL: "exec" },
+      fetch: async (_input, init) => {
+        requestHeaders = new Headers(init?.headers);
+        return new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      },
+    });
+
+    expect(code).toBe(0);
+    expect(requestHeaders.get("x-mallary-client")).toBe("cli");
+    expect(requestHeaders.get("x-mallary-client-name")).toBe("Mallary CLI");
+    expect(requestHeaders.get("x-mallary-client-version")).toBe(CLI_VERSION);
+    expect(requestHeaders.get("x-mallary-harness")).toBe("OpenClaw");
+    expect(requestHeaders.has("x-mallary-harness-version")).toBe(false);
+  });
+
   it("requires OAuth or MALLARY_API_KEY for authenticated commands", async () => {
     const stdout = new MemoryWriter();
     const stderr = new MemoryWriter();
@@ -954,6 +979,11 @@ describe("mallary cli", () => {
           res.end(JSON.stringify({ status: "ok", data: { analytics: [] } }));
           return;
         }
+        if (url.pathname === "/api/v1/audience" && req.method === "GET") {
+          seen.audienceProfile = url.searchParams.get("profile_id");
+          res.end(JSON.stringify({ status: "ok", data: { audience: [] } }));
+          return;
+        }
         if (url.pathname === "/api/v1/settings" && req.method === "GET") {
           seen.settingsGetProfile = url.searchParams.get("profile_id");
           res.end(JSON.stringify({ status: "ok", data: { business_name: "Mallary" } }));
@@ -1012,6 +1042,14 @@ describe("mallary cli", () => {
           })
         ).toBe(0);
         expect(
+          await runCli(["audience", "list", "--profile-id", profileId, "--json"], {
+            stdout: new MemoryWriter(),
+            stderr: new MemoryWriter(),
+            env,
+            fetch,
+          })
+        ).toBe(0);
+        expect(
           await runCli(["settings", "get", "--profile-id", profileId, "--json"], {
             stdout: new MemoryWriter(),
             stderr: new MemoryWriter(),
@@ -1058,6 +1096,7 @@ describe("mallary cli", () => {
     expect(seen.postsListProfile).toBe(profileId);
     expect(seen.analyticsProfile).toBe(profileId);
     expect(seen.analyticsPost).toBe("99");
+    expect(seen.audienceProfile).toBe(profileId);
     expect(seen.settingsGetProfile).toBe(profileId);
     expect(seen.settingsUpdate).toEqual({ business_name: "Mallary", profile_id: profileId });
     expect(seen.platformsListProfile).toBe(profileId);
@@ -1071,6 +1110,19 @@ describe("mallary cli", () => {
         if (req.url === "/api/v1/analytics?post_id=42" && req.method === "GET") {
           res.setHeader("content-type", "application/json");
           res.end(JSON.stringify({ status: "ok", data: { analytics: [{ post_id: 42, platform: "instagram", views: 12 }] } }));
+          return;
+        }
+        if (req.url === "/api/v1/audience" && req.method === "GET") {
+          res.setHeader("content-type", "application/json");
+          res.end(JSON.stringify({
+            status: "ok",
+            data: {
+              audience: [
+                { platform: "youtube", label: "YouTube", account: { username: "mallary" }, metric: "subscribers", count: 1234, status: "available" },
+                { platform: "linkedin", label: "LinkedIn", account: { username: "mallary" }, metric: "followers", count: null, status: "permission_required" },
+              ],
+            },
+          }));
           return;
         }
         if (req.url === "/api/v1/jobs/123" && req.method === "GET") {
@@ -1127,6 +1179,11 @@ describe("mallary cli", () => {
         const analyticsOut = new MemoryWriter();
         expect(await runCli(["analytics", "list", "--post-id", "42", "--json"], { stdout: analyticsOut, stderr: new MemoryWriter(), env, fetch })).toBe(0);
         expect(JSON.parse(analyticsOut.toString()).data.analytics[0].views).toBe(12);
+
+        const audienceOut = new MemoryWriter();
+        expect(await runCli(["audience", "list"], { stdout: audienceOut, stderr: new MemoryWriter(), env, fetch })).toBe(0);
+        expect(audienceOut.toString()).toContain("YouTube @mallary: 1,234 subscribers");
+        expect(audienceOut.toString()).toContain("LinkedIn @mallary: permission_required");
 
         const jobOut = new MemoryWriter();
         expect(await runCli(["jobs", "get", "123", "--json"], { stdout: jobOut, stderr: new MemoryWriter(), env, fetch })).toBe(0);

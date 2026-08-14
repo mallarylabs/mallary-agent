@@ -184,8 +184,9 @@ This is the only command inventory intended for agent discovery. Request the min
 4. `posts list` - inspect grouped post history and status
 5. `jobs get <id>` - inspect one job and its result
 6. `analytics list` - inspect available analytics rows
-7. `settings get` - inspect saved brand configuration
-8. `webhooks list` - inspect configured webhook destinations
+7. `audience list` - inspect follower and subscriber counts
+8. `settings get` - inspect saved brand configuration
+9. `webhooks list` - inspect configured webhook destinations
 
 ### Explicit-Request Code Paths (Syntax Intentionally Omitted)
 
@@ -243,8 +244,9 @@ Read-only integration endpoints used during discovery:
 4. `GET /api/v1/posts`
 5. `GET /api/v1/jobs/{id}`
 6. `GET /api/v1/analytics`
-7. `GET /api/v1/settings`
-8. `GET /api/v1/webhooks`
+7. `GET /api/v1/audience`
+8. `GET /api/v1/settings`
+9. `GET /api/v1/webhooks`
 
 Explicit-request write endpoint paths are intentionally omitted from this agent-facing architecture guide. An endpoint implemented by the API is not authorization to call it.
 

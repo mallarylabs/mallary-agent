@@ -10,7 +10,7 @@ The CLI mirrors the public Mallary API. It does not bypass plan limits, feature 
 
 This feature list describes what the CLI can do. It is not a user request to run a state-changing command.
 
-- Start with the minimum read-only discovery needed for the request. Prefer `mallary health`, `mallary profiles list`, `mallary platforms list`, `mallary posts list`, `mallary jobs get`, `mallary analytics list`, `mallary settings get`, or `mallary webhooks list`.
+- Start with the minimum read-only discovery needed for the request. Prefer `mallary health`, `mallary profiles list`, `mallary platforms list`, `mallary posts list`, `mallary jobs get`, `mallary analytics list`, `mallary audience list`, `mallary settings get`, or `mallary webhooks list`.
 - Treat discovery output as sensitive. Request only needed fields and redact profile IDs, account labels, post data, settings, and webhook details before sharing them.
 - Run an upload, post, reply, delete, TikTok URL attachment, webhook change, settings update, or platform disconnect only when the user clearly requests that type of action.
 - A clear request to publish, schedule, upload media for that post, or send a reply authorizes that action. Ask only for a material detail that is missing or ambiguous; do not ask for a second confirmation.
@@ -50,7 +50,7 @@ Mallary supports both simple post creation and advanced payload-based publishing
 - Idempotency keys
 - Optional per-post AI auto reply flag
 - Job inspection
-- Analytics fetching
+- Post analytics and account audience fetching
 - Dashboard profile listing and `--profile-id` targeting
 - Webhook management
 - Profile-scoped settings read/update
@@ -64,9 +64,9 @@ Profiles group your social media accounts. You can create one profile for each o
 - Every user has a default profile.
 - Omit `--profile-id` or `profile_id` to use the default profile.
 - Use `mallary profiles list` to find your profile IDs.
-- Pass `--profile-id` to target a non-default profile in `posts create`, `posts list`, `analytics list`, `settings get/update`, `platforms list`, and `platforms disconnect`.
+- Pass `--profile-id` to target a non-default profile in `posts create`, `posts list`, `analytics list`, `audience list`, `settings get/update`, `platforms list`, and `platforms disconnect`.
 - In JSON file mode, send `profile_id`.
-- Platform connections, posts, analytics, and AI auto-reply settings are profile-scoped.
+- Platform connections, posts, post analytics, audience counts, and AI auto-reply settings are profile-scoped.
 - The CLI lists profiles and targets them. The dashboard and the REST API create and rename profiles.
 - Commands that create posts, upload files, update settings, manage webhooks, or disconnect platforms have side effects. Make sure that the target profile and the result you want are correct before you run them.
 
@@ -271,7 +271,7 @@ AI agents use read-only commands by default. Uploading, publishing, replying, de
 
 ## Summary
 
-Read-only commands can inspect jobs, posts, analytics, settings, webhooks, profiles, and connected platforms. The following capabilities require a clear user request before an AI agent uses them:
+Read-only commands can inspect jobs, posts, post analytics, audience counts, settings, webhooks, profiles, and connected platforms. The following capabilities require a clear user request before an AI agent uses them:
 
 - upload local media to Mallary storage and to the Mallary CDN
 - create direct or scheduled posts on connected social accounts
