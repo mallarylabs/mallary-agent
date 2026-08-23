@@ -100,6 +100,13 @@ These are compatibility notes, not a user request to post.
 
 - The current public path supports text-only posts or one image attachment.
 
+### Bluesky
+
+- A post can use up to four `jpg`, `jpeg`, `png`, or `webp` images, up to 2 MB each.
+- A video post uses one `mp4` file, up to 300 MB.
+- Do not mix images and video in one Bluesky post.
+- Media items can include alt text for accessibility.
+
 ## Size and Provider Limits
 
 Mallary's media path accepts files up to 5 GB. Each social platform applies separate type, duration, dimension, and size limits. A format accepted by Mallary can still be rejected by the destination platform.

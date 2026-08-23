@@ -257,6 +257,7 @@ Platform-specific media rules:
 - TikTok video posts require one video, and TikTok photo posts support up to 35 JPEG/WebP images.
 - Pinterest requires exactly one image or GIF, or exactly one video, plus `boardId`.
 - Reddit image posts require one image or GIF, and Reddit video upload is not supported by the current public API path.
+- Bluesky supports text-only posts, up to four JPG, PNG, or WEBP images, or one MP4 video. Images can use `alt_text`.
 - X allows up to 4 images, or 1 video, or 1 GIF.
 - Full matrix:
   `https://docs.mallary.ai/api-reference/endpoint/create#platform-specific-media-rules`
@@ -397,8 +398,9 @@ TikTok:
 
 Defaults:
 
-- Video posts default to `post_mode=MEDIA_UPLOAD` and `source=FILE_UPLOAD`.
-- Photo posts default to `post_mode=MEDIA_UPLOAD`.
+- Video posts default to `post_mode=DIRECT_POST` and `source=FILE_UPLOAD`.
+- Photo posts default to `post_mode=DIRECT_POST`.
+- `MEDIA_UPLOAD` jobs stay `action_required` until you finish the post in TikTok and add its final TikTok URL.
 - If `privacy_level` is omitted for direct post, Mallary first tries the first allowed privacy level from TikTok creator info, preferring `PUBLIC_TO_EVERYONE`, then `MUTUAL_FOLLOW_FRIENDS`, then `FOLLOWER_OF_CREATOR`, then `SELF_ONLY`. If TikTok returns the private-account-only direct-post restriction, Mallary retries once with the most private allowed level.
 - If `disable_comment`, `disable_duet`, or `disable_stitch` are omitted for direct post, Mallary falls back to the creator settings returned by TikTok.
 
@@ -494,6 +496,30 @@ Reddit:
 }
 ```
 
+Bluesky:
+
+- `message`: optional Bluesky-specific message, up to 300 characters
+- `languages` or `langs`: up to three language codes
+- `alt_text`: optional description on each image or video item in `media`
+
+```json
+{
+  "message": "A new update is ready.",
+  "platforms": ["bluesky"],
+  "media": [
+    {
+      "url": "./launch.png",
+      "alt_text": "A phone showing the new Mallary dashboard"
+    }
+  ],
+  "platform_options": {
+    "bluesky": {
+      "languages": ["en"]
+    }
+  }
+}
+```
+
 X / Twitter:
 
 - `message`: optional X-specific message, supplied as `platform_options.x.message` or `platform_options.twitter.message`.
@@ -549,7 +575,7 @@ File mode example:
 
 AI auto reply:
 
-- AI Auto Replies detect new comments on your published posts. They use OpenAI (ChatGPT) to post replies. The replies follow the settings that you configure in the Mallary dashboard, or the settings section below. Mallary supports AI Auto Replies on YouTube, Facebook, Instagram, LinkedIn, X (Twitter), and Reddit.
+- AI Auto Replies detect new comments on your published posts. They use OpenAI (ChatGPT) to post replies. The replies follow the settings that you configure in the Mallary dashboard, or the settings section below. Mallary supports AI Auto Replies on YouTube, Facebook, Instagram, Threads, LinkedIn, X, and Bluesky.
 - Privacy warning: do not enable AI Auto Replies for posts or accounts where comments can contain sensitive, regulated, confidential, or customer-private data. Enable them only when you intend and approve that processing. When you enable AI Auto Replies, Mallary processes comment text, post context, connected-platform metadata, and saved brand/profile settings. Mallary also sends relevant context to OpenAI for reply generation.
 - AI Auto Replies are available on Pro and Business plans only.
 - AI Auto Replies depend on your saved brand/profile settings, not only on the current post payload.
@@ -633,7 +659,7 @@ mallary audience list --profile-id AbC123xYz90
 mallary audience list --json
 ```
 
-Mallary updates supported audience counts once every 24 hours. TikTok and LinkedIn show `permission_required` until Mallary adds the permissions those platforms need.
+Mallary updates supported audience counts once every 24 hours. TikTok returns followers when the connection includes audience stats access. LinkedIn shows `permission_required` until Mallary adds the permission it needs.
 
 ### Profiles
 

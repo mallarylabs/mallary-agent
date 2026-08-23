@@ -17,6 +17,7 @@ Mallary supports platform-specific settings through `platform_options` in file m
 | TikTok | `tiktok` | `post_type`, `post_mode`, `source`, `privacy_level`. Media `thumbnail_url` changes cover behavior. |
 | Facebook | `facebook` | `post_type`, `link`, `pageId`. Media `thumbnail_url` sets video thumbnails. |
 | Pinterest | `pinterest` | `post_type`, `boardId`, `link`, `alt_text` |
+| Bluesky | `bluesky` | `message`, `languages`. Media `alt_text` adds an accessible description. |
 
 ### Platforms with Default Settings
 
@@ -24,7 +25,6 @@ These usually work with the standard payload alone:
 
 - `x`
 - `threads`
-- `snapchat`
 
 ## Usage
 
@@ -177,7 +177,7 @@ In Mallary, use the platform names directly in:
 - `facebook`
 - `pinterest`
 - `threads`
-- `snapchat`
+- `bluesky`
 
 ## Documentation
 
@@ -201,5 +201,6 @@ Use it for:
 
 - Mallary supports platform-specific publish settings where the public API exposes them.
 - The main workflow is `mallary posts create --file payload.json`.
-- X, Threads, and Snapchat usually work with the standard body alone.
+- X and Threads usually work with the standard body alone.
+- Bluesky can use the standard body alone. Add `platform_options.bluesky` when you need a different message or language codes.
 - Pinterest, TikTok, YouTube, Instagram, LinkedIn, Facebook, and Reddit often need structured `platform_options`.

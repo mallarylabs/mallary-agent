@@ -99,7 +99,7 @@ Platform-specific payloads
   - reddit: `message`, `post_type`, `subreddit` or `subredditName`
   - threads: `message`, `post_type`
   - x/twitter: `message`
-  - snapchat: `message`, `contentType` or `post_type`
+  - bluesky: `message`, `languages` or `langs`; media items can use `alt_text`
 
 Post enhancements
 - `comments_under_post` supports up to 3 follow-up comments.
