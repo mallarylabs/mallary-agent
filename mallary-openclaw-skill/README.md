@@ -74,6 +74,8 @@ mallary comments list --post-id <post-id>
 
 These commands do not change Mallary state, but their output can expose profile IDs, profile names, account labels, connection state, post content, comments, analytics, settings, webhook destinations, platform results, and provider metadata.
 
+`mallary platforms list` also reports the exact selectable post types. If the user later asks to publish a Story, Reel, Short, carousel, photo, or video, preserve that requested format. Never silently publish it as a feed post or another type.
+
 ## Profile Safety
 
 - obtain the current profile ID with a read-only profile lookup

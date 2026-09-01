@@ -1,7 +1,7 @@
 ---
 name: mallary
 description: Use this skill only when the user explicitly asks to inspect, set up, or act through Mallary, the Mallary CLI, the Mallary API, Mallary MCP, or an existing Mallary workflow. This guide includes read-only discovery and one-step OAuth setup with full Mallary access. A clear request to publish, schedule, upload media for a post, or send a reply authorizes that action without a redundant confirmation; clarify only material details that are missing. Executable write syntax is intentionally omitted.
-version: 1.0.17
+version: 1.0.18
 homepage: https://mallary.ai/
 metadata:
   openclaw:
@@ -118,6 +118,16 @@ A clear request such as `Post this to Instagram and LinkedIn now` authorizes tha
 - Local media used in an authorized post may be uploaded as part of that post. Never substitute or add unrelated files.
 
 Do not turn a clear publishing request into a preview-and-confirm loop.
+
+## Requested Post Format
+
+Treat an explicitly requested format such as Story, Reel, Short, carousel, photo, or video as part of the user's instruction.
+
+- `mallary platforms list` reports the exact selectable `post_types` for each destination. This is read-only discovery.
+- Never silently replace a requested Story with a feed post, or substitute any other format.
+- If every requested destination lists the same requested type, preserve that type in the publishing request.
+- If destinations need different types, use the CLI's advanced payload support only after the user has clearly requested publishing.
+- If a destination does not list the requested type, explain that mismatch and stop instead of publishing a different format.
 
 ## Read-Only Verification
 

@@ -190,6 +190,19 @@ mallary posts create \
   --scheduled-timezone America/Los_Angeles
 ```
 
+Choose one post type for every compatible destination in flag mode:
+
+```bash
+mallary posts create \
+  --message "A new Story" \
+  --platform facebook \
+  --platform instagram \
+  --post-type story \
+  --media ./story.mp4
+```
+
+Mallary checks the type before it uploads media or sends the post. If one selected platform cannot use that type, the command stops and lists that platform's supported types. Use file mode when different platforms need different types.
+
 Create from a JSON file:
 
 ```bash
@@ -226,7 +239,8 @@ Notes:
 - If `media[].url` is already a remote URL, it must already be hosted on `https://files.mallary.ai/...`. External media URLs are rejected by the CLI.
 - Existing remote `media[].thumbnail_url` values must also already be hosted on `https://files.mallary.ai/...`.
 - This is intentional because many social platforms only accept trusted media URLs. The CLI requires media to be uploaded to the Mallary CDN first.
-- Platform-specific payloads are supported in file mode via `platform_options`.
+- A shared post type is available in flag mode with `--post-type`.
+- Other platform-specific payloads, or different post types for different destinations, are supported in file mode via `platform_options`.
 - When a destination needs a platform-specific message or caption, use `platform_options.<platform>.message`.
 - Each key in `platform_options` must match the platform name you put in `platforms`.
 
@@ -234,16 +248,17 @@ Video thumbnails:
 
 - In flag mode, use `--thumbnail` with exactly one `--media` item.
 - In file mode, put `thumbnail_url` on the video media item.
-- YouTube regular videos, Facebook videos, and Instagram videos/Reels can use custom thumbnails/covers.
-- YouTube accepts `jpg`, `jpeg`, or `png` thumbnails up to 2 MB. Recommended: `1280x720` 16:9. YouTube Shorts thumbnails are skipped.
-- Facebook videos accept `jpg`, `jpeg`, or `png` thumbnails up to 10 MB.
+- YouTube regular videos and Shorts, Facebook feed videos, and Instagram videos/Reels can use custom thumbnails/covers.
+- YouTube accepts `jpg`, `jpeg`, or `png` thumbnails up to 2 MB. Use 16:9 for a regular video and 9:16 for a Short.
+- Facebook feed videos accept `jpg`, `jpeg`, or `png` thumbnails up to 10 MB.
 - TikTok video posts do not accept arbitrary image thumbnails through Mallary. A `thumbnail_url` value disables Mallary's `video_cover_timestamp_ms` behavior. TikTok then uses its default cover.
 - TikTok photo posts can use `thumbnail_url` for the cover photo. It works only when the URL exactly matches one of the supplied photo URLs.
 
 Platform-specific payloads:
 
-- These are available only in file mode with `mallary posts create --file payload.json`.
-- The CLI does not validate platform-specific keys itself. It passes them through to the Mallary API.
+- Use `--post-type` in flag mode when every selected destination should use the same supported type.
+- Use file mode with `mallary posts create --file payload.json` for other platform-specific fields or different post types by destination.
+- In file mode, the CLI passes platform-specific keys through to the Mallary API. Flag-mode `--post-type` values are checked before upload or submission.
 - If you include `platform_options.instagram`, your `platforms` array must include `instagram`. The same rule applies to every platform.
 - For the exact currently documented `platform_options` fields and examples by platform, see:
   `https://docs.mallary.ai/api-reference/endpoint/create#body-platform-options`
@@ -252,10 +267,11 @@ Platform-specific media rules:
 
 - The CLI uses the same platform media validation as the Mallary API.
 - YouTube requires exactly one video.
+- Facebook supports `feed`, `story`, and `reel` via `platform_options.facebook.post_type`. Reels use one 9:16 MP4 or MOV video that is 3 to 90 seconds long.
 - Instagram supports `feed`, `story`, `reel`, and `carousel` via `platform_options.instagram.post_type`. Stories use one image or video. Reels use one video. Carousels use 2 to 10 mixed image/video items.
 - LinkedIn currently supports text-only posts or one image attachment only.
 - TikTok video posts require one video, and TikTok photo posts support up to 35 JPEG/WebP images.
-- Pinterest requires exactly one image or GIF, or exactly one video, plus `boardId`.
+- Pinterest requires exactly one image or GIF, or exactly one video, plus `boardId`. Mallary shortens Pin descriptions longer than 800 characters so they can publish.
 - Reddit image posts require one image or GIF, and Reddit video upload is not supported by the current public API path.
 - Bluesky supports text-only posts, up to four JPG, PNG, or WEBP images, or one MP4 video. Images can use `alt_text`.
 - X allows up to 4 images, or 1 video, or 1 GIF.
@@ -289,9 +305,10 @@ Payload shape:
 Facebook:
 
 - `message`: optional Facebook-specific message/caption
-- `post_type`: `feed` or `story`
+- `post_type`: `feed`, `story`, or `reel`
 - `link`: optional link URL for link-style feed posts without media
 - `pageId`: optional advanced override if you need to target a specific connected Facebook Page
+- Reels use one 9:16 MP4 or MOV video that is 3 to 90 seconds long and at least 540 by 960 pixels.
 
 ```json
 {
@@ -453,7 +470,7 @@ Photo post example:
 
 Pinterest:
 
-- `message`: optional Pinterest-specific description/default title source
+- `message`: optional Pinterest-specific description/default title source; Mallary shortens it to Pinterest's 800-character limit
 - `post_type`: `image` or `video`
 - `boardId`: board id to publish into
 - `link`: optional destination URL
@@ -760,6 +777,8 @@ List your connected platforms against Mallary's full supported platform set:
 mallary platforms list
 mallary platforms list --profile-id AbC123xYz90
 ```
+
+The human and JSON responses include each platform's selectable `post_types`. Platforms whose format is selected from content and media report automatic selection instead.
 
 Disconnect a platform:
 

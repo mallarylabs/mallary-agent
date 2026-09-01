@@ -65,6 +65,7 @@ Typical workflows
    mallary upload ./image.png --json
 2) Create post from flags:
    mallary posts create --message "Hello" --platform youtube --media ./video.mp4 --thumbnail ./cover.jpg --json
+   Use --post-type when every selected destination should use the same supported type.
 3) Create post from a raw JSON payload:
    mallary posts create --file ./post.json --json
 4) Poll a job:
@@ -79,7 +80,8 @@ Important constraints
 - The CLI is a direct client for the public API. It does not bypass plan limits or validation rules.
 - Free-plan users can use `comments list` and `comments reply`. Other CLI commands return `upgrade_required`.
 - Settings updates are file-based in v1.
-- For advanced per-platform payloads, prefer posts create --file.
+- Flag mode supports one shared explicit format through --post-type.
+- For advanced per-platform payloads or different types by destination, prefer posts create --file.
 - comments_under_post remains limited by the API.
 - Media must be local files uploaded through Mallary or already-hosted `https://files.mallary.ai/...` URLs.
 - Video thumbnails use `media[].thumbnail_url` in JSON file mode, or `--thumbnail` with exactly one `--media` item in flag mode.
@@ -87,10 +89,11 @@ Important constraints
 - External third-party media URLs are rejected by the CLI.
 
 Platform-specific payloads
-- Use `platform_options` in file mode only.
+- Use `--post-type` in flag mode when each selected platform should use the same supported type.
+- Use `platform_options` in file mode for other platform-specific fields or different types by destination.
 - Use `platform_options.<platform>.message` for platform-specific messages/captions.
 - Supported examples:
-  - facebook: `message`, `post_type`, `link`, `pageId`
+  - facebook: `message`, `post_type` (`feed`, `story`, or `reel`), `link`, `pageId`
   - instagram: `message`, `post_type`
   - linkedin: `message`, `author_urn`
   - youtube: `message`, `post_type`, `title`, `visibility`, `categoryId`, `madeForKids`
@@ -100,6 +103,12 @@ Platform-specific payloads
   - threads: `message`, `post_type`
   - x/twitter: `message`
   - bluesky: `message`, `languages` or `langs`; media items can use `alt_text`
+
+Format discovery
+- `mallary platforms list` is read-only and returns each destination's selectable `post_types`.
+- Preserve an explicitly requested Story, Reel, Short, carousel, photo, or video.
+- Never silently replace a requested format with a feed post or another type.
+- If a destination does not list the requested type, stop and report the mismatch.
 
 Post enhancements
 - `comments_under_post` supports up to 3 follow-up comments.

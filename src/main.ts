@@ -21,6 +21,23 @@ import { detectAgentHarness } from "./harness.js";
 const DEFAULT_BASE_URL = "https://mallary.ai";
 const MALLARY_MEDIA_HOST = "files.mallary.ai";
 
+const POST_TYPES_BY_PLATFORM: Readonly<Record<string, readonly string[]>> = {
+  facebook: ["feed", "story", "reel"],
+  instagram: ["feed", "story", "reel", "carousel"],
+  threads: ["text", "image", "video", "carousel"],
+  youtube: ["regular", "shorts"],
+  tiktok: ["video", "photo"],
+  pinterest: ["image", "video"],
+  reddit: ["text", "link", "image"],
+};
+
+function canonicalPlatformName(value: string): string {
+  const platform = String(value || "").trim().toLowerCase();
+  if (platform === "meta") return "facebook";
+  if (platform === "twitter") return "x";
+  return platform;
+}
+
 type FetchLike = typeof fetch;
 type JsonRecord = Record<string, unknown>;
 
@@ -621,13 +638,15 @@ function getHelpText(commandPath?: string[]): string {
         "Usage: mallary posts create [options]",
         "",
         "Flag mode:",
-        "  mallary posts create --message \"Hello\" --platform facebook --platform instagram [--profile-id <id>] [--media ./file.jpg] [--thumbnail ./cover.jpg] [--comment \"...\" ] [--scheduled-at <time>] [--scheduled-timezone <iana>] [--idempotency-key <key>]",
+        "  mallary posts create --message \"Hello\" --platform facebook --platform instagram [--post-type story] [--profile-id <id>] [--media ./file.jpg] [--thumbnail ./cover.jpg] [--comment \"...\" ] [--scheduled-at <time>] [--scheduled-timezone <iana>] [--idempotency-key <key>]",
         "",
         "File mode:",
         "  mallary posts create --file payload.json [--idempotency-key <key>]",
         "",
         "Notes:",
-        "  - --file is mutually exclusive with payload-building flags such as --message, --platform, --profile-id, --media, --thumbnail, --comment, --scheduled-at, --scheduled-timezone, --auto-reply-enabled, and --webhook-url.",
+        "  - --file is mutually exclusive with payload-building flags such as --message, --platform, --post-type, --profile-id, --media, --thumbnail, --comment, --scheduled-at, --scheduled-timezone, --auto-reply-enabled, and --webhook-url.",
+        "  - --post-type applies the same type to every selected platform. Use file mode when platforms need different types.",
+        "  - Supported explicit types: Facebook feed/story/reel; Instagram feed/story/reel/carousel; Threads text/image/video/carousel; YouTube regular/shorts; TikTok video/photo; Pinterest image/video; Reddit text/link/image.",
         "  - Use --scheduled-at with an absolute timestamp like 2026-04-06T18:30:00Z, or pair a local time like 2026-04-06T14:30 with --scheduled-timezone America/New_York.",
         "  - Local media paths are uploaded automatically before the post request.",
       ].join("\n");
@@ -951,6 +970,7 @@ async function buildPostPayload(
       file: { type: "string" },
       message: { type: "string" },
       platform: { type: "string", multiple: true },
+      "post-type": { type: "string" },
       "profile-id": { type: "string" },
       media: { type: "string", multiple: true },
       thumbnail: { type: "string" },
@@ -980,6 +1000,7 @@ async function buildPostPayload(
     ensureExclusiveFileMode(parsed.values as JsonRecord, [
       "message",
       "platform",
+      "post-type",
       "profile-id",
       "media",
       "thumbnail",
@@ -1025,6 +1046,33 @@ async function buildPostPayload(
     });
   }
 
+  const requestedPostType =
+    typeof parsed.values["post-type"] === "string"
+      ? parsed.values["post-type"].trim().toLowerCase()
+      : "";
+  const platformOptions: JsonRecord = {};
+  if (requestedPostType) {
+    for (const rawPlatform of platforms) {
+      const platform = canonicalPlatformName(rawPlatform);
+      const supportedPostTypes = POST_TYPES_BY_PLATFORM[platform];
+      if (!supportedPostTypes) {
+        throw new CliError(1, {
+          http_status: 0,
+          code: "invalid_args",
+          message: `--post-type is not available for ${platform || rawPlatform}. Mallary chooses that destination's format from the content and media.`,
+        });
+      }
+      if (!supportedPostTypes.includes(requestedPostType)) {
+        throw new CliError(1, {
+          http_status: 0,
+          code: "invalid_args",
+          message: `Post type \"${requestedPostType}\" is not supported by ${platform}. Supported types: ${supportedPostTypes.join(", ")}. Use --file when platforms need different post types.`,
+        });
+      }
+      platformOptions[platform] = { post_type: requestedPostType };
+    }
+  }
+
   const mediaEntries = Array.isArray(parsed.values.media) ? parsed.values.media : [];
   const thumbnail =
     typeof parsed.values.thumbnail === "string" ? parsed.values.thumbnail.trim() : "";
@@ -1043,6 +1091,9 @@ async function buildPostPayload(
     message,
     platforms,
   };
+  if (requestedPostType) {
+    payload.platform_options = platformOptions;
+  }
   if (typeof parsed.values["profile-id"] === "string" && parsed.values["profile-id"].trim()) {
     payload.profile_id = parsed.values["profile-id"].trim();
   }
@@ -1757,9 +1808,16 @@ async function runPlatformsList(deps: CliDeps, baseUrl: string, args: string[]):
       printHeading(stdout, "All supported platforms");
       platformRows.forEach((item) => {
         if (!isObject(item)) return;
+        const postTypes = Array.isArray(item.post_types)
+          ? item.post_types.map((value) => String(value)).filter(Boolean)
+          : [];
+        const formatLabel =
+          postTypes.length > 0
+            ? `; post types: ${postTypes.join(", ")}`
+            : "; format selected automatically from content and media";
         writeLine(
           stdout,
-          `- ${formatValue(item.platform)}: ${item.connected === true ? "connected" : "not connected"}`
+          `- ${formatValue(item.platform)}: ${item.connected === true ? "connected" : "not connected"}${formatLabel}`
         );
       });
     }

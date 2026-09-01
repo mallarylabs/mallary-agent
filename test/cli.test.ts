@@ -179,6 +179,143 @@ describe("mallary cli", () => {
     expect(stderr.toString()).toContain("--file cannot be combined");
   });
 
+  it("applies one requested post type to every compatible platform", async () => {
+    let postedBody = "";
+    await withServer(
+      async (req, res, _state, body) => {
+        if (req.url === "/api/v1/post" && req.method === "POST") {
+          postedBody = body;
+          res.setHeader("content-type", "application/json");
+          res.end(JSON.stringify({ status: "queued", batch_id: "story-batch", jobs: [] }));
+          return;
+        }
+        res.statusCode = 404;
+        res.end("not found");
+      },
+      async (baseUrl) => {
+        const stdout = new MemoryWriter();
+        const stderr = new MemoryWriter();
+        const code = await runCli(
+          [
+            "posts",
+            "create",
+            "--message",
+            "Story update",
+            "--platform",
+            "facebook",
+            "--platform",
+            "instagram",
+            "--post-type",
+            "story",
+            "--json",
+          ],
+          {
+            stdout,
+            stderr,
+            env: { MALLARY_API_KEY: "test" },
+            fetch: createMallaryFetch(baseUrl),
+          }
+        );
+
+        expect(code).toBe(0);
+        expect(JSON.parse(postedBody)).toEqual({
+          message: "Story update",
+          platforms: ["facebook", "instagram"],
+          platform_options: {
+            facebook: { post_type: "story" },
+            instagram: { post_type: "story" },
+          },
+        });
+        expect(stderr.toString()).toBe("");
+      }
+    );
+  });
+
+  it("rejects a post type that a selected platform cannot use before sending a request", async () => {
+    const stdout = new MemoryWriter();
+    const stderr = new MemoryWriter();
+    let requestSent = false;
+    const code = await runCli(
+      [
+        "posts",
+        "create",
+        "--message",
+        "Not a Story",
+        "--platform",
+        "youtube",
+        "--post-type",
+        "story",
+      ],
+      {
+        stdout,
+        stderr,
+        env: { MALLARY_API_KEY: "test" },
+        fetch: async () => {
+          requestSent = true;
+          return new Response("unexpected request", { status: 500 });
+        },
+      }
+    );
+
+    expect(code).toBe(1);
+    expect(requestSent).toBe(false);
+    expect(stderr.toString()).toContain('Post type "story" is not supported by youtube');
+    expect(stderr.toString()).toContain("regular, shorts");
+  });
+
+  it("shows selectable post types during read-only platform discovery", async () => {
+    await withServer(
+      async (req, res) => {
+        if (req.url === "/api/v1/platforms" && req.method === "GET") {
+          res.setHeader("content-type", "application/json");
+          res.end(
+            JSON.stringify({
+              status: "ok",
+              data: {
+                connected: ["instagram"],
+                counts: { connected: 1, supported: 2 },
+                platforms: [
+                  {
+                    platform: "instagram",
+                    connected: true,
+                    post_types: ["feed", "story", "reel", "carousel"],
+                    post_type_selection: "explicit",
+                  },
+                  {
+                    platform: "bluesky",
+                    connected: false,
+                    post_types: [],
+                    post_type_selection: "automatic",
+                  },
+                ],
+              },
+            })
+          );
+          return;
+        }
+        res.statusCode = 404;
+        res.end("not found");
+      },
+      async (baseUrl) => {
+        const stdout = new MemoryWriter();
+        const stderr = new MemoryWriter();
+        const code = await runCli(["platforms", "list"], {
+          stdout,
+          stderr,
+          env: { MALLARY_API_KEY: "test" },
+          fetch: createMallaryFetch(baseUrl),
+        });
+
+        expect(code).toBe(0);
+        expect(stdout.toString()).toContain("instagram: connected; post types: feed, story, reel, carousel");
+        expect(stdout.toString()).toContain(
+          "bluesky: not connected; format selected automatically from content and media"
+        );
+        expect(stderr.toString()).toBe("");
+      }
+    );
+  });
+
   it("uploads local files end-to-end", async () => {
     const filePath = await makeTempFile("hello.txt", "hello world");
     let uploaded = "";
@@ -289,6 +426,65 @@ describe("mallary cli", () => {
         expect(await runCli(["jobs", "get", "123"], { stdout: jobOut, stderr: new MemoryWriter(), env, fetch })).toBe(0);
         expect(jobOut.toString()).toContain("Post ID: page_123");
         expect(jobOut.toString()).toContain("Post URL: https://www.facebook.com/page/posts/123");
+      }
+    );
+  });
+
+  it("preserves profile connection guidance from failed post requests", async () => {
+    await withServer(
+      async (req, res) => {
+        if (req.url === "/api/v1/post" && req.method === "POST") {
+          res.statusCode = 409;
+          res.setHeader("content-type", "application/json");
+          res.end(
+            JSON.stringify({
+              status: "error",
+              error: {
+                code: "platform_not_connected_to_profile",
+                message: 'Instagram is not connected to profile "Default" (DfProfile7). No post was created.',
+                details: {
+                  profile: { id: "DfProfile7", name: "Default", selection: "default" },
+                  missing_platforms: ["instagram"],
+                  suggested_profiles: [
+                    { profile_id: "Business22", name: "Business" },
+                  ],
+                },
+              },
+            })
+          );
+          return;
+        }
+        res.statusCode = 404;
+        res.end("not found");
+      },
+      async (baseUrl) => {
+        const stdout = new MemoryWriter();
+        const code = await runCli(
+          ["posts", "create", "--message", "Hello", "--platform", "instagram", "--json"],
+          {
+            stdout,
+            stderr: new MemoryWriter(),
+            env: { MALLARY_API_KEY: "test" },
+            fetch: createMallaryFetch(baseUrl),
+          }
+        );
+
+        expect(code).toBe(2);
+        expect(JSON.parse(stdout.toString())).toEqual({
+          ok: false,
+          error: {
+            http_status: 409,
+            code: "platform_not_connected_to_profile",
+            message: 'Instagram is not connected to profile "Default" (DfProfile7). No post was created.',
+            details: {
+              profile: { id: "DfProfile7", name: "Default", selection: "default" },
+              missing_platforms: ["instagram"],
+              suggested_profiles: [
+                { profile_id: "Business22", name: "Business" },
+              ],
+            },
+          },
+        });
       }
     );
   });

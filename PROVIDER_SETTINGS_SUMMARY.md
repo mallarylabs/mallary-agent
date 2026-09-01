@@ -15,7 +15,7 @@ Mallary supports platform-specific settings through `platform_options` in file m
 | LinkedIn | `linkedin` | `author_urn` |
 | Instagram | `instagram` | `post_type`. Media `thumbnail_url` sets video/Reels covers. |
 | TikTok | `tiktok` | `post_type`, `post_mode`, `source`, `privacy_level`. Media `thumbnail_url` changes cover behavior. |
-| Facebook | `facebook` | `post_type`, `link`, `pageId`. Media `thumbnail_url` sets video thumbnails. |
+| Facebook | `facebook` | `post_type` (`feed`, `story`, or `reel`), `link`, `pageId`. Reels use one 9:16 MP4/MOV video. Media `thumbnail_url` sets feed video thumbnails. |
 | Pinterest | `pinterest` | `post_type`, `boardId`, `link`, `alt_text` |
 | Bluesky | `bluesky` | `message`, `languages`. Media `alt_text` adds an accessible description. |
 

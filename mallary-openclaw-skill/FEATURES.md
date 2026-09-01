@@ -40,8 +40,10 @@ Mallary supports both simple post creation and advanced payload-based publishing
 
 - One `posts create` request can target multiple platforms at once.
 - Use repeatable `--platform` flags in flag mode.
+- Use `--post-type` in flag mode when every selected platform should use the same supported type, such as `story` for Facebook and Instagram.
 - Use the `platforms` array in file mode.
-- In file mode, `platform_options` changes the platform-specific behavior.
+- In file mode, `platform_options` changes platform-specific behavior or gives different destinations different post types.
+- Read-only `platforms list` output includes each destination's selectable `post_types`. Never silently replace an explicitly requested Story, Reel, Short, carousel, photo, or video with a different format.
 
 #### Advanced Features
 
@@ -181,7 +183,7 @@ type CreatePostPayload = {
   auto_reply_enabled?: boolean;
   platform_options?: {
     facebook?: {
-      post_type?: "feed" | "story";
+      post_type?: "feed" | "story" | "reel";
       link?: string;
       pageId?: string;
     };
