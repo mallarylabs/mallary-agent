@@ -380,6 +380,14 @@ describe("mallary cli", () => {
                   platform_post_url: "https://www.facebook.com/page/posts/123",
                 },
               ],
+              warnings: [
+                {
+                  platform: "youtube",
+                  code: "youtube_shorts_thumbnail_display_not_verifiable",
+                  severity: "warning",
+                  message: "YouTube may not show this thumbnail on Shorts surfaces.",
+                },
+              ],
             })
           );
           return;
@@ -421,6 +429,8 @@ describe("mallary cli", () => {
         ).toBe(0);
         expect(createOut.toString()).toContain("Post ID: page_123");
         expect(createOut.toString()).toContain("Post URL: https://www.facebook.com/page/posts/123");
+        expect(createOut.toString()).toContain("Warnings:");
+        expect(createOut.toString()).toContain("YouTube may not show this thumbnail on Shorts surfaces.");
 
         const jobOut = new MemoryWriter();
         expect(await runCli(["jobs", "get", "123"], { stdout: jobOut, stderr: new MemoryWriter(), env, fetch })).toBe(0);

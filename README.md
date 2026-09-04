@@ -248,8 +248,8 @@ Video thumbnails:
 
 - In flag mode, use `--thumbnail` with exactly one `--media` item.
 - In file mode, put `thumbnail_url` on the video media item.
-- YouTube regular videos and Shorts, Facebook feed videos, and Instagram videos/Reels can use custom thumbnails/covers.
-- YouTube accepts `jpg`, `jpeg`, or `png` thumbnails up to 2 MB. Use 16:9 for a regular video and 9:16 for a Short.
+- YouTube regular videos, Facebook feed videos, and Instagram videos/Reels can use custom thumbnails/covers.
+- YouTube accepts `jpg`, `jpeg`, or `png` thumbnails up to 2 MB for regular videos. Use 16:9. For a Short, YouTube may store the image but show a video frame instead. Mallary returns a warning because the YouTube API cannot confirm the cover viewers will see.
 - Facebook feed videos accept `jpg`, `jpeg`, or `png` thumbnails up to 10 MB.
 - TikTok video posts do not accept arbitrary image thumbnails through Mallary. A `thumbnail_url` value disables Mallary's `video_cover_timestamp_ms` behavior. TikTok then uses its default cover.
 - TikTok photo posts can use `thumbnail_url` for the cover photo. It works only when the URL exactly matches one of the supplied photo URLs.
@@ -372,6 +372,7 @@ YouTube:
 - `visibility`: `public`, `unlisted`, or `private`
 - `categoryId`: optional YouTube category id
 - `madeForKids`: optional boolean
+- `playlist_id`: optional existing playlist owned by the connected YouTube channel
 
 ```json
 {
@@ -381,11 +382,12 @@ YouTube:
   "platform_options": {
     "youtube": {
       "message": "YouTube-specific video description",
-      "post_type": "shorts",
+      "post_type": "regular",
       "title": "Acme Co walkthrough",
       "visibility": "unlisted",
       "categoryId": "28",
-      "madeForKids": false
+      "madeForKids": false,
+      "playlist_id": "PL1234567890"
     }
   }
 }

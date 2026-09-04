@@ -132,7 +132,8 @@ These JSON objects demonstrate data shape only. They are not publishing requests
     "youtube": {
       "post_type": "shorts",
       "title": "<reviewed title>",
-      "visibility": "public"
+      "visibility": "public",
+      "playlist_id": "<reviewed existing playlist ID>"
     },
     "pinterest": {
       "post_type": "video",
@@ -183,6 +184,7 @@ type CreatePostPayload = {
       visibility?: "public" | "unlisted" | "private";
       categoryId?: string;
       madeForKids?: boolean;
+      playlist_id?: string;
     };
     tiktok?: {
       post_type?: "video" | "photo";

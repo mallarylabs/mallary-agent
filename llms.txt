@@ -96,7 +96,7 @@ Platform-specific payloads
   - facebook: `message`, `post_type` (`feed`, `story`, or `reel`), `link`, `pageId`
   - instagram: `message`, `post_type`
   - linkedin: `message`, `author_urn`
-  - youtube: `message`, `post_type`, `title`, `visibility`, `categoryId`, `madeForKids`
+  - youtube: `message`, `post_type`, `title`, `visibility`, `categoryId`, `madeForKids`, `playlist_id`
   - tiktok: `message`, `post_type`, `post_mode`, `source`, `title`, `description`, `privacy_level`
   - pinterest: `message`, `post_type`, `boardId`, `link`, `alt_text`
   - reddit: `message`, `post_type`, `subreddit` or `subredditName`

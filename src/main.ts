@@ -1156,6 +1156,13 @@ async function runPostsCreate(deps: CliDeps, baseUrl: string, args: string[]): P
         }
       });
     }
+    if (Array.isArray(responseObj.warnings) && responseObj.warnings.length > 0) {
+      writeLine(stdout, "Warnings:");
+      responseObj.warnings.forEach((warning) => {
+        if (!isObject(warning)) return;
+        writeLine(stdout, `- ${formatValue(warning.message || warning.code)}`);
+      });
+    }
   });
 }
 
