@@ -195,6 +195,8 @@ type CreatePostPayload = {
       trialParams?: {
         graduationStrategy: "MANUAL" | "SS_PERFORMANCE";
       };
+      isPaidPartnership?: boolean;
+      brandedContentSponsors?: string[];
     };
     linkedin?: {
       author_urn?: string;

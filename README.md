@@ -219,7 +219,8 @@ Example `post.json`:
   "platform_options": {
     "youtube": {
       "message": "YouTube description for the launch video",
-      "title": "Launch update"
+      "title": "Launch update",
+      "tags": ["product launch", "creator tools"]
     },
     "facebook": {
       "message": "Facebook caption for this launch"
@@ -268,7 +269,7 @@ Platform-specific media rules:
 - The CLI uses the same platform media validation as the Mallary API.
 - YouTube requires exactly one video.
 - Facebook supports `feed`, `story`, and `reel` via `platform_options.facebook.post_type`. Reels use one 9:16 MP4 or MOV video that is 3 to 90 seconds long.
-- Instagram supports `feed`, `story`, `reel`, and `carousel` via `platform_options.instagram.post_type`. Stories use one image or video. Reels use one video. Carousels use 2 to 10 mixed image/video items. For a Reel, `shareToFeed` controls profile feed placement. Add `trialParams.graduationStrategy` to publish a Trial Reel.
+- Instagram supports `feed`, `story`, `reel`, and `carousel` via `platform_options.instagram.post_type`. Stories use one image or video. Reels use one video. Carousels use 2 to 10 mixed image/video items. For a Reel, `shareToFeed` controls profile feed placement. Add `trialParams.graduationStrategy` to publish a Trial Reel. With a Facebook Login connection, `isPaidPartnership` and up to two `brandedContentSponsors` work on feed posts, Reels, and carousels.
 - LinkedIn currently supports text-only posts or one image attachment only.
 - TikTok video posts require one video, and TikTok photo posts support up to 35 JPEG/WebP images.
 - Pinterest requires exactly one image or GIF, or exactly one video, plus `boardId`. Mallary shortens Pin descriptions longer than 800 characters so they can publish.
@@ -330,6 +331,8 @@ Instagram:
 - `post_type`: `feed`, `story`, `reel`, or `carousel`
 - `shareToFeed`: optional boolean for Reels. It defaults to `true`. Set it to `false` to keep the Reel off the profile feed.
 - `trialParams.graduationStrategy`: optional Trial Reel setting. Use `MANUAL` to choose later in Instagram, or `SS_PERFORMANCE` to let Instagram share it with followers if it performs well. Do not use `shareToFeed` in the same request.
+- `isPaidPartnership`: optional boolean for the Paid partnership label on feed posts, Reels, and carousels. It requires Facebook Login and does not work with Stories.
+- `brandedContentSponsors`: optional list of up to two Instagram usernames or numeric user IDs. Adding a sponsor also turns on the Paid partnership label. Each sponsor must be a public Business or Creator account.
 - Stories do not support captions or follow-up comments. Include the story text in the media itself.
 - Carousels support 2 to 10 image/video items.
 
@@ -393,6 +396,8 @@ YouTube:
 - `visibility`: `public`, `unlisted`, or `private`
 - `categoryId`: optional YouTube category id
 - `madeForKids`: optional boolean
+- `containsSyntheticMedia`: optional boolean; set it to `true` when the video contains realistic AI-generated or altered content that could look real
+- `tags`: optional list of video tags; each tag can use up to 100 characters and the complete list can use up to 500 characters after YouTube counts separators
 - `playlist_id`: optional existing playlist owned by the connected YouTube channel
 
 ```json
@@ -408,6 +413,8 @@ YouTube:
       "visibility": "unlisted",
       "categoryId": "28",
       "madeForKids": false,
+      "containsSyntheticMedia": true,
+      "tags": ["product walkthrough", "creator tools", "Mallary"],
       "playlist_id": "PL1234567890"
     }
   }
