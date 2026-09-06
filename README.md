@@ -268,7 +268,7 @@ Platform-specific media rules:
 - The CLI uses the same platform media validation as the Mallary API.
 - YouTube requires exactly one video.
 - Facebook supports `feed`, `story`, and `reel` via `platform_options.facebook.post_type`. Reels use one 9:16 MP4 or MOV video that is 3 to 90 seconds long.
-- Instagram supports `feed`, `story`, `reel`, and `carousel` via `platform_options.instagram.post_type`. Stories use one image or video. Reels use one video. Carousels use 2 to 10 mixed image/video items.
+- Instagram supports `feed`, `story`, `reel`, and `carousel` via `platform_options.instagram.post_type`. Stories use one image or video. Reels use one video. Carousels use 2 to 10 mixed image/video items. For a Reel, `shareToFeed` controls profile feed placement. Add `trialParams.graduationStrategy` to publish a Trial Reel.
 - LinkedIn currently supports text-only posts or one image attachment only.
 - TikTok video posts require one video, and TikTok photo posts support up to 35 JPEG/WebP images.
 - Pinterest requires exactly one image or GIF, or exactly one video, plus `boardId`. Mallary shortens Pin descriptions longer than 800 characters so they can publish.
@@ -328,6 +328,8 @@ Instagram:
 
 - `message`: optional Instagram-specific caption
 - `post_type`: `feed`, `story`, `reel`, or `carousel`
+- `shareToFeed`: optional boolean for Reels. It defaults to `true`. Set it to `false` to keep the Reel off the profile feed.
+- `trialParams.graduationStrategy`: optional Trial Reel setting. Use `MANUAL` to choose later in Instagram, or `SS_PERFORMANCE` to let Instagram share it with followers if it performs well. Do not use `shareToFeed` in the same request.
 - Stories do not support captions or follow-up comments. Include the story text in the media itself.
 - Carousels support 2 to 10 image/video items.
 
@@ -339,7 +341,26 @@ Instagram:
   "platform_options": {
     "instagram": {
       "message": "Instagram reel caption",
-      "post_type": "reel"
+      "post_type": "reel",
+      "shareToFeed": false
+    }
+  }
+}
+```
+
+Trial Reel shape:
+
+```json
+{
+  "message": "Try this with a new audience",
+  "platforms": ["instagram"],
+  "media": [{ "url": "./reel.mp4" }],
+  "platform_options": {
+    "instagram": {
+      "post_type": "reel",
+      "trialParams": {
+        "graduationStrategy": "SS_PERFORMANCE"
+      }
     }
   }
 }

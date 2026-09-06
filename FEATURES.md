@@ -127,7 +127,8 @@ These JSON objects demonstrate data shape only. They are not publishing requests
       "post_type": "feed"
     },
     "instagram": {
-      "post_type": "reel"
+      "post_type": "reel",
+      "shareToFeed": false
     },
     "youtube": {
       "post_type": "shorts",
@@ -174,6 +175,10 @@ type CreatePostPayload = {
     };
     instagram?: {
       post_type?: "feed" | "story" | "reel" | "carousel";
+      shareToFeed?: boolean;
+      trialParams?: {
+        graduationStrategy: "MANUAL" | "SS_PERFORMANCE";
+      };
     };
     linkedin?: {
       author_urn?: string;

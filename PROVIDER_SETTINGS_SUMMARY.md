@@ -13,7 +13,7 @@ Mallary supports platform-specific settings through `platform_options` in file m
 | Reddit | `reddit` | `post_type`, `subreddit` |
 | YouTube | `youtube` | `post_type`, `title`, `visibility`, `categoryId`, `madeForKids`, `playlist_id`. Media `thumbnail_url` sets regular video thumbnails. Shorts may store the image but show a video frame instead. |
 | LinkedIn | `linkedin` | `author_urn` |
-| Instagram | `instagram` | `post_type`. Media `thumbnail_url` sets video/Reels covers. |
+| Instagram | `instagram` | `post_type`, `shareToFeed` for Reel feed placement, and `trialParams.graduationStrategy` for Trial Reels. Media `thumbnail_url` sets video/Reels covers. |
 | TikTok | `tiktok` | `post_type`, `post_mode`, `source`, `privacy_level`. Media `thumbnail_url` changes cover behavior. |
 | Facebook | `facebook` | `post_type` (`feed`, `story`, or `reel`), `link`, `pageId`. Reels use one 9:16 MP4/MOV video. Media `thumbnail_url` sets feed video thumbnails. |
 | Pinterest | `pinterest` | `post_type`, `boardId`, `link`, `alt_text` |

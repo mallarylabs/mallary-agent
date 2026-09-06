@@ -94,7 +94,7 @@ Platform-specific payloads
 - Use `platform_options.<platform>.message` for platform-specific messages/captions.
 - Supported examples:
   - facebook: `message`, `post_type` (`feed`, `story`, or `reel`), `link`, `pageId`
-  - instagram: `message`, `post_type`
+  - instagram: `message`, `post_type`, `shareToFeed`, and `trialParams.graduationStrategy` for Trial Reels
   - linkedin: `message`, `author_urn`
   - youtube: `message`, `post_type`, `title`, `visibility`, `categoryId`, `madeForKids`, `playlist_id`
   - tiktok: `message`, `post_type`, `post_mode`, `source`, `title`, `description`, `privacy_level`
