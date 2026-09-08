@@ -270,7 +270,7 @@ Platform-specific media rules:
 - YouTube requires exactly one video.
 - Facebook supports `feed`, `story`, and `reel` via `platform_options.facebook.post_type`. Reels use one 9:16 MP4 or MOV video that is 3 to 90 seconds long.
 - Instagram supports `feed`, `story`, `reel`, and `carousel` via `platform_options.instagram.post_type`. Stories use one image or video. Reels use one video. Carousels use 2 to 10 mixed image/video items. For a Reel, `shareToFeed` controls profile feed placement. Add `trialParams.graduationStrategy` to publish a Trial Reel. With a Facebook Login connection, `isPaidPartnership` and up to two `brandedContentSponsors` work on feed posts, Reels, and carousels.
-- LinkedIn currently supports text-only posts or one image attachment only.
+- LinkedIn supports text-only posts, one image or GIF, or one MP4 video. Videos can be up to 1 GB (1,073,741,824 bytes) and 3 seconds to 30 minutes long. Do not mix images and video.
 - TikTok video posts require one video, and TikTok photo posts support up to 35 JPEG/WebP images.
 - Pinterest requires exactly one image or GIF, or exactly one video, plus `boardId`. Mallary shortens Pin descriptions longer than 800 characters so they can publish.
 - Reddit image posts require one image or GIF, and Reddit video upload is not supported by the current public API path.
