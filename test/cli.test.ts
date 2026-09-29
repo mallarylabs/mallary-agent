@@ -153,6 +153,7 @@ describe("mallary cli", () => {
       stdout,
       stderr,
       env: {},
+      oauthCredentialPath: () => path.join(tmpdir(), `mallary-cli-no-auth-${process.pid}-${Date.now()}.json`),
     });
     expect(code).toBe(1);
     expect(JSON.parse(stdout.toString())).toEqual({
@@ -177,6 +178,90 @@ describe("mallary cli", () => {
     });
     expect(code).toBe(1);
     expect(stderr.toString()).toContain("--file cannot be combined");
+  });
+
+  it("gets the full scheduled post and its edit revision", async () => {
+    const stdout = new MemoryWriter();
+    const stderr = new MemoryWriter();
+    const calls: string[] = [];
+    const code = await runCli(["posts", "get", "123", "--profile-id", "profile-a", "--json"], {
+      stdout,
+      stderr,
+      env: { MALLARY_API_KEY: "test" },
+      fetch: async (input) => {
+        const url = new URL(String(input));
+        calls.push(`${url.pathname}${url.search}`);
+        return new Response(JSON.stringify({ status: "ok", data: {
+          id: 123, batch_id: "batch-1", revision: 2, editable: true,
+          profile_id: "profile-a", platforms: ["instagram"], message: "Original",
+          scheduled_at: "2026-10-15T14:00:00.000Z",
+        } }), { status: 200, headers: { "content-type": "application/json" } });
+      },
+    });
+    expect(code).toBe(0);
+    expect(calls).toEqual(["/api/v1/posts/123?profile_id=profile-a"]);
+    expect(JSON.parse(stdout.toString()).data.revision).toBe(2);
+    expect(stderr.toString()).toBe("");
+  });
+
+  it("edits the complete destination set and target profile with a revision", async () => {
+    const stdout = new MemoryWriter();
+    const stderr = new MemoryWriter();
+    const calls: Array<{ method: string; path: string; body: unknown }> = [];
+    const code = await runCli([
+      "posts", "edit", "123", "--message", "Updated",
+      "--target-profile-id", "profile-b", "--platform", "instagram", "--platform", "linkedin",
+      "--expected-revision", "2", "--json",
+    ], {
+      stdout,
+      stderr,
+      env: { MALLARY_API_KEY: "test" },
+      fetch: async (input, init) => {
+        const url = new URL(String(input));
+        calls.push({ method: String(init?.method), path: `${url.pathname}${url.search}`, body: init?.body ? JSON.parse(String(init.body)) : null });
+        const data = url.pathname === "/api/v1/platforms"
+          ? { posting_ready: ["instagram", "linkedin"] }
+          : url.pathname === "/api/v1/posts/123" && init?.method === "PATCH"
+            ? { id: 123, revision: 3, profile_id: "profile-b", platforms: ["instagram", "linkedin"], scheduled_at: "2026-10-15T14:00:00.000Z" }
+            : { id: 123, batch_id: "batch-1", revision: 2, editable: true, profile_id: "profile-a", platforms: ["facebook"], message: "Original" };
+        return new Response(JSON.stringify({ status: "ok", data }), { status: 200, headers: { "content-type": "application/json" } });
+      },
+    });
+    expect(code).toBe(0);
+    expect(calls.map((call) => [call.method, call.path])).toEqual([
+      ["GET", "/api/v1/posts/123"],
+      ["GET", "/api/v1/platforms?profile_id=profile-b"],
+      ["PATCH", "/api/v1/posts/123?profile_id=profile-a"],
+    ]);
+    expect(calls[2].body).toEqual({
+      expected_revision: 2,
+      message: "Updated",
+      destinations: { profile_id: "profile-b", platforms: ["instagram", "linkedin"] },
+    });
+    expect(JSON.parse(stdout.toString()).data.revision).toBe(3);
+    expect(stderr.toString()).toBe("");
+  });
+
+  it("stops an edit before sending a write when its expected revision is stale", async () => {
+    const stdout = new MemoryWriter();
+    const stderr = new MemoryWriter();
+    const methods: string[] = [];
+    const code = await runCli([
+      "posts", "edit", "123", "--message", "Updated", "--expected-revision", "1", "--json",
+    ], {
+      stdout,
+      stderr,
+      env: { MALLARY_API_KEY: "test" },
+      fetch: async (_input, init) => {
+        methods.push(String(init?.method));
+        return new Response(JSON.stringify({ status: "ok", data: {
+          id: 123, revision: 2, editable: true, profile_id: "profile-a", platforms: ["instagram"],
+        } }), { status: 200, headers: { "content-type": "application/json" } });
+      },
+    });
+    expect(code).toBe(1);
+    expect(methods).toEqual(["GET"]);
+    expect(JSON.parse(stdout.toString()).error.code).toBe("post_edit_conflict");
   });
 
   it("applies one requested post type to every compatible platform", async () => {

@@ -5,6 +5,7 @@ Mallary CLI is the official command-line interface for the Mallary public API.
 Purpose
 - Upload local media to Mallary storage/CDN infrastructure. This transmits selected local file bytes
 - Create and schedule social posts
+- Edit scheduled posts before publishing starts
 - Inspect jobs and grouped posts
 - List comments and reply to comments on published posts
 - Fetch analytics
@@ -20,7 +21,7 @@ Install
 Authentication
 - Interactive default: browser-based OAuth with `mallary auth login`
 - OAuth grants read, publish, engage, and manage access in one login; users do not choose scopes
-- A clear user request to publish, schedule, upload media for that post, or send a reply authorizes that action; do not ask for a second confirmation
+- A clear user request to publish, schedule, edit a scheduled post, upload media for that post, or send a reply authorizes that action; do not ask for a second confirmation
 - Ask only when a material detail is missing or ambiguous, and do not widen the request
 - Check the active method without exposing credentials: `mallary auth status`
 - Optional CI/advanced override: MALLARY_API_KEY
@@ -38,6 +39,8 @@ Command inventory
 - mallary upload <file...>
 - mallary posts create
 - mallary posts list
+- mallary posts get <id>
+- mallary posts edit <id> (requires the saved revision; can change the whole group's profile and platforms)
 - mallary posts delete <id> (destructive: deletes queued/scheduled Mallary post/job that has not started publishing)
 - mallary comments list --post-id <id>
 - mallary comments reply --post-id <id> --comment-id <cid> --message "text"
@@ -72,7 +75,11 @@ Typical workflows
    mallary jobs get 123 --json
 5) List grouped posts:
    mallary posts list --json
-6) Engage with comments:
+6) Edit a scheduled post:
+   mallary posts get 123 --json
+   mallary posts edit 123 --message "Updated launch note" --expected-revision 1
+   To change the profile or platforms, check the final account list and send the full destination platform list.
+7) Engage with comments:
    mallary comments list --post-id 123 --json
    mallary comments reply --post-id 123 --comment-id "1789..." --message "Thanks for checking this out."
 

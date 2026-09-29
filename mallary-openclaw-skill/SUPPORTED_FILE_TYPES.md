@@ -77,7 +77,7 @@ These are compatibility notes, not a user request to post.
 ### YouTube
 
 - A post requires exactly one video.
-- Regular-video custom thumbnails can use `jpg`, `jpeg`, or `png` up to 2 MB.
+- Regular-video custom thumbnails can use `jpg`, `jpeg`, or `png` up to 50 MB.
 - The recommended regular-video thumbnail dimensions are `1280x720` with a 16:9 ratio.
 - For YouTube Shorts, YouTube may store the thumbnail but show a video frame instead. Mallary returns a warning because the YouTube API cannot confirm the cover viewers will see.
 

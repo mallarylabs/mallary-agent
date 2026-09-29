@@ -335,7 +335,7 @@ async function readJsonFile(deps: CliDeps, filePath: string): Promise<unknown> {
 async function performRequest(
   deps: CliDeps,
   options: {
-    method: "GET" | "POST" | "DELETE" | "PUT";
+    method: "GET" | "POST" | "PATCH" | "DELETE" | "PUT";
     baseUrl: string;
     requestPath: string;
     apiKey?: string;
@@ -395,7 +395,7 @@ async function performRequest(
 async function apiRequest(
   deps: CliDeps,
   options: {
-    method: "GET" | "POST" | "DELETE";
+    method: "GET" | "POST" | "PATCH" | "DELETE";
     baseUrl: string;
     requestPath: string;
     apiKey?: string;
@@ -652,6 +652,25 @@ function getHelpText(commandPath?: string[]): string {
       ].join("\n");
     case "posts list":
       return "Usage: mallary posts list [--profile-id <id>] [--page <n>] [--per-page <n>] [--json]";
+    case "posts get":
+      return "Usage: mallary posts get <id> [--profile-id <current-profile-id>] [--json]";
+    case "posts edit":
+      return [
+        "Usage: mallary posts edit <id> [options]",
+        "",
+        "Flag mode:",
+        "  mallary posts edit <id> --message \"Updated text\" [--target-profile-id <id>] [--platform <platform> ...] [--media ./file.jpg] [--comment \"...\"] [--scheduled-at <time>] [--scheduled-timezone <iana>] [--expected-revision <n>]",
+        "",
+        "File mode:",
+        "  mallary posts edit <id> --file changes.json [--expected-revision <n>]",
+        "",
+        "Notes:",
+        "  - --profile-id identifies the post's current profile. --target-profile-id moves the post to another profile.",
+        "  - Repeated --platform values replace the complete destination platform list. Omit them to keep it.",
+        "  - Mallary reads the current post and uses its revision. --expected-revision requires a specific revision.",
+        "  - --media and --comment replace their complete lists. Use file mode with empty arrays to clear them.",
+        "  - A destination change applies to the entire scheduled post group. It stops if any destination has started publishing.",
+      ].join("\n");
     case "posts delete":
       return "Usage: mallary posts delete <id> [--json]";
     case "comments list":
@@ -693,7 +712,7 @@ function getHelpText(commandPath?: string[]): string {
         "  auth login|status|logout",
         "  health",
         "  upload <file...>",
-        "  posts create|list|delete",
+        "  posts create|list|get|edit|delete",
         "  comments list|reply",
         "  jobs get <id>",
         "  jobs attach-tiktok-url <id> --url <tiktok_video_url>",
@@ -1226,6 +1245,252 @@ async function runPostsList(deps: CliDeps, baseUrl: string, args: string[]): Pro
         }
       }
     });
+  });
+}
+
+function postDetailFromResponse(response: unknown): JsonRecord {
+  if (isObject(response) && isObject(response.data)) return response.data;
+  throw createError(2, "invalid_post_response", "Mallary did not return the scheduled post details.");
+}
+
+function postProfileQuery(profileId: string): string {
+  return profileId ? `?profile_id=${encodeURIComponent(profileId)}` : "";
+}
+
+async function fetchPostDetail(
+  deps: CliDeps,
+  baseUrl: string,
+  apiKey: string,
+  id: string,
+  sourceProfileId = ""
+): Promise<JsonRecord> {
+  const response = await apiRequest(deps, {
+    method: "GET",
+    baseUrl,
+    requestPath: `/api/v1/posts/${encodeURIComponent(id)}${postProfileQuery(sourceProfileId)}`,
+    apiKey,
+  });
+  return postDetailFromResponse(response);
+}
+
+async function runPostsGet(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
+  const parsed = parseArgs({
+    args,
+    allowPositionals: true,
+    strict: true,
+    options: {
+      help: { type: "boolean", short: "h" },
+      "profile-id": { type: "string" },
+    },
+  });
+  if (parsed.values.help) {
+    return result({ help: getHelpText(["posts", "get"]) }, (stdout) => writeLine(stdout, getHelpText(["posts", "get"])));
+  }
+  const id = parseSinglePositional("id", parsed.positionals[0]);
+  const apiKey = await ensureAuthToken(deps, "mallary.read");
+  const post = await fetchPostDetail(deps, baseUrl, apiKey, id, String(parsed.values["profile-id"] || "").trim());
+  return result({ status: "ok", data: post }, (stdout) => {
+    printHeading(stdout, `Scheduled post ${formatValue(post.id || id)}`);
+    writeLine(stdout, `Profile: ${formatValue(post.profile_id)}`);
+    writeLine(stdout, `Platforms: ${formatValue(post.platforms)}`);
+    writeLine(stdout, `Scheduled for: ${formatValue(post.scheduled_at)}`);
+    writeLine(stdout, `Revision: ${formatValue(post.revision)}`);
+    writeLine(stdout, `Editable: ${post.editable === true ? "yes" : "no"}`);
+    if (post.editable !== true && post.edit_block_reason) {
+      writeLine(stdout, `Reason: ${formatValue(post.edit_block_reason)}`);
+    }
+    writeLine(stdout, `Message: ${formatValue(post.message)}`);
+  });
+}
+
+function parsePostEditRevision(value: unknown): number | null {
+  if (value === undefined || value === null || value === "") return null;
+  const revision = Number(value);
+  if (!Number.isSafeInteger(revision) || revision < 1) {
+    throw createError(1, "invalid_args", "--expected-revision must be a positive integer.");
+  }
+  return revision;
+}
+
+function validateEditDestinations(value: unknown): { profile_id: string; platforms: string[] } {
+  if (!isObject(value)) {
+    throw createError(1, "invalid_destinations", "destinations must contain profile_id and a complete platforms list.");
+  }
+  const profileId = String(value.profile_id || "").trim();
+  const rawPlatforms = value.platforms;
+  if (!profileId || !Array.isArray(rawPlatforms) || rawPlatforms.length === 0) {
+    throw createError(1, "invalid_destinations", "destinations must contain a target profile_id and at least one platform.");
+  }
+  const platforms = rawPlatforms.map((raw) => canonicalPlatformName(String(raw || "")));
+  if (platforms.some((platform) => !platform) || new Set(platforms).size !== platforms.length) {
+    throw createError(1, "invalid_destinations", "Destination platforms must be non-empty and unique.");
+  }
+  return { profile_id: profileId, platforms };
+}
+
+async function checkEditDestinationReadiness(
+  deps: CliDeps,
+  baseUrl: string,
+  apiKey: string,
+  destinations: { profile_id: string; platforms: string[] }
+): Promise<void> {
+  const response = await apiRequest(deps, {
+    method: "GET",
+    baseUrl,
+    requestPath: `/api/v1/platforms?profile_id=${encodeURIComponent(destinations.profile_id)}`,
+    apiKey,
+  });
+  const data = isObject(response) && isObject(response.data) ? response.data : null;
+  if (!data || !Array.isArray(data.posting_ready)) {
+    throw createError(2, "connection_status_unavailable", "Mallary could not confirm the target profile's connected platforms.");
+  }
+  const ready = new Set(data.posting_ready.map((raw) => canonicalPlatformName(String(raw || ""))));
+  const missing = destinations.platforms.filter((platform) => !ready.has(platform));
+  if (missing.length > 0) {
+    throw createError(1, "destination_unavailable", `Connect or reconnect these platforms in the target profile before editing: ${missing.join(", ")}.`, {
+      profile_id: destinations.profile_id,
+      platforms: missing,
+    });
+  }
+}
+
+async function runPostsEdit(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
+  const parsed = parseArgs({
+    args,
+    allowPositionals: true,
+    strict: true,
+    options: {
+      help: { type: "boolean", short: "h" },
+      file: { type: "string" },
+      "profile-id": { type: "string" },
+      "target-profile-id": { type: "string" },
+      "expected-revision": { type: "string" },
+      message: { type: "string" },
+      platform: { type: "string", multiple: true },
+      media: { type: "string", multiple: true },
+      thumbnail: { type: "string" },
+      comment: { type: "string", multiple: true },
+      "scheduled-at": { type: "string" },
+      "scheduled-timezone": { type: "string" },
+      "auto-reply-enabled": { type: "boolean" },
+      "auto-reply-disabled": { type: "boolean" },
+    },
+  });
+  if (parsed.values.help) {
+    return result({ help: getHelpText(["posts", "edit"]) }, (stdout) => writeLine(stdout, getHelpText(["posts", "edit"])));
+  }
+  const id = parseSinglePositional("id", parsed.positionals[0]);
+  if (!Number.isSafeInteger(Number(id)) || Number(id) <= 0) {
+    throw createError(1, "invalid_args", "id must be a positive Mallary post ID.");
+  }
+  const sourceProfileId = String(parsed.values["profile-id"] || "").trim();
+  const apiKey = await ensureAuthToken(deps, "mallary.publish");
+  const current = await fetchPostDetail(deps, baseUrl, apiKey, id, sourceProfileId);
+  if (current.editable !== true) {
+    throw createError(1, "post_edit_blocked", String(current.edit_block_reason || "This post can no longer be edited."));
+  }
+  const currentRevision = parsePostEditRevision(current.revision);
+  if (currentRevision === null) {
+    throw createError(2, "invalid_post_response", "Mallary did not return an edit revision for this post.");
+  }
+  const requestedRevision = parsePostEditRevision(parsed.values["expected-revision"]);
+  if (requestedRevision !== null && requestedRevision !== currentRevision) {
+    throw createError(1, "post_edit_conflict", "The post changed since the requested revision. Get the post again before editing.", {
+      expected_revision: requestedRevision,
+      current_revision: currentRevision,
+    });
+  }
+  const changes: JsonRecord = {};
+  if (typeof parsed.values.file === "string") {
+    ensureExclusiveFileMode(parsed.values as JsonRecord, [
+      "target-profile-id", "message", "platform", "media", "thumbnail", "comment",
+      "scheduled-at", "scheduled-timezone", "auto-reply-enabled", "auto-reply-disabled",
+    ]);
+    const filePayload = await readJsonFile(deps, parsed.values.file);
+    if (!isObject(filePayload)) {
+      throw createError(1, "invalid_payload", "Edit file must contain a JSON object.");
+    }
+    const allowed = new Set([
+      "expected_revision", "message", "media", "comments_under_post", "scheduled_at",
+      "scheduled_timezone", "auto_reply_enabled", "platform_options", "destinations",
+    ]);
+    const unknown = Object.keys(filePayload).filter((key) => !allowed.has(key));
+    if (unknown.length > 0) {
+      throw createError(1, "invalid_payload", `Unsupported edit fields: ${unknown.join(", ")}.`);
+    }
+    Object.assign(changes, filePayload);
+  } else {
+    if (typeof parsed.values.message === "string") changes.message = parsed.values.message;
+    if (typeof parsed.values["scheduled-at"] === "string") changes.scheduled_at = parsed.values["scheduled-at"];
+    if (typeof parsed.values["scheduled-timezone"] === "string") changes.scheduled_timezone = parsed.values["scheduled-timezone"];
+    if (parsed.values["auto-reply-enabled"] === true && parsed.values["auto-reply-disabled"] === true) {
+      throw createError(1, "invalid_args", "Choose either --auto-reply-enabled or --auto-reply-disabled.");
+    }
+    if (parsed.values["auto-reply-enabled"] === true) changes.auto_reply_enabled = true;
+    if (parsed.values["auto-reply-disabled"] === true) changes.auto_reply_enabled = false;
+    const media = Array.isArray(parsed.values.media) ? parsed.values.media : [];
+    const thumbnail = String(parsed.values.thumbnail || "").trim();
+    if (thumbnail && media.length !== 1) {
+      throw createError(1, "invalid_args", "--thumbnail requires exactly one --media item.");
+    }
+    if (media.length > 0) {
+      changes.media = thumbnail ? [{ url: String(media[0]), thumbnail_url: thumbnail }] : media;
+    }
+    if (Array.isArray(parsed.values.comment) && parsed.values.comment.length > 0) {
+      changes.comments_under_post = parsed.values.comment;
+    }
+    const targetProfile = String(parsed.values["target-profile-id"] || "").trim();
+    const requestedPlatforms = Array.isArray(parsed.values.platform)
+      ? parsed.values.platform.map((platform) => String(platform))
+      : [];
+    if (targetProfile || requestedPlatforms.length > 0) {
+      changes.destinations = validateEditDestinations({
+        profile_id: targetProfile || current.profile_id,
+        platforms: requestedPlatforms.length > 0 ? requestedPlatforms : current.platforms,
+      });
+    }
+  }
+  const fileRevision = parsePostEditRevision(changes.expected_revision);
+  if (fileRevision !== null && fileRevision !== currentRevision) {
+    throw createError(1, "post_edit_conflict", "The post changed since the edit file's revision. Get the post again before editing.");
+  }
+  if (fileRevision !== null && requestedRevision !== null && fileRevision !== requestedRevision) {
+    throw createError(1, "invalid_args", "The file and --expected-revision must match.");
+  }
+  if ("destinations" in changes) changes.destinations = validateEditDestinations(changes.destinations);
+  const changedFields = Object.keys(changes).filter((key) => key !== "expected_revision");
+  if (changedFields.length === 0) {
+    throw createError(1, "invalid_args", "Provide at least one change to edit the scheduled post.");
+  }
+  if (changes.destinations) {
+    await checkEditDestinationReadiness(
+      deps, baseUrl, apiKey,
+      changes.destinations as { profile_id: string; platforms: string[] }
+    );
+  }
+  const uploads: UploadedFile[] = [];
+  if (Array.isArray(changes.media)) {
+    const resolved = await resolveMediaItems(deps, baseUrl, apiKey, changes.media);
+    changes.media = resolved.mediaPayload;
+    uploads.push(...resolved.uploads);
+  }
+  changes.expected_revision = currentRevision;
+  const response = await apiRequest(deps, {
+    method: "PATCH",
+    baseUrl,
+    requestPath: `/api/v1/posts/${encodeURIComponent(id)}${postProfileQuery(sourceProfileId || String(current.profile_id || ""))}`,
+    apiKey,
+    body: changes,
+  });
+  const post = postDetailFromResponse(response);
+  const json = uploads.length > 0 ? { status: "ok", uploads, response } : response;
+  return result(json, (stdout) => {
+    writeLine(stdout, `Updated scheduled post ${formatValue(post.id || id)}.`);
+    writeLine(stdout, `Profile: ${formatValue(post.profile_id)}`);
+    writeLine(stdout, `Platforms: ${formatValue(post.platforms)}`);
+    writeLine(stdout, `Scheduled for: ${formatValue(post.scheduled_at)}`);
+    writeLine(stdout, `Revision: ${formatValue(post.revision)}`);
+    if (uploads.length > 0) writeLine(stdout, `Uploaded ${uploads.length} file(s).`);
   });
 }
 
@@ -1870,13 +2135,17 @@ async function dispatchCommand(deps: CliDeps, globals: GlobalOptions): Promise<C
           return runPostsCreate(deps, baseUrl, rest);
         case "list":
           return runPostsList(deps, baseUrl, rest);
+        case "get":
+          return runPostsGet(deps, baseUrl, rest);
+        case "edit":
+          return runPostsEdit(deps, baseUrl, rest);
         case "delete":
           return runPostsDelete(deps, baseUrl, rest);
         default:
           throw new CliError(1, {
             http_status: 0,
             code: "invalid_command",
-            message: "Unknown posts subcommand. Use create, list, or delete.",
+            message: "Unknown posts subcommand. Use create, list, get, edit, or delete.",
           });
       }
     case "comments":

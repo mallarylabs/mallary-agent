@@ -250,7 +250,7 @@ Video thumbnails:
 - In flag mode, use `--thumbnail` with exactly one `--media` item.
 - In file mode, put `thumbnail_url` on the video media item.
 - YouTube regular videos, Facebook feed videos, and Instagram videos/Reels can use custom thumbnails/covers.
-- YouTube accepts `jpg`, `jpeg`, or `png` thumbnails up to 2 MB for regular videos. Use 16:9. For a Short, YouTube may store the image but show a video frame instead. Mallary returns a warning because the YouTube API cannot confirm the cover viewers will see.
+- YouTube accepts `jpg`, `jpeg`, or `png` thumbnails up to 50 MB for regular videos. Use 16:9. For a Short, YouTube may store the image but show a video frame instead. Mallary returns a warning because the YouTube API cannot confirm the cover viewers will see.
 - Facebook feed videos accept `jpg`, `jpeg`, or `png` thumbnails up to 10 MB.
 - TikTok video posts do not accept arbitrary image thumbnails through Mallary. A `thumbnail_url` value disables Mallary's `video_cover_timestamp_ms` behavior. TikTok then uses its default cover.
 - TikTok photo posts can use `thumbnail_url` for the cover photo. It works only when the URL exactly matches one of the supplied photo URLs.
@@ -658,6 +658,47 @@ mallary posts list
 mallary posts list --profile-id AbC123xYz90
 mallary posts list --page 2 --per-page 25 --json
 ```
+
+Get the full saved post and its edit revision:
+
+```bash
+mallary posts get 123 --profile-id AbC123xYz90 --json
+```
+
+Edit a scheduled post before any destination starts publishing:
+
+```bash
+mallary posts edit 123 --message "Updated launch text" --scheduled-at 2026-10-15T15:00:00Z
+mallary posts edit 123 --target-profile-id NewProfile123 --platform instagram --platform linkedin
+```
+
+`--target-profile-id` moves the whole post group to that connection profile. Each `--platform` value is part of the **complete final list**, not an addition to the current list. If you change only the target profile, Mallary keeps the current platform list. If you change only the platform list, Mallary keeps the current profile. The CLI checks that the target profile has ready connections for every selected platform and shows the final profile and platforms after saving. The API rejects the edit if any destination has started publishing.
+
+Use `--profile-id` to identify a post in a non-default current profile. The CLI reads the latest revision before saving. For automation, add `--expected-revision <n>` from `posts get --json` so a stale edit stops before it writes. `--media` and `--comment` each replace the full saved list; use file mode with an empty array to clear a list.
+
+For media, comments, and platform-specific options together, use a JSON file:
+
+```bash
+mallary posts edit 123 --file ./post-changes.json
+```
+
+```json
+{
+  "expected_revision": 2,
+  "message": "Updated launch text",
+  "destinations": {
+    "profile_id": "NewProfile123",
+    "platforms": ["instagram", "linkedin"]
+  },
+  "media": [{ "url": "./new-photo.jpg" }],
+  "platform_options": {
+    "instagram": { "post_type": "feed" },
+    "linkedin": { "message": "Updated LinkedIn caption" }
+  }
+}
+```
+
+When `destinations` is present, include both the target `profile_id` and the complete final `platforms` list. Omit it to keep the current destinations. When `platform_options` is present, it replaces the full saved options map. The CLI uploads local replacement media before saving; if the post changes during upload, the API returns a conflict and leaves the scheduled post unchanged.
 
 After Mallary publishes a post, grouped post results include per-platform post IDs and public post URLs. This applies only when the provider makes them available.
 
