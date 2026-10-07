@@ -1395,6 +1395,47 @@ describe("mallary cli", () => {
     expect(seen.disconnect).toEqual({ platform: "facebook", profile_id: profileId });
   });
 
+  it("pages all analytics posts with filters and a continuation cursor", async () => {
+    let query: URLSearchParams | null = null;
+    await withServer(
+      async (req, res) => {
+        const url = new URL(String(req.url || "/"), "http://mallary.test");
+        if (url.pathname !== "/api/v1/analytics/posts" || req.method !== "GET") {
+          res.statusCode = 404;
+          res.end(JSON.stringify({ error: "not found" }));
+          return;
+        }
+        query = url.searchParams;
+        res.setHeader("content-type", "application/json");
+        res.end(JSON.stringify({
+          status: "ok",
+          data: {
+            items: [{ id: "batch:123", title: "Launch", platforms: ["x"], views: 12 }],
+            total: 101,
+            next_cursor: "next-page",
+          },
+        }));
+      },
+      async (baseUrl) => {
+        const stdout = new MemoryWriter();
+        const exitCode = await runCli(
+          ["analytics", "posts", "--profile-id", "AbC123xYz90", "--start-date", "2026-01-01", "--end-date", "2026-09-29", "--platform", "x", "--sort", "views", "--limit", "25", "--cursor", "first-page"],
+          { stdout, stderr: new MemoryWriter(), env: { MALLARY_API_KEY: "test" }, fetch: createMallaryFetch(baseUrl) }
+        );
+        expect(exitCode).toBe(0);
+        expect(stdout.toString()).toContain("Found 1 of 101 post(s).");
+        expect(stdout.toString()).toContain("Next cursor: next-page");
+      }
+    );
+    expect(query?.get("profile_id")).toBe("AbC123xYz90");
+    expect(query?.get("start_date")).toBe("2026-01-01");
+    expect(query?.get("end_date")).toBe("2026-09-29");
+    expect(query?.get("platform")).toBe("x");
+    expect(query?.get("sort")).toBe("views");
+    expect(query?.get("limit")).toBe("25");
+    expect(query?.get("cursor")).toBe("first-page");
+  });
+
   it("covers analytics, jobs, disconnect, and webhook commands", async () => {
     await withServer(
       async (req, res) => {

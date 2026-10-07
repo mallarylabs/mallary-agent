@@ -683,6 +683,8 @@ function getHelpText(commandPath?: string[]): string {
       return "Usage: mallary jobs attach-tiktok-url <id> --url <tiktok_video_url> [--json]";
     case "analytics list":
       return "Usage: mallary analytics list [--profile-id <id>] [--post-id <id>] [--json]";
+    case "analytics posts":
+      return "Usage: mallary analytics posts [--profile-id <id>] [--start-date <YYYY-MM-DD>] [--end-date <YYYY-MM-DD>] [--platform <name>] [--status <status>] [--media-type <type>] [--search <text>] [--sort <sort>] [--limit <n>] [--cursor <cursor>] [--json]";
     case "audience list":
       return "Usage: mallary audience list [--profile-id <id>] [--json]";
     case "profiles list":
@@ -716,7 +718,7 @@ function getHelpText(commandPath?: string[]): string {
         "  comments list|reply",
         "  jobs get <id>",
         "  jobs attach-tiktok-url <id> --url <tiktok_video_url>",
-        "  analytics list",
+        "  analytics list|posts",
         "  audience list",
         "  profiles list",
         "  webhooks list|create|delete",
@@ -1765,6 +1767,69 @@ async function runAnalyticsList(deps: CliDeps, baseUrl: string, args: string[]):
   });
 }
 
+async function runAnalyticsPosts(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
+  const parsed = parseArgs({
+    args,
+    allowPositionals: false,
+    strict: true,
+    options: {
+      help: { type: "boolean", short: "h" },
+      "profile-id": { type: "string" },
+      "start-date": { type: "string" },
+      "end-date": { type: "string" },
+      platform: { type: "string" },
+      status: { type: "string" },
+      "media-type": { type: "string" },
+      search: { type: "string" },
+      sort: { type: "string" },
+      limit: { type: "string" },
+      cursor: { type: "string" },
+    },
+  });
+  if (parsed.values.help) {
+    const help = getHelpText(["analytics", "posts"]);
+    return result({ help }, (stdout) => writeLine(stdout, help));
+  }
+  const apiKey = await ensureAuthToken(deps, "mallary.read");
+  const params = new URLSearchParams();
+  const names: Record<string, string> = {
+    "profile-id": "profile_id",
+    "start-date": "start_date",
+    "end-date": "end_date",
+    platform: "platform",
+    status: "status",
+    "media-type": "media_type",
+    search: "search",
+    sort: "sort",
+    limit: "limit",
+    cursor: "cursor",
+  };
+  for (const [flag, queryName] of Object.entries(names)) {
+    const value = parsed.values[flag as keyof typeof parsed.values];
+    if (typeof value === "string" && value.trim()) params.set(queryName, value);
+  }
+  const response = await apiRequest(deps, {
+    method: "GET",
+    baseUrl,
+    requestPath: `/api/v1/analytics/posts${params.size ? `?${params.toString()}` : ""}`,
+    apiKey,
+  });
+  return result(response, (stdout) => {
+    const data = isObject(response) && isObject(response.data) ? response.data : {};
+    const items = Array.isArray(data.items) ? data.items : [];
+    writeLine(stdout, `Found ${items.length} of ${formatValue(data.total ?? items.length)} post(s).`);
+    items.forEach((item) => {
+      if (!isObject(item)) return;
+      const platforms = Array.isArray(item.platforms) ? item.platforms.join(", ") : "";
+      writeLine(
+        stdout,
+        `- ${formatValue(item.id)} | ${formatValue(item.title)} | ${platforms} | views ${formatValue(item.views)}`
+      );
+    });
+    if (data.next_cursor) writeLine(stdout, `Next cursor: ${formatValue(data.next_cursor)}`);
+  });
+}
+
 async function runAudienceList(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
   const apiKey = await ensureAuthToken(deps, "mallary.read");
   const parsed = parseArgs({
@@ -2171,10 +2236,11 @@ async function dispatchCommand(deps: CliDeps, globals: GlobalOptions): Promise<C
       });
     case "analytics":
       if (subcommand === "list") return runAnalyticsList(deps, baseUrl, rest);
+      if (subcommand === "posts") return runAnalyticsPosts(deps, baseUrl, rest);
       throw new CliError(1, {
         http_status: 0,
         code: "invalid_command",
-          message: "Unknown analytics subcommand. Use list.",
+        message: "Unknown analytics subcommand. Use list or posts.",
         });
     case "audience":
       if (subcommand === "list") return runAudienceList(deps, baseUrl, rest);

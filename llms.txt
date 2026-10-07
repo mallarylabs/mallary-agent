@@ -46,6 +46,7 @@ Command inventory
 - mallary comments reply --post-id <id> --comment-id <cid> --message "text"
 - mallary jobs get <id>
 - mallary analytics list
+- mallary analytics posts
 - mallary audience list
 - mallary webhooks list
 - mallary webhooks create
