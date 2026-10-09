@@ -5,6 +5,7 @@ Mallary CLI is the official command-line interface for the https://mallary.ai so
 With the CLI you can:
 
 - upload local media files to Mallary.ai
+- save, read, edit, delete, and submit unpublished drafts
 - create and schedule posts to your social media accounts
 - inspect jobs and grouped posts
 - list comments and reply to comments on published posts
@@ -77,7 +78,7 @@ API-key safety:
 - Do not print the key with `echo`, `printenv`, debug logs, shell tracing, or CI output. Redact logs before you share them.
 - If the key is exposed, rotate or revoke it.
 
-Most CLI commands are available on paid plans only: Starter, Pro, and Business. Comment listing and supplied comment replies are available on all plans.
+Most CLI commands are available on paid plans only: Starter, Pro, and Business. Saved drafts, comment listing, and supplied comment replies are available on all plans. Publishing or scheduling a saved draft still follows normal plan and account rules.
 
 ## Quickstart
 
@@ -979,3 +980,33 @@ If you are an AI agent or building an agent integration:
 ## Versioning
 
 Mallary CLI uses semantic versioning.
+
+## Saved Drafts
+
+Requires CLI 0.2.18 or later. Saved drafts are available to all users. Draft saves use no posting allowance. They never publish or assign a date.
+
+```bash
+mallary drafts create --message "An unfinished idea" --profile-id <profile-id> --json
+mallary drafts list --profile-id <profile-id> --page 1 --per-page 20 --json
+mallary drafts get <draft-id> --json
+mallary drafts edit <draft-id> --expected-revision 1 --message "Ready for review" --platform linkedin --json
+mallary drafts delete <draft-id> --expected-revision 2 --json
+```
+
+Use the draft UUID and current revision returned by Mallary. The numbers above are examples; read the actual revision before each write. A `409` means you must read again. Supplied lists and platform settings replace their saved values; omitted fields stay unchanged. Use `--file changes.json` with empty arrays to clear media, comments, or destinations.
+
+Create and edit support `--message`, repeated `--platform`, `--profile-id`, repeated `--media`, `--thumbnail`, repeated `--comment`, `--post-type`, `--auto-reply-enabled`, or `--file`. File mode supports the draft API content fields. `--expected-revision` is required for edits and can be supplied with file mode. Local media files upload to Mallary before saving. A saved draft does not make uploaded media private.
+
+## Publish or Schedule
+
+Only use these commands when the user asks to publish or schedule the saved post:
+
+```bash
+mallary drafts submit <draft-id> --expected-revision 2 --json
+mallary drafts submit <draft-id> --expected-revision 2 --scheduled-at 2030-01-01T12:00:00Z --json
+mallary drafts submit <draft-id> --expected-revision 2 --scheduled-at 2030-01-01T09:00 --scheduled-timezone America/New_York --json
+```
+
+Omit the date to publish now. Normal plan, account, content, and platform checks apply. Validation failures leave the draft saved. Repeating the exact revision and schedule returns the original publishing jobs. After an uncertain response, read the draft; a submitted draft includes `submission`. Do not create a new post as a retry.
+
+Draft saves reject schedule fields, webhook URLs, and publishing idempotency keys. List and get use read scope. Save, edit, delete, and submit use publish scope. For reads, deletes, and submissions, `--profile-id` optionally verifies the source profile. For edits, it changes the saved profile. A draft uses one connection profile.

@@ -633,6 +633,20 @@ function getHelpText(commandPath?: string[]): string {
         "",
         "Create Mallary upload URLs and upload local files end-to-end.",
       ].join("\n");
+    case "drafts":
+      return "Usage: mallary drafts <create|list|get|edit|delete|submit> [options]\n\nSaved drafts are available to all users.";
+    case "drafts create":
+      return "Usage: mallary drafts create [--message <text>] [--platform <name> ...] [--profile-id <id>] [--media <file> ...] [--file <json>] [--json]";
+    case "drafts list":
+      return "Usage: mallary drafts list [--profile-id <id>] [--page <n>] [--per-page <n>] [--json]";
+    case "drafts get":
+      return "Usage: mallary drafts get <id> [--profile-id <id>] [--json]";
+    case "drafts edit":
+      return "Usage: mallary drafts edit <id> --expected-revision <n> [--message <text>] [--platform <name> ...] [--profile-id <id>] [--media <file> ...] [--file <json>] [--json]";
+    case "drafts delete":
+      return "Usage: mallary drafts delete <id> --expected-revision <n> [--profile-id <id>] [--json]";
+    case "drafts submit":
+      return "Usage: mallary drafts submit <id> --expected-revision <n> [--profile-id <id>] [--scheduled-at <time>] [--scheduled-timezone <iana>] [--json]";
     case "posts create":
       return [
         "Usage: mallary posts create [options]",
@@ -715,6 +729,7 @@ function getHelpText(commandPath?: string[]): string {
         "  health",
         "  upload <file...>",
         "  posts create|list|get|edit|delete",
+        "  drafts create|list|get|edit|delete|submit",
         "  comments list|reply",
         "  jobs get <id>",
         "  jobs attach-tiktok-url <id> --url <tiktok_video_url>",
@@ -980,7 +995,8 @@ async function buildPostPayload(
   deps: CliDeps,
   baseUrl: string,
   apiKey: string,
-  args: string[]
+  args: string[],
+  draftMode: false | "create" | "edit" = false
 ): Promise<{ payload: JsonRecord; uploads: UploadedFile[]; idempotencyKey?: string }> {
   const parsed = parseArgs({
     args,
@@ -988,6 +1004,7 @@ async function buildPostPayload(
     strict: true,
     options: {
       help: { type: "boolean", short: "h" },
+      "expected-revision": { type: "string" },
       file: { type: "string" },
       message: { type: "string" },
       platform: { type: "string", multiple: true },
@@ -1012,6 +1029,16 @@ async function buildPostPayload(
     });
   }
 
+  if (draftMode && (parsed.values["scheduled-at"] || parsed.values["scheduled-timezone"] || parsed.values["webhook-url"] || parsed.values["idempotency-key"])) {
+    throw new CliError(1, { http_status: 0, code: "invalid_args", message: "Draft saves do not accept dates, webhooks, or publishing idempotency keys. Use drafts submit to publish or schedule." });
+  }
+  if (!draftMode && parsed.values["expected-revision"]) throw new CliError(1, { http_status: 0, code: "invalid_args", message: "--expected-revision is for edits, not post creation." });
+  const validateDraftRevision = (value: unknown) => {
+    if (draftMode === "create" && value !== undefined)
+      throw createError(1, "invalid_args", "A new draft has no expected revision.");
+    if (draftMode === "edit" && (!Number.isSafeInteger(Number(value)) || Number(value) < 1))
+      throw createError(1, "invalid_args", "--expected-revision must be the current positive draft revision.");
+  };
   const idempotencyKey =
     typeof parsed.values["idempotency-key"] === "string"
       ? parsed.values["idempotency-key"]
@@ -1039,6 +1066,10 @@ async function buildPostPayload(
         message: "Post payload file must contain a JSON object.",
       });
     }
+    if (draftMode && ["scheduled_at", "scheduled_timezone", "webhook_url", "user_id"].some(key => key in payload))
+      throw new CliError(1, { http_status: 0, code: "invalid_payload", message: "Draft content cannot include publishing fields or user_id." });
+    if (draftMode && parsed.values["expected-revision"]) payload.expected_revision = Number(parsed.values["expected-revision"]);
+    if (draftMode) validateDraftRevision(payload.expected_revision);
     const uploads: UploadedFile[] = [];
     if (Array.isArray(payload.media)) {
       const resolved = await resolveMediaItems(deps, baseUrl, apiKey, payload.media);
@@ -1049,17 +1080,18 @@ async function buildPostPayload(
   }
 
   const message = typeof parsed.values.message === "string" ? parsed.values.message.trim() : "";
+  if (draftMode) validateDraftRevision(parsed.values["expected-revision"]);
   const platforms = Array.isArray(parsed.values.platform)
     ? parsed.values.platform.map((platform) => String(platform).trim()).filter(Boolean)
     : [];
-  if (!message) {
+  if (!draftMode && !message) {
     throw new CliError(1, {
       http_status: 0,
       code: "invalid_args",
       message: "--message is required in flag mode.",
     });
   }
-  if (platforms.length === 0) {
+  if (!draftMode && platforms.length === 0) {
     throw new CliError(1, {
       http_status: 0,
       code: "invalid_args",
@@ -1072,6 +1104,8 @@ async function buildPostPayload(
       ? parsed.values["post-type"].trim().toLowerCase()
       : "";
   const platformOptions: JsonRecord = {};
+  if (draftMode && requestedPostType && !platforms.length)
+    throw createError(1, "invalid_args", "--post-type requires at least one --platform. Use file mode to change saved platform options directly.");
   if (requestedPostType) {
     for (const rawPlatform of platforms) {
       const platform = canonicalPlatformName(rawPlatform);
@@ -1112,6 +1146,11 @@ async function buildPostPayload(
     message,
     platforms,
   };
+  if (draftMode) {
+    if (parsed.values.message === undefined) delete payload.message;
+    if (!Array.isArray(parsed.values.platform)) delete payload.platforms;
+    if (parsed.values["expected-revision"]) payload.expected_revision = Number(parsed.values["expected-revision"]);
+  }
   if (requestedPostType) {
     payload.platform_options = platformOptions;
   }
@@ -1145,6 +1184,52 @@ async function buildPostPayload(
     payload.auto_reply_enabled = parsed.values["auto-reply-enabled"];
   }
   return { payload, uploads: resolved.uploads, idempotencyKey };
+}
+
+async function runDrafts(deps: CliDeps, baseUrl: string, action: string | undefined, args: string[]): Promise<CommandResult> {
+  if (action === "--help" || action === "-h") return result({ help: getHelpText(["drafts"]) }, stdout => writeLine(stdout, getHelpText(["drafts"])));
+  const actions = ["create", "list", "get", "edit", "delete", "submit"];
+  if (!action || !actions.includes(action)) throw new CliError(1, { http_status: 0, code: "invalid_command", message: "Use drafts create, list, get, edit, delete, or submit." });
+  const help = `Usage: mallary drafts ${action}${["get", "edit", "delete", "submit"].includes(action) ? " <id>" : ""} [options]
+Create/edit: --message, --platform, --profile-id, --media, --comment, --post-type, or --file.
+Edit/delete/submit: --expected-revision <n>. Submit publishes now unless --scheduled-at <time> is supplied (optional --scheduled-timezone).
+List: --profile-id, --page, --per-page. --json is available for all draft commands.
+Saved drafts are available to all users.`;
+  if (args.includes("--help") || args.includes("-h")) return result({ help }, stdout => writeLine(stdout, help));
+  const apiKey = await ensureAuthToken(deps, ["list", "get"].includes(action) ? "mallary.read" : "mallary.publish");
+  let id: string | undefined;
+  if (["get", "edit", "delete", "submit"].includes(action)) {
+    id = args[0]; args = args.slice(1);
+    if (!id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) throw new CliError(1, { http_status: 0, code: "invalid_args", message: "Use the draft UUID returned by drafts create or list." });
+  }
+  let body: JsonRecord | undefined;
+  const query = new URLSearchParams();
+  if (action === "create" || action === "edit") {
+    ({ payload: body } = await buildPostPayload(deps, baseUrl, apiKey, args, action));
+    if (action === "create" && body.expected_revision !== undefined) throw new CliError(1, { http_status: 0, code: "invalid_args", message: "A new draft has no expected revision." });
+  } else {
+    const parsed = parseArgs({ args, strict: true, allowPositionals: false, options: {
+      "profile-id": { type: "string" }, ...action === "list" ? { page: { type: "string" as const }, "per-page": { type: "string" as const } } : {},
+      ...["delete", "submit"].includes(action) ? { "expected-revision": { type: "string" as const } } : {},
+      ...action === "submit" ? { "scheduled-at": { type: "string" as const }, "scheduled-timezone": { type: "string" as const } } : {},
+    } });
+    if (parsed.values["profile-id"]) query.set("profile_id", String(parsed.values["profile-id"]));
+    if (action === "list") {
+      if (parsed.values.page) query.set("page", String(parsed.values.page));
+      if (parsed.values["per-page"]) query.set("per_page", String(parsed.values["per-page"]));
+    }
+    if (["delete", "submit"].includes(action)) body = { expected_revision: Number(parsed.values["expected-revision"]) };
+    if (action === "submit" && body) {
+      if (parsed.values["scheduled-at"]) body.scheduled_at = parsed.values["scheduled-at"];
+      if (parsed.values["scheduled-timezone"]) body.scheduled_timezone = parsed.values["scheduled-timezone"];
+    }
+  }
+  if (["edit", "delete", "submit"].includes(action) && (!Number.isSafeInteger(body?.expected_revision) || Number(body?.expected_revision) < 1))
+    throw new CliError(1, { http_status: 0, code: "invalid_args", message: "--expected-revision must be the current positive draft revision." });
+  const method = action === "edit" ? "PATCH" : action === "delete" ? "DELETE" : ["create", "submit"].includes(action) ? "POST" : "GET";
+  const suffix = query.size ? `?${query}` : "";
+  const response = await apiRequest(deps, { method, baseUrl, apiKey, requestPath: `/api/v1/drafts${id ? `/${encodeURIComponent(id)}` : ""}${action === "submit" ? "/submit" : ""}${suffix}`, body });
+  return result(response, stdout => writeLine(stdout, JSON.stringify(response, null, 2)));
 }
 
 async function runPostsCreate(deps: CliDeps, baseUrl: string, args: string[]): Promise<CommandResult> {
@@ -2194,6 +2279,8 @@ async function dispatchCommand(deps: CliDeps, globals: GlobalOptions): Promise<C
       return runHealth(deps, baseUrl);
     case "upload":
       return runUpload(deps, baseUrl, [subcommand, ...rest].filter((value): value is string => typeof value === "string"));
+    case "drafts":
+      return runDrafts(deps, baseUrl, subcommand, rest);
     case "posts":
       switch (subcommand) {
         case "create":

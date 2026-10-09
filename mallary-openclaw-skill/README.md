@@ -122,3 +122,14 @@ Do not reconstruct those instructions from nearby files during discovery. If the
 - Pricing: https://mallary.ai/pricing
 - Repository: https://github.com/mallarylabs/mallary-agent
 - Support: support@mallary.ai
+
+## Saved Draft Discovery
+
+Use the draft UUID returned by Mallary:
+
+```bash
+mallary drafts list --json
+mallary drafts get <draft_id> --json
+```
+
+Saved drafts are available to all users. Saving a draft changes the user's Mallary account but never publishes or schedules. See the saved-draft boundary in [SKILL.md](./SKILL.md). A clear save request authorizes saving; publication needs its own clear request. CLI 0.2.18 and skill 1.0.19 include draft support.

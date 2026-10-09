@@ -128,3 +128,5 @@ Out of scope
 - Dashboard onboarding endpoints
 - Admin/observability endpoints
 - MCP transport/client behavior
+
+Saved drafts (CLI 0.2.18+, all users): create/list/get/edit/delete/submit. Saves need no date and never publish. Read the saved UUID and revision before a write. Only an explicit publish/schedule request authorizes submit. See README.md and command help.

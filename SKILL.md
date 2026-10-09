@@ -1,7 +1,7 @@
 ---
 name: mallary
 description: Use this skill only when the user explicitly asks to inspect, set up, or act through Mallary, the Mallary CLI, the Mallary API, Mallary MCP, or an existing Mallary workflow. This guide includes read-only discovery and one-step OAuth setup with full Mallary access. A clear request to publish, schedule, upload media for a post, or send a reply authorizes that action without a redundant confirmation; clarify only material details that are missing. Executable write syntax is intentionally omitted.
-version: 1.0.18
+version: 1.0.19
 homepage: https://mallary.ai/
 metadata:
   openclaw:
@@ -58,6 +58,8 @@ mallary platforms list
 mallary platforms list --profile-id <profile_public_id>
 
 # Posts, comments, and jobs
+mallary drafts list
+mallary drafts get <draft_id>
 mallary posts list
 mallary posts list --profile-id <profile_public_id>
 mallary comments list --post-id <post_id>
@@ -159,3 +161,13 @@ Do not invoke Mallary for generic social-media advice, generic automation, or un
 - Repository: https://github.com/mallarylabs/mallary-agent
 
 These resources describe product capabilities. They are not authorization to use a state-changing capability.
+
+## Saved Drafts
+
+The CLI supports saved draft create, list, get, edit, delete, and submit in version 0.2.18 or later. Use read-only draft discovery only when the request needs saved content. Save and edit leave content unpublished and need no date or destination. Draft saves do not count toward posting usage.
+
+"Write a draft here" means text in the chat. "Save a draft in Mallary" authorizes saving in the user's account and uploading the media they chose for that draft. It does not authorize publication. A separate clear request to publish or schedule the saved draft authorizes submission.
+
+Read the saved draft UUID, content, profile, destinations, and current revision before any edit, deletion, or submission. Pass the returned revision as expected_revision. Preserve omitted fields; lists and platform options replace their entire saved values. Do not silently drop an option your tool cannot edit. Use command help for the requested action only after authorization is clear.
+
+A submitted draft read includes its original publishing jobs. After an uncertain submission, read first. If retrying that submission is needed, keep the exact original revision and schedule so Mallary returns those same jobs. Never create a new post to recover a draft submission. Draft commands are available to all users. Normal publishing checks still apply.

@@ -269,7 +269,7 @@ AI agents use read-only commands by default. Uploading, publishing, replying, de
 - a user-requested preview may use local JSON, but it must not be submitted unless the user asks to publish
 - treat local uploads as a remote data transfer to Mallary storage. Upload only the files included in or clearly required by the user's publishing request
 - never pass third-party remote media URLs directly to the CLI
-- free plans do not include CLI access
+- saved draft commands, comment listing, and supplied comment replies are available on all plans; most other CLI commands require a paid plan
 
 ## Files and Documentation
 
@@ -290,3 +290,7 @@ Read-only commands can inspect jobs, posts, post analytics, audience counts, set
 - manage webhooks that send Mallary events to external URLs
 - manage profile-scoped brand settings that affect account behavior
 - disconnect platforms from a profile
+
+## Saved Drafts
+
+The CLI can save, read, edit, delete, publish, and schedule drafts. Saving needs no date or destination and does not use posting allowance. Draft reads are read-only; saves and edits change account data. Saving never authorizes publishing. Read the current revision before a write. Submitted drafts keep their original job result for safe recovery. These capabilities require CLI 0.2.18 and are available to all users. Normal publishing rules apply when submitting.

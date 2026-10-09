@@ -273,3 +273,7 @@ Read-only commands can inspect jobs, posts, post analytics, audience counts, set
 - manage webhooks
 - manage brand settings
 - disconnect platforms
+
+## Saved Drafts
+
+The CLI can save, read, edit, delete, publish, and schedule drafts. Saving needs no date or destination and does not use posting allowance. Draft reads are read-only; saves and edits change account data. Saving never authorizes publishing. Read the current revision before a write. Submitted drafts keep their original job result for safe recovery. These capabilities require CLI 0.2.18 and are available to all users. Normal publishing rules apply when submitting.
