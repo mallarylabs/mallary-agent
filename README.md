@@ -304,12 +304,21 @@ Payload shape:
 }
 ```
 
+To add an AI label in file mode, send a JSON boolean (`true` or `false`) in the matching platform options:
+
+- Instagram, including Reels: `platform_options.instagram.is_ai_generated`
+- Facebook Reels: `platform_options.facebook.is_ai_generated`, with `platform_options.facebook.post_type` set to `reel`
+- X: `platform_options.x.made_with_ai`; `platform_options.twitter.made_with_ai` also works
+
+Set a field to `true` to disclose AI-made content. Leave it out to send no AI label choice. The fields stay with drafts and scheduled posts. They do not change posts that are already live. X first replies do not inherit the label.
+
 Facebook:
 
 - `message`: optional Facebook-specific message/caption
 - `post_type`: `feed`, `story`, or `reel`
 - `link`: optional link URL for link-style feed posts without media
 - `pageId`: optional advanced override if you need to target a specific connected Facebook Page
+- `is_ai_generated`: optional boolean for the AI label on Reels only; requires `post_type: "reel"`
 - Reels use one 9:16 MP4 or MOV video that is 3 to 90 seconds long and at least 540 by 960 pixels.
 
 ```json
@@ -330,6 +339,7 @@ Instagram:
 
 - `message`: optional Instagram-specific caption
 - `post_type`: `feed`, `story`, `reel`, or `carousel`
+- `is_ai_generated`: optional boolean to disclose AI-made Instagram media, including Reels. Works with Instagram Login and Facebook Login.
 - `shareToFeed`: optional boolean for Reels. It defaults to `true`. Set it to `false` to keep the Reel off the profile feed.
 - `trialParams.graduationStrategy`: optional Trial Reel setting. Use `MANUAL` to choose later in Instagram, or `SS_PERFORMANCE` to let Instagram share it with followers if it performs well. Do not use `shareToFeed` in the same request.
 - `isPaidPartnership`: optional boolean for the Paid partnership label on feed posts, Reels, and carousels. It requires Facebook Login and does not work with Stories.
@@ -571,6 +581,7 @@ Bluesky:
 X / Twitter:
 
 - `message`: optional X-specific message, supplied as `platform_options.x.message` or `platform_options.twitter.message`.
+- `made_with_ai`: optional boolean for the main post. Use `platform_options.x.made_with_ai` or `platform_options.twitter.made_with_ai`. It does not label first replies.
 
 Canonical reference for platform-specific post fields:
 
