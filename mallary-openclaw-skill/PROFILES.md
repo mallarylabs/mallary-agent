@@ -73,17 +73,18 @@ Profile-aware API behavior:
 - Settings are profile-scoped. They include `auto_reply_enabled`, the business fields, the brand profile text, and the AI auto-reply context.
 - `--auto-reply-enabled` on a post also depends on the saved settings of the selected profile and on the plan access.
 
-## Limits
+## Account allowance
 
-`GET /api/v1/profiles` returns `data.limits.max_accounts_per_platform`. When the user reaches the allowed profile count, the dashboard disables **New profile**.
+`GET /api/v1/profiles` returns the workspace's current `data.limits`. For account-based plans, `account_limit_scope` is `total` and `max_accounts_total` is shared across platforms and profiles.
 
-Current backend limit values:
+| Plan | Total social media accounts | Monthly price |
+| --- | ---: | ---: |
+| Starter | 5 | $15 |
+| Pro | 15 | $29 |
+| Business | 100 | $99 |
 
-| Plan | Limit |
-| --- | ---: |
-| Free | 1 |
-| Starter | 4 |
-| Pro | 10 |
-| Business | 50 |
+Posts are unlimited. Profiles group your accounts; they do not add account spots. Each profile holds one account per platform. You can use several profiles for several accounts on the same platform.
 
-CLI access is paid-plan only, but Free users still have a default profile in the dashboard.
+Existing customers keep their current limits. Use the limits returned for the authenticated workspace instead of inferring them from the plan name. The compatibility field `max_accounts_per_platform` remains available for older contracts.
+
+X publishing and comments use prepaid credits at cost. Analytics and account lookups do not use credits. See https://mallary.ai/pricing for current offers.

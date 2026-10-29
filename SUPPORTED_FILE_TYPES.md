@@ -83,7 +83,7 @@ These are compatibility notes, not a user request to post.
 
 ### Instagram
 
-- Stories use exactly one image or video and do not support captions or follow-up comments.
+- Stories use exactly one image or video and support captions. To place styled text on the image or video, add it to the media before upload. Stories do not support follow-up comments.
 - Reels use exactly one video.
 - Carousels use 2 to 10 image or video items.
 - Video and Reel covers can use a separate thumbnail.

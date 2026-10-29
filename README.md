@@ -78,7 +78,7 @@ API-key safety:
 - Do not print the key with `echo`, `printenv`, debug logs, shell tracing, or CI output. Redact logs before you share them.
 - If the key is exposed, rotate or revoke it.
 
-Most CLI commands are available on paid plans only: Starter, Pro, and Business. Saved drafts, comment listing, and supplied comment replies are available on all plans. Publishing or scheduling a saved draft still follows normal plan and account rules.
+Use the CLI with your Mallary plan. Starter is $15/month for 5 total social media accounts, Pro is $29 for 15, and Business is $99 for 100. Posts are unlimited. Scheduling, analytics, and AI auto-replies are included. X publishing and comments use prepaid credits at cost; analytics and account lookups do not use credits. Existing customers keep their current terms. See [pricing](https://mallary.ai/pricing).
 
 ## Quickstart
 
@@ -344,7 +344,7 @@ Instagram:
 - `trialParams.graduationStrategy`: optional Trial Reel setting. Use `MANUAL` to choose later in Instagram, or `SS_PERFORMANCE` to let Instagram share it with followers if it performs well. Do not use `shareToFeed` in the same request.
 - `isPaidPartnership`: optional boolean for the Paid partnership label on feed posts, Reels, and carousels. It requires Facebook Login and does not work with Stories.
 - `brandedContentSponsors`: optional list of up to two Instagram usernames or numeric user IDs. Adding a sponsor also turns on the Paid partnership label. Each sponsor must be a public Business or Creator account.
-- Stories do not support captions or follow-up comments. Include the story text in the media itself.
+- Stories support captions through `--message` or `platform_options.instagram.message` in file mode. To place styled text on the image or video, add it to the media before upload. Stories do not support follow-up comments.
 - Carousels support 2 to 10 image/video items.
 
 ```json
@@ -636,7 +636,6 @@ AI auto reply:
 
 - AI Auto Replies detect new comments on your published posts. They use OpenAI (ChatGPT) to post replies. The replies follow the settings that you configure in the Mallary dashboard, or the settings section below. Mallary supports AI Auto Replies on YouTube, Facebook, Instagram, Threads, LinkedIn, X, and Bluesky.
 - Privacy warning: do not enable AI Auto Replies for posts or accounts where comments can contain sensitive, regulated, confidential, or customer-private data. Enable them only when you intend and approve that processing. When you enable AI Auto Replies, Mallary processes comment text, post context, connected-platform metadata, and saved brand/profile settings. Mallary also sends relevant context to OpenAI for reply generation.
-- AI Auto Replies are available on Pro and Business plans only.
 - AI Auto Replies depend on your saved brand/profile settings, not only on the current post payload.
 - You can enable it account-wide in `mallary settings update`, or per post with `--auto-reply-enabled`.
 - If you omit `--auto-reply-enabled`, the post uses your saved account-level setting.
