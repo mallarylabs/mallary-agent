@@ -78,7 +78,7 @@ API-key safety:
 - Do not print the key with `echo`, `printenv`, debug logs, shell tracing, or CI output. Redact logs before you share them.
 - If the key is exposed, rotate or revoke it.
 
-Use the CLI with your Mallary plan. Starter is $15/month for 5 total social media accounts, Pro is $29 for 15, and Business is $99 for 100. Posts are unlimited. Scheduling, analytics, and AI auto-replies are included. X publishing and comments use prepaid credits at cost; analytics and account lookups do not use credits. Existing customers keep their current terms. See [pricing](https://mallary.ai/pricing).
+Use the CLI with your Mallary plan. Starter is $15/month for 5 total social media accounts, Pro is $29 for 15, and Business is $95 for 100. Posts are unlimited. Scheduling, analytics, and AI auto-replies are included. X publishing and comments use prepaid credits at cost; analytics and account lookups do not use credits. Existing customers keep their current terms. See [pricing](https://mallary.ai/pricing).
 
 ## Quickstart
 
