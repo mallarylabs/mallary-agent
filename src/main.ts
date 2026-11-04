@@ -2221,6 +2221,10 @@ async function runPlatformsList(deps: CliDeps, baseUrl: string, args: string[]):
     writeLine(stdout, `Connected platforms (${connected.length}/${supportedCount})`);
     if (connected.length === 0) {
       writeLine(stdout, "None");
+      if (Array.isArray(data?.connected)) {
+        const connectUrl = new URL("/platforms", baseUrl);
+        writeLine(stdout, `Connect a social account: ${connectUrl.toString()}`);
+      }
     } else {
       connected.forEach((platform) => writeLine(stdout, `- ${platform}`));
     }

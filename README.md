@@ -138,6 +138,10 @@ List your connected platforms:
 mallary platforms list
 ```
 
+If no platforms are connected, the text output shows a link to connect a social
+account in your browser.
+`--json` keeps the API response unchanged.
+
 ## Commands
 
 ### Health

@@ -401,6 +401,41 @@ describe("mallary cli", () => {
     );
   });
 
+  it.each([undefined, "AbC123xYz90"])("links empty platform results to the Platforms page without a profile parameter (%s)", async (profileId) => {
+    const stdout = new MemoryWriter();
+    const stderr = new MemoryWriter();
+    const requests: string[] = [];
+    const code = await runCli(["platforms", "list", ...(profileId ? ["--profile-id", profileId] : [])], {
+      stdout, stderr, env: { MALLARY_API_KEY: "test" },
+      fetch: async (input, init) => {
+        requests.push(String(input));
+        expect(init?.method).toBe("GET");
+        return Response.json({ status: "ok", data: { connected: [], counts: { supported: 10 }, platforms: [] } });
+      },
+    });
+    const query = profileId ? `?profile_id=${profileId}` : "";
+    expect(code).toBe(0);
+    expect(stdout.toString()).toContain("Connect a social account: https://mallary.ai/platforms\n");
+    expect(stdout.toString()).not.toContain("profile_id=");
+    expect(requests).toEqual([`https://mallary.ai/api/v1/platforms${query}`]);
+    expect(stderr.toString()).toBe("");
+  });
+
+  it("keeps empty platform JSON unchanged without opening a browser", async () => {
+    const stdout = new MemoryWriter();
+    const stderr = new MemoryWriter();
+    const response = { status: "ok", data: { connected: [], counts: { supported: 10 }, platforms: [] } };
+    let requests = 0;
+    const code = await runCli(["platforms", "list", "--json"], {
+      stdout, stderr, env: { MALLARY_API_KEY: "test" },
+      fetch: async () => { requests++; return Response.json(response); },
+    });
+    expect(code).toBe(0);
+    expect(JSON.parse(stdout.toString())).toEqual(response);
+    expect(requests).toBe(1);
+    expect(stderr.toString()).toBe("");
+  });
+
   it("uploads local files end-to-end", async () => {
     const filePath = await makeTempFile("hello.txt", "hello world");
     let uploaded = "";
